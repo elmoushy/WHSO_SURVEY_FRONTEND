@@ -1,0 +1,143 @@
+/* Enhanced Theme Variables with Glassmorphism Support */
+:root {
+  /* Light Theme */
+  --bg-light-primary: #F5F7FA;
+  --bg-light-surface: rgba(255, 255, 255, 0.9);
+  --brand-green: #997A51;
+  --brand-gold: #CFA365;
+  --accent-neon: #AE5D5A;
+  --accent-cyan: #E5D2BA;
+  --text-light-high: #262626;
+  --text-light-medium: #4A4A4A;
+  --text-light-muted: #5E4E3F;
+  --border-light: rgba(229, 210, 186, 0.3);
+
+  /* Dark/Night Theme - Enhanced for glassmorphism */
+  --bg-night-primary: linear-gradient(135deg, #1A1A1A 0%, #2D2B26 100%);
+  --bg-night-surface: rgba(66, 64, 59, 0.4);
+  --text-night-high: #F5F3EE;
+  --text-night-medium: #D0D0D0;
+  --text-night-muted: #A0A0A0;
+  --border-night: rgba(94, 78, 63, 0.3);
+  
+  /* Glassmorphism specific variables */
+  --glass-bg-light: rgba(255, 255, 255, 0.1);
+  --glass-bg-dark: rgba(66, 64, 59, 0.25);
+  --glass-border-light: rgba(255, 255, 255, 0.2);
+  --glass-border-dark: rgba(153, 122, 81, 0.3);
+  --glass-shadow-light: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --glass-shadow-dark: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Default Theme Variables (Dark Mode as Default) */
+:root {
+  --bg-primary: var(--bg-night-primary);
+  --bg-surface: var(--bg-night-surface);
+  --text-high: var(--text-night-high);
+  --text-medium: var(--text-night-medium);
+  --text-muted: var(--text-night-muted);
+  --border: var(--border-night);
+  --glass-bg: var(--glass-bg-dark);
+  --glass-border: var(--glass-border-dark);
+  --glass-shadow: var(--glass-shadow-dark);
+}
+
+/* Light Theme Override */
+[data-theme="light"] {
+  --bg-primary: var(--bg-light-primary);
+  --bg-surface: var(--bg-light-surface);
+  --text-high: var(--text-light-high);
+  --text-medium: var(--text-light-medium);
+  --text-muted: var(--text-light-muted);
+  --border: var(--border-light);
+  --glass-bg: var(--glass-bg-light);
+  --glass-border: var(--glass-border-light);
+  --glass-shadow: var(--glass-shadow-light);
+}
+
+/* Enhanced Theme Transition */
+* {
+  transition: 
+    background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    backdrop-filter 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    
+}
+
+/* Enhanced Body styling with theme support */
+body {
+  background-color: #F5F7FA !important;
+  /* background: var(--bg-primary); */
+  color: var(--text-muted);
+  font-family: 'Cairo', 'Noto Kufi Arabic', sans-serif;
+  overflow-x: hidden;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Enhanced Arabic font support */
+html[lang="ar"] body,
+body {
+  font-family: 'Cairo', 'Noto Kufi Arabic', sans-serif;
+  direction: rtl;
+  text-align: right;
+}
+
+/* Global RTL Support - Force Arabic Layout */
+* {
+  direction: rtl;
+  text-align: inherit;
+}
+
+/* Enhanced glassmorphism backdrop filter support */
+@supports (backdrop-filter: blur(20px)) {
+  .glass-element {
+    backdrop-filter: blur(20px);
+  }
+}
+
+@supports not (backdrop-filter: blur(20px)) {
+  .glass-element {
+    background: var(--bg-surface);
+  }
+}
+
+/* SweetAlert2 RTL Support */
+.swal-rtl-popup {
+  direction: rtl !important;
+  text-align: right !important;
+}
+
+.swal-rtl-title {
+  text-align: right !important;
+}
+
+.swal-rtl-content {
+  text-align: right !important;
+}
+
+.swal2-popup[dir="rtl"] {
+  direction: rtl !important;
+}
+
+.swal2-popup[dir="rtl"] .swal2-title {
+  text-align: right !important;
+}
+
+.swal2-popup[dir="rtl"] .swal2-html-container {
+  text-align: right !important;
+}
+
+.swal2-popup[dir="rtl"] .swal2-actions {
+  flex-direction: row-reverse !important;
+}
+
+/* Prevent body scroll when modal is open */
+body.modal-open {
+  overflow: hidden !important;
+  height: 100vh;
+  position: fixed;
+  width: 100%;
+}

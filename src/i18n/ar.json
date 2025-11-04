@@ -1,0 +1,1459 @@
+{
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "إنشاء حساب",
+    "username": "اسم المستخدم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "loginButton": "دخول",
+    "registerButton": "إنشاء حساب",
+    "welcomeAuth": "مرحباً بك في WPC | WeaponpowerCloud App",
+    "subtitle": "مستقبلك يبدأ هنا"
+  },
+  "header": {
+    "projectName": "WPC | WeaponpowerCloud App",
+    "toggleLanguage": "تبديل اللغة",
+    "toggleTheme": "تبديل المظهر",
+    "notifications": "الإشعارات",
+    "logout": "تسجيل الخروج",
+    "markAllRead": "تحديد الكل كمقروء",
+    "logoutConfirm": "هل أنت متأكد من رغبتك في تسجيل الخروج؟",
+    "settings": "الإعدادات",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "lightMode": "المظهر الفاتح",
+    "darkMode": "المظهر الداكن"
+  },
+  "navigation": {
+    "menu": "القائمة",
+    "main": "التنقل الرئيسي",
+    "welcome": "الرئيسيه",
+    "home": "الرئيسية",
+    "homeDesc": "العودة إلى صفحة الترحيب",
+    "dashboard": "لوحة التحكم",
+    "dashboardDesc": "نظرة عامة وتحليلات",
+    "businessQuarters": "الأرباع التجارية",
+    "businessQuartersDesc": "بيانات الأداء الفصلي",
+    "analytics": "التحليلات",
+    "analyticsDesc": "رؤى وتقارير عميقة",
+    "projects": "ملفاتي",
+    "projectsDesc": "إدارة ملفاتك والتخزين",
+    "news": "الأخبار",
+    "newsDesc": "آخر التحديثات والإعلانات",
+    "control": "لوحة التحكم",
+    "controlDesc": "إدارة عناصر التحكم والإعدادات النظام",
+    "surveys": "الاستطلاعات",
+    "surveysDesc": "عرض والمشاركة في الاستطلاعات المتاحة",
+    "quickActions": "إجراءات سريعة",
+    "newProject": "مشروع جديد",
+    "notifications": "الإشعارات",
+    "help": "المساعدة والدعم",
+    "profile": "الملف الشخصي",
+    "settings": "الإعدادات"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "markAllRead": "تحديد الكل كمقروء",
+    "noNotifications": "لا توجد إشعارات",
+    "noNotificationsDesc": "أنت محدث! لا توجد إشعارات جديدة.",
+    "viewAll": "عرض جميع الإشعارات",
+    "refresh": "تحديث",
+    "filter": "تصفية",
+    "search": "البحث في الإشعارات...",
+    "filterBy": "تصفية حسب",
+    "sortBy": "ترتيب حسب",
+    "priority": "الأولوية",
+    "type": "النوع",
+    "status": "الحالة",
+    "dateRange": "النطاق الزمني",
+    "showRead": "إظهار المقروءة",
+    "showUnread": "إظهار غير المقروءة",
+    "showAll": "إظهار الكل",
+    "deleteSelected": "حذف المحدد",
+    "markAsRead": "تحديد كمقروء",
+    "markAsUnread": "تحديد كغير مقروء",
+    "delete": "حذف",
+    "preferences": "تفضيلات الإشعارات",
+    "settings": "الإعدادات",
+    "emailNotifications": "إشعارات البريد الإلكتروني",
+    "websocketNotifications": "الإشعارات الفورية",
+    "quietHours": "ساعات الصمت",
+    "language": "لغة الإشعارات",
+    "timezone": "المنطقة الزمنية",
+    "types": {
+      "survey_assigned": "تم تكليف استطلاع",
+      "survey_completed": "تم إكمال الاستطلاع",
+      "survey_shared": "تم مشاركة الاستطلاع",
+      "survey_updated": "تم تحديث الاستطلاع",
+      "survey_deleted": "تم حذف الاستطلاع",
+      "admin_message": "رسالة من الإدارة",
+      "system_alert": "تنبيه النظام",
+      "user_mention": "إشارة المستخدم",
+      "group_invitation": "دعوة المجموعة",
+      "response_received": "تم استلام الرد"
+    },
+    "priorities": {
+      "low": "منخفض",
+      "normal": "عادي",
+      "high": "عالي",
+      "urgent": "عاجل"
+    },
+    "time": {
+      "justNow": "الآن",
+      "minutesAgo": "دقيقة مضت",
+      "hourAgo": "ساعة مضت",
+      "hoursAgo": "ساعات مضت",
+      "dayAgo": "يوم مضى",
+      "daysAgo": "أيام مضت"
+    },
+    "actions": {
+      "markAllRead": "تحديد جميع الإشعارات كمقروءة",
+      "bulkDelete": "حذف الإشعارات المحددة",
+      "refresh": "تحديث الإشعارات",
+      "goToSurvey": "الذهاب إلى الاستطلاع",
+      "viewDetails": "عرض التفاصيل"
+    },
+    "stats": {
+      "total": "إجمالي الإشعارات",
+      "unread": "غير مقروء",
+      "recent": "الحديث (7 أيام)"
+    }
+  },
+  "welcome": {
+    "heroTitle": "WPC | WeaponpowerCloud",
+    "heroDescription": "استمتع بالجيل القادم من الأنظمة السحابية الآمنة المصممة للتميز العسكري والعمليات الاستراتيجية. توفر منصتنا أماناً لا مثيل له، واستخبارات في الوقت الفعلي، وقدرات تعاون سلسة للمنظمات الدفاعية في جميع أنحاء العالم.",
+    "greeting": "مرحباً بك في",
+    "staticText": "WPC WeaponPowerCloud", 
+    "animatedTexts": {
+      "innovation": "الابتكار",
+      "security": "الأمان",
+      "cloudPower": "القوة السحابية", 
+      "excellence": "التميز"
+    },
+    "servicesTitle": "خدماتنا",
+    "servicesSubtitle": "حلول شاملة مصممة لتلبية احتياجات عملك",
+    "services": {
+      "security": {
+        "title": "الأمان",
+        "description": "احمِ بياناتك الحساسة بالتشفير العسكري، وضوابط الوصول القائمة على الأدوار، وسجلات التدقيق، كل ذلك مستضاف في سحابتك الخاصة."
+      },
+      "fastUpload": {
+        "title": "رفع الملفات السريع",
+        "description": "استفد من بروتوكولات النقل المحسنة والتدفقات المتوازية للرفع السريع، حتى على الشبكات عالية الكمون أو منخفضة النطاق الترددي."
+      },
+      "easyShare": {
+        "title": "مشاركة الملفات الكبيرة بسهولة",
+        "description": "شارك الملفات من أي حجم بسلاسة داخل مؤسستك - بدون حدود طرف ثالث - مع أذونات مفصلة وإشعارات في الوقت الفعلي."
+      },
+      "dataManagement": {
+        "title": "إدارة البيانات",
+        "description": "نظم وأدر ملفاتك بتصنيف متقدم ووسم وقدرات بحث مدعومة برؤى مدفوعة بالذكاء الاصطناعي."
+      },
+      "realTimeSync": {
+        "title": "المزامنة في الوقت الفعلي",
+        "description": "حافظ على مزامنة ملفاتك عبر جميع الأجهزة والمنصات مع حل التعارض التلقائي والتحكم في الإصدار."
+      },
+      "analytics": {
+        "title": "التحليلات والرؤى",
+        "description": "راقب استخدام الملفات وأنماط الوصول ومقاييس التخزين مع التحليلات الشاملة ولوحات التقارير التفصيلية."
+      }
+    },
+    "latestNews": "آخر الأخبار والتحديثات",
+    "readMore": "اقرأ المزيد",
+    "slideIndicator": "انتقل إلى الشريحة",
+    "news": {
+      "news1": {
+        "date": "20 ديسمبر 2024",
+        "category": "الأمان",
+        "title": "تم نشر بروتوكول التشفير المحسن",
+        "excerpt": "يقدم تحديث الأمان الأخير بروتوكولات التشفير الكمي العسكرية، مما يضمن حماية بيانات غير مسبوقة لجميع الاتصالات الدفاعية."
+      },
+      "news2": {
+        "date": "18 ديسمبر 2024",
+        "category": "ميزة",
+        "title": "إطلاق لوحة معلومات الاستخبارات في الوقت الفعلي",
+        "excerpt": "الوصول إلى بيانات الاستخبارات الحيوية من خلال لوحة المعلومات الجديدة في الوقت الفعلي، والتي تتميز بقدرات التحليل المتقدم والنمذجة التنبؤية."
+      },
+      "news3": {
+        "date": "15 ديسمبر 2024",
+        "category": "النظام",
+        "title": "توسيع البنية التحتية العالمية",
+        "excerpt": "تعمل WeaponpowerCloud الآن عبر 15 مركز بيانات آمن في جميع أنحاء العالم، مما يوفر وصولاً أسرع وتحسين التكرار للعمليات الحيوية."
+      }
+    },
+    "features": {
+      "security": {
+        "title": "أمان أكثر",
+        "description": "التشفير العسكري المتقدم وبروتوكولات الأمان متعددة الطبقات تحمي بياناتك الأكثر حساسية مع خوارزميات مقاومة للكم وهندسة عدم الثقة."
+      },
+      "sharing": {
+        "title": "سهولة المشاركة",
+        "description": "تعاون بسلاسة مع الموظفين المخولين من خلال القنوات الآمنة والاتصالات المشفرة وضوابط الأذونات المفصلة المصممة للعمليات الدفاعية."
+      },
+      "upload": {
+        "title": "رفع الملفات الكبيرة بسرعة",
+        "description": "نقل مجموعات البيانات الضخمة وتقارير الاستخبارات والوثائق التكتيكية بسرعة البرق مع تقنية الضغط المحسنة والرفع المتوازي."
+      }
+    }
+  },
+  "control": {
+    "title": "لوحة التحكم",
+    "subtitle": "إدارة جميع عناصر التحكم والإعدادات النظام",
+    "backToControlPanel": "العودة إلى لوحة التحكم",
+    "newsManagement": {
+      "title": "لوحة التحكم في إدارة الأخبار",
+      "subtitle": "إدارة أخبار الشريط المتحرك وأخبار البطاقات والإنجازات"
+    },
+    "refresh": "تحديث البيانات",
+    "loading": "جارٍ التحميل...",
+    "confirmClose": "لديك تغييرات غير محفوظة. هل أنت متأكد من رغبتك في الإغلاق؟",
+    "confirmDelete": "هل أنت متأكد من رغبتك في حذف هذا العنصر؟",
+    "modules": {
+      "news": {
+        "title": "إدارة الأخبار",
+        "description": "إدارة المقالات الإخبارية والشريط المتحرك والمحتوى",
+        "button": "إدارة الأخبار"
+      },
+      "survey": {
+        "title": "إدارة الاستطلاعات",
+        "description": "إنشاء وإدارة الاستطلاعات والاستفتاءات",
+        "button": "إدارة الاستطلاعات",
+        "comingSoon": "قريباً"
+      },
+      "users": {
+        "title": "إدارة المستخدمين",
+        "description": "إدارة حسابات المستخدمين والصلاحيات والمجموعات",
+        "button": "إدارة المستخدمين"
+      },
+      "analytics": {
+        "title": "إدارة التحليلات",
+        "description": "تكوين التحليلات والتقارير",
+        "button": "إعدادات التحليلات",
+        "comingSoon": "قريباً"
+      },
+      "settings": {
+        "title": "إعدادات النظام",
+        "description": "تكوين الإعدادات العامة للنظام",
+        "button": "إعدادات النظام",
+        "comingSoon": "قريباً"
+      },
+      "backup": {
+        "title": "النسخ الاحتياطي والاستعادة",
+        "description": "إدارة النسخ الاحتياطي واستعادة البيانات",
+        "button": "مركز النسخ الاحتياطي",
+        "comingSoon": "قريباً"
+      }
+    },
+    "stats": {
+      "modules": "وحدات التحكم",
+      "active": "نشط",
+      "coming": "قريباً"
+    },
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "superAdminOnly": "متاح فقط للمسؤول الأعلى"
+    },
+    "quickActions": {
+      "title": "إجراءات سريعة",
+      "subtitle": "إجراءات التحكم المستخدمة بشكل شائع",
+      "addNews": "إضافة خبر",
+      "createSurvey": "إنشاء استطلاع",
+      "backup": "نسخ احتياطي للبيانات"
+    },
+    "tabs": {
+      "slider": "أخبار الشريط المتحرك",
+      "cards": "أخبار البطاقات",
+      "achievements": "الإنجازات"
+    },
+    "slider": {
+      "title": "إدارة أخبار الشريط المتحرك",
+      "description": "إدارة عناصر الشريط المتحرك/البانر للصفحة الرئيسية",
+      "create": "إضافة خبر شريط متحرك",
+      "empty": "لا توجد أخبار في الشريط المتحرك. أنشئ أول خبر!"
+    },
+    "cards": {
+      "title": "إدارة أخبار البطاقات",
+      "description": "إدارة المقالات الإخبارية الرئيسية والبطاقات",
+      "create": "إضافة خبر بطاقة",
+      "empty": "لا توجد أخبار بطاقات. أنشئ أول خبر!"
+    },
+    "achievements": {
+      "title": "إدارة الإنجازات",
+      "description": "إدارة الإنجازات والمنجزات",
+      "create": "إضافة إنجاز",
+      "empty": "لا توجد إنجازات. أنشئ أول إنجاز!"
+    },
+    "modal": {
+      "create": "إنشاء",
+      "edit": "تحرير",
+      "save": "حفظ التغييرات",
+      "cancel": "إلغاء"
+    },
+    "form": {
+      "titleArabic": "العنوان (العربية)",
+      "titleArabicPlaceholder": "أدخل العنوان باللغة العربية",
+      "titleEnglish": "العنوان (الإنجليزية)",
+      "titleEnglishPlaceholder": "أدخل العنوان باللغة الإنجليزية",
+      "description": "الوصف",
+      "descriptionPlaceholder": "أدخل الوصف",
+      "category": "الفئة",
+      "priority": "الأولوية",
+      "priorityPlaceholder": "أدخل الأولوية (1-100)",
+      "displayDuration": "مدة العرض (بالثواني)",
+      "durationPlaceholder": "أدخل مدة العرض بالثواني",
+      "date": "تاريخ المقال",
+      "achievementDate": "تاريخ الإنجاز",
+      "articleDate": "تاريخ المقال",
+      "featured": "مميز",
+      "active": "نشط",
+      "mainImage": "الصورة الرئيسية",
+      "imageHelp": "الصيغ المدعومة: JPEG, PNG, GIF, WebP. الحد الأقصى للحجم: 10MB",
+      "dragDropImage": "اسحب وأفلت الصورة أو اضغط للاستعراض",
+      "supportedFormats": "مدعوم: JPG, PNG, GIF (الحد الأقصى: 5 ميجابايت)",
+      "changeImage": "تغيير",
+      "removeImage": "إزالة",
+      "create": "إنشاء",
+      "update": "تحديث"
+    },
+    "categories": {
+      "general": "عام",
+      "news": "أخبار",
+      "military": "عسكري",
+      "technology": "تكنولوجيا",
+      "training": "تدريب",
+      "announcement": "إعلان",
+      "pressRelease": "بيان صحفي",
+      "event": "حدث",
+      "update": "تحديث",
+      "other": "أخرى"
+    },
+    "success": {
+      "sliderCreated": "تم إنشاء خبر الشريط المتحرك بنجاح",
+      "sliderUpdated": "تم تحديث خبر الشريط المتحرك بنجاح",
+      "sliderDeleted": "تم حذف خبر الشريط المتحرك بنجاح",
+      "cardsCreated": "تم إنشاء خبر البطاقة بنجاح",
+      "cardsUpdated": "تم تحديث خبر البطاقة بنجاح",
+      "cardsDeleted": "تم حذف خبر البطاقة بنجاح",
+      "achievementsCreated": "تم إنشاء الإنجاز بنجاح",
+      "achievementsUpdated": "تم تحديث الإنجاز بنجاح",
+      "achievementsDeleted": "تم حذف الإنجاز بنجاح"
+    },
+    "errors": {
+      "titleArabicRequired": "العنوان باللغة العربية مطلوب",
+      "titleEnglishRequired": "العنوان باللغة الإنجليزية مطلوب",
+      "descriptionRequired": "الوصف مطلوب",
+      "priorityRange": "يجب أن تكون الأولوية بين 1 و 100",
+      "durationRange": "يجب أن تكون مدة العرض بين 3 و 30 ثانية",
+      "submitFailed": "فشل في إرسال النموذج",
+      "deleteFailed": "فشل في حذف العنصر"
+    }
+  },
+  "dashboard": {
+    "title": "لوحة التحكم القيادية",
+    "overview": "نظرة عامة على النظام",
+    "totalUsers": "إجمالي المستخدمين",
+    "topStorageUsers": "أكثر المستخدمين استخداماً للتخزين",
+    "privateFiles": "الملفات الخاصة",
+    "systemActivity": "نشاط النظام",
+    "storageUsage": "استخدام التخزين",
+    "fileSharing": "مشاركة الملفات",
+    "userActivity": "نشاط المستخدمين",
+    "analytics": "التحليلات والرؤى",
+    "week": "أسبوع",
+    "month": "شهر",
+    "year": "سنة",
+    "today": "اليوم",
+    "thisWeek": "هذا الأسبوع",
+    "thisMonth": "هذا الشهر",
+    "viewAll": "عرض الكل",
+    "users": "المستخدمين",
+    "files": "الملفات",
+    "shared": "مشارك",
+    "uploads": "التحميلات",
+    "downloads": "التنزيلات",
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "security": "حالة الأمان",
+    "operational": "تشغيلي",
+    "secure": "آمن",
+    "totalStorage": "إجمالي التخزين",
+    "usedStorage": "التخزين المستخدم",
+    "availableStorage": "التخزين المتاح",
+    "recentActivity": "النشاط الأخير",
+    "fileUploaded": "تم رفع ملف",
+    "fileShared": "تم مشاركة ملف",
+    "userRegistered": "تم تسجيل مستخدم",
+    "systemAlert": "تنبيه النظام",
+    "minutes": "دقائق مضت",
+    "hours": "ساعات مضت",
+    "days": "أيام مضت",
+    "gb": "جيجابايت",
+    "mb": "ميجابايت",
+    "kb": "كيلوبايت",
+    "bytes": "بايت"
+  },
+  "businessQuarters": {
+    "title": "الأرباع التجارية",
+    "quarter1": "الربع الأول",
+    "quarter2": "الربع الثاني",
+    "quarter3": "الربع الثالث",
+    "quarter4": "الربع الرابع",
+    "revenue": "الإيرادات",
+    "growth": "النمو",
+    "performance": "الأداء",
+    "metrics": "المقاييس",
+    "summary": "الملخص",
+    "details": "التفاصيل",
+    "comparison": "المقارنة",
+    "forecast": "التوقعات"
+  },
+  "projects": {
+    "title": "المشاريع",
+    "create": "إنشاء مشروع",
+    "edit": "تحرير المشروع",
+    "delete": "حذف المشروع",
+    "status": "الحالة",
+    "progress": "التقدم",
+    "deadline": "الموعد النهائي",
+    "team": "الفريق",
+    "budget": "الميزانية",
+    "description": "الوصف",
+    "files": "الملفات",
+    "comments": "التعليقات",
+    "history": "التاريخ",
+    "active": "نشط",
+    "completed": "مكتمل",
+    "onHold": "متوقف",
+    "cancelled": "ملغى"
+  },
+  "analytics": {
+    "title": "التحليلات",
+    "overview": "نظرة عامة",
+    "reports": "التقارير",
+    "metrics": "المقاييس",
+    "trends": "الاتجاهات",
+    "insights": "الرؤى",
+    "performance": "الأداء",
+    "efficiency": "الكفاءة",
+    "productivity": "الإنتاجية",
+    "quality": "الجودة",
+    "satisfaction": "الرضا",
+    "engagement": "المشاركة",
+    "conversion": "التحويل",
+    "retention": "الاحتفاظ"
+  },
+  "common": {
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
+    "create": "إنشاء",
+    "copy": "نسخ",
+    "saveChanges": "حفظ التغييرات",
+    "selectOption": "اختر خياراً",
+    "enter": "دخول",
+    "user": "المستخدم",
+    "services": "الخدمات",
+    "futureStartsHere": "المستقبل يبدأ هنا",
+    "lastUpdate": "آخر تحديث",
+    "refresh": "تحديث",
+    "retry": "إعادة المحاولة",
+    "goBack": "العودة",
+    "created": "تم الإنشاء",
+    "updated": "تم التحديث",
+    "documents": "المستندات",
+    "images": "الصور",
+    "videos": "الفيديوهات",
+    "others": "أخرى",
+    "blocked": "محاولات محجوبة",
+    "back": "رجوع",
+    "to": "إلى",
+    "notAvailable": "غير متوفر",
+    "yes": "نعم",
+    "no": "لا",
+    "pagination": {
+      "showing": "عرض",
+      "of": "من",
+      "previous": "السابق",
+      "next": "التالي"
+    }
+  },
+  "files": {
+    "title": "ملفاتي",
+    "storageUsed": "المساحة المستخدمة",
+    "storageLimit": "حد التخزين",
+    "uploadFiles": "رفع الملفات",
+    "dragDropFiles": "اسحب وأفلت الملفات هنا أو اضغط للاختيار",
+    "maxFileSize": "الحد الأقصى لحجم الملف: 100 ميجابايت",
+    "selectFiles": "اختيار الملفات",
+    "uploadProgress": "تقدم الرفع",
+    "uploading": "جارٍ الرفع...",
+    "uploadComplete": "تم الرفع بنجاح",
+    "uploadFailed": "فشل الرفع",
+    "fileName": "اسم الملف",
+    "fileSize": "الحجم",
+    "dateModified": "تاريخ التعديل",
+    "owner": "المالك",
+    "sharedWith": "مشارك مع",
+    "actions": "الإجراءات",
+    "download": "تحميل",
+    "share": "مشاركة",
+    "delete": "حذف",
+    "rename": "إعادة تسمية",
+    "details": "التفاصيل",
+    "preview": "معاينة",
+    "shareFile": "مشاركة الملف",
+    "shareWithUser": "مشاركة مع مستخدم",
+    "selectUser": "اختيار مستخدم",
+    "sharePermissions": "الصلاحيات",
+    "viewOnly": "عرض فقط",
+    "canDownload": "يمكن التحميل",
+    "edit": "يمكن التعديل",
+    "fullAccess": "وصول كامل",
+    "shareButton": "مشاركة",
+    "cancelShare": "إلغاء",
+    "stopSharing": "إيقاف المشاركة",
+    "sharedFiles": "الملفات المشتركة",
+    "myFiles": "ملفاتي",
+    "recentFiles": "الملفات الحديثة",
+    "noFiles": "لا توجد ملفات",
+    "createFolder": "إنشاء مجلد",
+    "folderName": "اسم المجلد",
+    "create": "إنشاء",
+    "cancel": "إلغاء",
+    "searching": "جارٍ البحث...",
+    "searchPlaceholder": "البحث في الملفات والمجلدات...",
+    "sortBy": "ترتيب حسب",
+    "sortName": "الاسم",
+    "sortDate": "التاريخ",
+    "sortSize": "الحجم",
+    "sortType": "النوع",
+    "viewGrid": "عرض شبكي",
+    "viewList": "عرض قائمة",
+    "selectAll": "تحديد الكل",
+    "selectedItems": "عنصر محدد",
+    "deleteSelected": "حذف المحدد",
+    "shareSelected": "مشاركة المحدد",
+    "moveSelected": "نقل المحدد",
+    "copySelected": "نسخ المحدد"
+  },
+  "news": {
+    "title": "الأخبار والتحديثات",
+    "subtitle": "ابق على اطلاع بآخر التطورات والإعلانات",
+    "topNews": "الأخبار العاجلة",
+    "announcements": "إعلانات",
+    "achievements": "الإنجازات الأخيرة",
+    "loadMore": "تحميل المزيد",
+    "types": {
+      "maintenance": "صيانة",
+      "security": "أمن",
+      "feature": "ميزة جديدة",
+      "training": "تدريب",
+      "general": "عام",
+      "urgent": "عاجل"
+    },
+    "categories": {
+      "technology": "التكنولوجيا",
+      "partnership": "الشراكة",
+      "awards": "الجوائز",
+      "innovation": "الابتكار",
+      "security": "الأمن",
+      "training": "التدريب"
+    },
+    "actions": {
+      "readMore": "اقرأ المزيد",
+      "viewDetails": "عرض التفاصيل",
+      "share": "مشاركة",
+      "bookmark": "إضافة للمفضلة"
+    },
+    "meta": {
+      "publishedOn": "نُشر في",
+      "by": "بواسطة",
+      "category": "الفئة",
+      "readTime": "دقيقة قراءة",
+      "views": "مشاهدة"
+    }
+  },
+  "survey": {
+    "title": "إدارة الاستطلاعات",
+    "subtitle": "إنشاء وإدارة الاستطلاعات والاستفتاءات",
+    "backToSurveys": "العودة إلى الاستطلاعات",
+    "dashboard": {
+      "title": "لوحة قيادة الاستطلاعات",
+      "subtitle": "إدارة وتتبع جميع الاستطلاعات",
+      "totalSurveys": "إجمالي الاستطلاعات",
+      "totalResponses": "إجمالي الردود",
+      "activeSurveys": "الاستطلاعات النشطة",
+      "averageCompletion": "متوسط الإكمال"
+    },
+    "list": {
+      "title": "العنوان",
+      "stats": "الإحصائيات",
+      "status": "الحالة",
+      "lastUpdated": "آخر تحديث",
+      "actions": "الإجراءات",
+      "createSurvey": "إنشاء استطلاع جديد",
+      "searchPlaceholder": "البحث في الاستطلاعات...",
+      "refreshData": "تحديث البيانات",
+      "selectedItems": "عنصر محدد",
+      "noSurveys": "لا توجد استطلاعات"
+    },
+    "pagination": {
+      "showing": "عرض",
+      "of": "من",
+      "items": "عنصر",
+      "previous": "السابق",
+      "next": "التالي",
+      "itemsPerPage": "عدد العناصر في الصفحة"
+    },
+    "sorting": {
+      "newest": "الأحدث",
+      "oldest": "الأقدم",
+      "titleAZ": "العنوان أ-ي",
+      "titleZA": "العنوان ي-أ",
+      "mostResponses": "الأكثر رداً",
+      "lastUpdated": "آخر تحديث"
+    },
+    "filters": {
+      "all": "جميع الاستطلاعات",
+      "active": "النشطة",
+      "inactive": "غير النشطة",
+      "private": "الخاصة",
+      "auth": "تتطلب تسجيل دخول",
+      "public": "العامة",
+      "locked": "مؤمنة"
+    },
+    "shared": {
+      "title": "الاستطلاعات المشتركة",
+      "subtitle": "الاستطلاعات التي تمت مشاركتها معك من قبل مستخدمين آخرين",
+      "overview": {
+        "totalShared": "إجمالي الاستطلاعات",
+        "authSurveys": "الاستطلاعات العامة",
+        "privateShared": "الاستطلاعات الخاصة",
+        "available": "متاحة للإجابة"
+      },
+      "filters": {
+        "allShared": "جميع المشتركة",
+        "authOnly": "الوصول العام فقط",
+        "publicOnly": "الوصول العام فقط",
+        "privateOnly": "المشتركة الخاصة فقط",
+        "groupsOnly": "المجموعات فقط",
+        "activeOnly": "النشطة فقط",
+        "unlockedOnly": "غير المؤمنة فقط"
+      },
+      "accessType": {
+        "auth": "وصول المصدقين",
+        "shared": "مشتركة خاصة",
+        "public": "وصول عام",
+        "private": "وصول خاص",
+        "groups": "وصول المجموعات"
+      },
+      "reason": {
+        "auth": "وصول المصدقين",
+        "public": "وصول عام",
+        "private": "وصول خاص",
+        "groups": "وصول المجموعات"
+      },
+      "card": {
+        "createdBy": "أنشئ بواسطة",
+        "questionsCount": "أسئلة",
+        "estimatedTime": "دقيقة تقديرية",
+        "canSubmit": "متاح للإرسال",
+        "hasSubmitted": "تم الإرسال بالفعل",
+        "isLocked": "الاستطلاع مؤمن",
+        "isInactive": "الاستطلاع غير نشط",
+        "isScheduled": "الاستطلاع مجدول",
+        "takeNow": "بدء الاستطلاع",
+        "viewOnly": "عرض فقط",
+        "alreadySubmitted": "مكتمل"
+      },
+      "search": {
+        "placeholder": "البحث في الاستطلاعات المشتركة...",
+        "noResults": "لم يتم العثور على استطلاعات مشتركة",
+        "emptyState": "لم يتم مشاركة أي استطلاعات معك بعد"
+      },
+      "errors": {
+        "loadFailed": "فشل في تحميل الاستطلاعات المشتركة",
+        "authRequired": "مطلوب المصادقة",
+        "permissionDenied": "تم رفض الإذن"
+      }
+    },
+    "auth": {
+      "loading": "جاري تحميل الاستطلاع...",
+      "accessDenied": "تم رفض الوصول",
+      "error": "خطأ",
+      "questionsCount": "أسئلة",
+      "estimatedMinutes": "دقائق متوقعة",
+      "authenticatedSurvey": "استطلاع محمي",
+      "welcomeTitle": "أهلاً وسهلاً بك في استطلاعنا",
+      "welcomeText": "نقدر وقتك وآرائك القيمة. إجاباتك ستساعدنا في تحسين خدماتنا وتطوير تجربة أفضل للجميع. الاستطلاع سهل وسريع، وجميع إجاباتك محفوظة بسرية تامة.",
+      "questionsPreview": "معاينة الأسئلة",
+      "moreQuestions": "أسئلة إضافية",
+      "startSurvey": "بدء الاستطلاع",
+      "pleaseAnswer": "يرجى الإجابة على الأسئلة التالية بعناية",
+      "errors": {
+        "noSurveyId": "معرف الاستطلاع غير مُتاح",
+        "surveyNotFound": "الاستطلاع غير موجود",
+        "accessDenied": "ليس لديك صلاحية للوصول إلى هذا الاستطلاع",
+        "authenticationRequired": "مطلوب المصادقة للوصول إلى هذا الاستطلاع",
+        "loadFailed": "فشل في تحميل الاستطلاع",
+        "submitFailed": "فشل في إرسال إجابات الاستطلاع"
+      }
+    },
+    "card": {
+      "edit": "تحرير",
+      "share": "مشاركة",
+      "shareLink": "مشاركة الرابط",
+      "viewResponses": "عرض الردود",
+      "clone": "تكرار",
+      "delete": "حذف",
+      "responses": "ردود",
+      "createdBy": "أنشئ بواسطة",
+      "manageAccess": "إدارة الوصول"
+    },
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "draft": "مسودة",
+      "completed": "مكتمل",
+      "paused": "متوقف مؤقتاً",
+      "private": "خاص",
+      "auth": "للمستخدمين المسجلين",
+      "public": "عام",
+      "groups": "للمجموعات"
+    },
+    "actions": {
+      "create": "إنشاء استطلاع جديد",
+      "edit": "تحرير الاستطلاع",
+      "view": "عرض الاستطلاع",
+      "delete": "حذف الاستطلاع",
+      "pause": "إيقاف مؤقت",
+      "resume": "استئناف",
+      "duplicate": "تكرار",
+      "share": "مشاركة",
+      "export": "تصدير النتائج",
+      "preview": "معاينة"
+    },
+    "bulk": {
+      "operations": {
+        "activate": "تفعيل",
+        "deactivate": "إلغاء تفعيل",
+        "lock": "قفل",
+        "delete": "حذف"
+      },
+      "confirmations": {
+        "delete": "هل أنت متأكد من حذف {count} استطلاع؟"
+      }
+    },
+    "analytics": {
+      "title": "تحليلات الاستطلاع",
+      "dashboard": "لوحة التحليلات",
+      "loadingAnalytics": "جاري تحميل التحليلات...",
+      "loadError": "فشل في تحميل التحليلات",
+      "noData": "لا توجد بيانات تحليلية",
+      "noDataDescription": "لا توجد بيانات متاحة لهذا الاستطلاع حتى الآن. تحقق مرة أخرى بمجرد إرسال الردود.",
+      "textualAnalysis": "تحليل الردود النصية",
+      "avgWords": "متوسط الكلمات",
+      "avgChars": "متوسط الأحرف",
+      "responses": "الردود",
+      "responseLengthDistribution": "توزيع أطوال الردود",
+      "wordCountAnalysis": "تحليل عدد الكلمات",
+      "averageWords": "متوسط الكلمات",
+      "averageChars": "متوسط الأحرف",
+      "perResponse": "لكل رد",
+      "verbosityLevel": "تفصيل الرد",
+      "engagementScore": "نقاط المشاركة",
+      "responseQuality": "جودة الردود",
+      "detailLevel": "مستوى التفصيل",
+      "consistencyLevel": "اتساق الردود",
+      "participation": "معدل المشاركة",
+      "providedText": "قدم ردود نصية",
+      "lengthDistribution": "توزيع الطول",
+      "lengths": {
+        "short": "قصير",
+        "medium": "متوسط",
+        "long": "طويل",
+        "shortDesc": "ردود مختصرة (1-10 كلمات)",
+        "mediumDesc": "ردود عادية (11-50 كلمة)",
+        "longDesc": "ردود مفصلة (50+ كلمة)"
+      },
+      "verbosityTypes": {
+        "brief": "مختصر",
+        "moderate": "معتدل",
+        "detailed": "مفصل",
+        "extensive": "شامل"
+      },
+      "engagementLevels": {
+        "low": "ردود منخفضة المشاركة",
+        "moderate": "مشاركة معتدلة",
+        "high": "ردود عالية المشاركة"
+      },
+      "detailTypes": {
+        "minimal": "تفصيل أدنى",
+        "basic": "تفصيل أساسي",
+        "detailed": "مفصل",
+        "comprehensive": "شامل"
+      },
+      "consistencyTypes": {
+        "high": "متسق للغاية",
+        "moderate": "متسق نوعاً ما",
+        "low": "ردود متنوعة"
+      },
+      "wordsPerResponse": "كلمة لكل رد",
+      "charsPerResponse": "حرف لكل رد",
+      "inSameCategory": "في نفس فئة الرد",
+      "unknown": "غير معروف"
+    },
+    "form": {
+      "create": "إنشاء استطلاع",
+      "edit": "تحرير الاستطلاع",
+      "update": "تحديث الاستطلاع",
+      "submit": "إرسال الاستطلاع",
+      "basicInfo": "المعلومات الأساسية",
+      "title": "عنوان الاستطلاع",
+      "titlePlaceholder": "أدخل عنوان الاستطلاع",
+      "description": "وصف الاستطلاع",
+      "descriptionPlaceholder": "أدخل وصف الاستطلاع",
+      "visibility": "مستوى الرؤية",
+      "visibilityDescription": "حدد من يمكنه الوصول إلى هذا الاستطلاع",
+      "default": "افتراضي",
+      "scheduling": "الجدولة",
+      "schedulingDescription": "تحكم في وقت نشاط استطلاعك",
+      "startDate": "تاريخ البداية",
+      "startDateHelp": "سيبدأ الاستطلاع في هذا التاريخ/الوقت. اتركه فارغاً للبدء فوراً.",
+      "endDate": "تاريخ النهاية",
+      "endDateHelp": "سيتوقف الاستطلاع عن قبول الردود بعد هذا التاريخ/الوقت. اتركه فارغاً للعمل إلى أجل غير مسمى.",
+      "settings": "إعدادات الاستطلاع",
+      "isActive": "الاستطلاع نشط",
+      "isActiveDescription": "حدد ما إذا كان الاستطلاع متاحاً للردود",
+      "allowAnonymous": "السماح بالردود المجهولة",
+      "allowAnonymousDescription": "السماح للمستخدمين بالرد دون تسجيل الدخول",
+      "requireCompletion": "إجبار الإكمال",
+      "requireCompletionDescription": "يجب على المستخدمين إكمال جميع الأسئلة المطلوبة",
+      "showProgressBar": "إظهار شريط التقدم",
+      "showProgressBarDescription": "إظهار شريط التقدم للمستخدمين أثناء الإجابة"
+    },
+    "visibility": {
+      "private": "خاص",
+      "privateDescription": "مرئي للمالك والأشخاص المدعوين فقط",
+      "auth": "للمستخدمين المسجلين",
+      "authDescription": "مرئي لجميع المستخدمين المسجلين في النظام",
+      "public": "عام",
+      "publicDescription": "مرئي للجميع، حتى الزوار غير المسجلين"
+    },
+    "questions": {
+      "title": "الأسئلة",
+      "addQuestion": "إضافة سؤال",
+      "editQuestion": "تحرير السؤال",
+      "questionText": "نص السؤال",
+      "questionTextPlaceholder": "أدخل سؤالك هنا",
+      "questionType": "نوع السؤال",
+      "options": "الخيارات",
+      "addOption": "إضافة خيار",
+      "optionPlaceholder": "أدخل نص الخيار",
+      "dragToReorder": "اسحب لإعادة الترتيب",
+      "isRequired": "السؤال مطلوب",
+      "isRequiredDescription": "يجب على المستجيبين الإجابة على هذا السؤال",
+      "save": "حفظ السؤال",
+      "noQuestions": "لا توجد أسئلة. أضف سؤالك الأول!",
+      "ratingSettings": "إعدادات مقياس التقييم",
+      "minValue": "القيمة الدنيا",
+      "maxValue": "القيمة العليا",
+      "preview": "المعاينة",
+      "shortAnswerPlaceholder": "إجابة قصيرة",
+      "longAnswerPlaceholder": "إجابة طويلة",
+      "yes": "نعم",
+      "no": "لا",
+      "optionDefaultText": "الخيار"
+    },
+    "questionTypes": {
+      "text": "نص قصير",
+      "textarea": "نص طويل",
+      "single_choice": "اختيار واحد",
+      "multiple_choice": "اختيارات متعددة",
+      "rating": "مقياس التقييم",
+      "yes_no": "نعم/لا"
+    },
+    "required": "*",
+    "requiredField": "هذا الحقل مطلوب",
+    "progress": {
+      "currentQuestion": "السؤال"
+    },
+    "placeholders": {
+      "shortText": "اكتب إجابتك هنا...",
+      "longText": "اكتب إجابتك المفصلة هنا... يمكنك كتابة عدة أسطر"
+    },
+    "singleChoice": {
+      "instruction": "اختر إجابة واحدة:"
+    },
+    "multipleChoice": {
+      "instruction": "يمكنك اختيار أكثر من إجابة:"
+    },
+    "rating": {
+      "instruction": "قيم من 1 إلى 5:",
+      "poor": "ضعيف",
+      "excellent": "ممتاز"
+    },
+    "yesNo": {
+      "instruction": "اختر إجابتك:",
+      "yes": "نعم",
+      "no": "لا"
+    },
+    "navigation": {
+      "previous": "السابق",
+      "next": "التالي"
+    },
+    "submit": "إرسال الاستطلاع",
+    "submitting": "جاري الإرسال...",
+    "success": {
+      "title": "شكراً لمشاركتك!",
+      "message": "تم إرسال إجاباتك بنجاح. نقدر وقتك وملاحظاتك.",
+      "backToSurveys": "العودة إلى الاستطلاعات"
+    },
+    "access": {
+      "title": "إدارة الوصول",
+      "level": "مستوى الوصول",
+      "public": {
+        "title": "عام",
+        "description": "يمكن للجميع الوصول إلى هذا الاستطلاع"
+      },
+      "authenticated": {
+        "title": "للمستخدمين المسجلين",
+        "description": "يمكن للمستخدمين المسجلين فقط الوصول"
+      },
+      "private": {
+        "title": "خاص",
+        "description": "يمكن للمالك والأشخاص المدعوين فقط الوصول"
+      },
+      "generateLink": "إنشاء رابط",
+      "regenerateLink": "إعادة إنشاء الرابط",
+      "revokeLink": "إلغاء الرابط",
+      "noPublicLink": "لا يوجد رابط عام حالياً",
+      "searchUsers": "البحث عن المستخدمين",
+      "sharedWith": "مشارك مع",
+      "noUsersSelected": "لم يتم تحديد مستخدمين",
+      "removeUser": "إزالة المستخدم",
+      "inviteByEmail": "الدعوة بالبريد الإلكتروني",
+      "emailPlaceholder": "أدخل عنوان البريد الإلكتروني",
+      "saveChanges": "حفظ التغييرات",
+      "confirmRegenerateLink": "هل أنت متأكد من رغبتك في إعادة إنشاء الرابط؟",
+      "confirmRevokeLink": "هل أنت متأكد من رغبتك في إلغاء الرابط؟"
+    },
+    "errors": {
+      "optionsMinimum": "يجب أن يحتوي السؤال على خيارين على الأقل",
+      "questionAddFailed": "فشل في إضافة السؤال"
+    },
+    "responses": {
+      "title": "ردود الاستطلاع",
+      "loading": "جاري تحميل الردود...",
+      "error": "خطأ في تحميل الردود",
+      "retry": "إعادة المحاولة",
+      "totalResponses": "إجمالي الردود",
+      "completed": "مكتمل",
+      "incomplete": "غير مكتمل",
+      "completionRate": "معدل الإكمال",
+      "noResponses": "لا توجد ردود بعد",
+      "noResponsesDescription": "لم يتلق هذا الاستطلاع أي ردود بعد. شاركه لبدء جمع الردود.",
+      "searchPlaceholder": "البحث بواسطة البريد الإلكتروني للمجيب...",
+      "filterBy": "تصنيف حسب",
+      "sortBy": "ترتيب حسب",
+      "showAll": "عرض الكل",
+      "exportData": "تصدير البيانات",
+      "refreshData": "تحديث",
+      "downloadCSV": "تحميل CSV",
+      "downloadJSON": "تحميل JSON",
+      "exportAction": "تصدير الردود",
+      "exportTitle": "تصدير ردود الاستطلاع",
+      "exporting": "جاري تصدير الردود...",
+      "exportError": "فشل في تصدير الردود",
+      "exportSingle": "تصدير هذا الرد",
+      "viewDetails": "عرض التفاصيل",
+      "responseDetails": "تفاصيل الرد",
+      "answersProvided": "إجابات مقدمة",
+      "authenticatedUser": "مستخدم مسجل",
+      "anonymousUser": "مستخدم مجهول",
+      "respondent": "المجيب",
+      "submittedAt": "تم الإرسال في",
+      "status": "الحالة",
+      "ipAddress": "عنوان IP",
+      "answers": "الإجابات",
+      "noAnswer": "لم يتم تقديم إجابة",
+      "questionText": "السؤال",
+      "answerText": "الإجابة",
+      "submissionDate": "تاريخ الإرسال",
+      "responseId": "معرف الرد",
+      "surveyTitle": "عنوان الاستطلاع",
+      "includeHeaders": "تضمين العناوين",
+      "includeDateRange": "تضمين نطاق التاريخ",
+      "fromDate": "من تاريخ",
+      "toDate": "إلى تاريخ",
+      "generating": "جاري إنشاء التصدير...",
+      "close": "إغلاق",
+      "export": "تصدير",
+      "filters": {
+        "all": "جميع الردود",
+        "completed": "المكتملة فقط",
+        "incomplete": "غير المكتملة فقط",
+        "allRespondents": "جميع المجيبين",
+        "authenticated": "المستخدمين المسجلين",
+        "anonymous": "المستخدمين المجهولين"
+      },
+      "sorting": {
+        "newest": "الأحدث أولاً",
+        "oldest": "الأقدم أولاً"
+      },
+      "dateRange": {
+        "startDate": "تاريخ البداية",
+        "endDate": "تاريخ النهاية"
+      },
+      "exportOptions": {
+        "csv": "تنسيق CSV",
+        "csvDescription": "تصدير الردود كملف CSV لتحليل جداول البيانات",
+        "json": "تنسيق JSON",
+        "jsonDescription": "تصدير الردود كبيانات JSON لتكامل API",
+        "includeIncomplete": "تضمين الردود غير المكتملة",
+        "confirm": "تصدير الردود"
+      }
+    }
+  },
+  "surveys": {
+    "title": "الاستطلاعات",
+    "subtitle": "عرض والمشاركة في الاستطلاعات المتاحة",
+    "loading": "جاري تحميل الاستطلاعات...",
+    "noSurveys": "لا توجد استطلاعات متاحة",
+    "error": {
+      "title": "خطأ في تحميل الاستطلاعات",
+      "message": "فشل في تحميل الاستطلاعات. يرجى المحاولة مرة أخرى.",
+      "invalidToken": "الرمز المقدم غير صالح",
+      "expiredToken": "انتهت صلاحية الرمز الخاص بك",
+      "inactiveSurvey": "هذا الاستطلاع لم يعد نشطاً",
+      "retry": "إعادة المحاولة"
+    },
+    "tokenInput": {
+      "placeholder": "أدخل رمز الوصول للاستطلاع...",
+      "label": "رمز الوصول للاستطلاع",
+      "button": "تحميل الاستطلاعات",
+      "required": "الرمز مطلوب"
+    },
+    "surveyCard": {
+      "estimatedTime": "الوقت المقدر",
+      "minutes": "دقائق",
+      "questionsCount": "الأسئلة",
+      "question": "سؤال",
+      "questions": "أسئلة",
+      "createdBy": "أنشأه",
+      "createdAt": "أنشئ في",
+      "expiresAt": "ينتهي في",
+      "expired": "منتهي الصلاحية",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "takeSurvey": "خذ الاستطلاع",
+      "viewSurvey": "عرض الاستطلاع"
+    },
+    "permissions": {
+      "canSubmit": "يمكن إرسال الردود",
+      "canViewResults": "يمكن عرض النتائج",
+      "accessType": "نوع الوصول",
+      "token": "وصول بالرمز"
+    },
+    "status": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "expired": "منتهي الصلاحية"
+    }
+  },
+  "validation": {
+    "required": "هذا الحقل مطلوب",
+    "answerRequired": "يرجى الإجابة على هذا السؤال للمتابعة",
+    "titleRequired": "عنوان الاستطلاع مطلوب",
+    "titleTooLong": "عنوان الاستطلاع يجب أن يكون أقل من 200 حرف",
+    "descriptionTooLong": "وصف الاستطلاع يجب أن يكون أقل من 1000 حرف"
+  },
+  "userManagement": {
+    "title": "إدارة المستخدمين",
+    "subtitle": "إدارة المستخدمين والمجموعات والأذونات",
+    "dashboard": {
+      "title": "لوحة تحكم إدارة المستخدمين",
+      "totalUsers": "إجمالي المستخدمين",
+      "totalGroups": "إجمالي المجموعات",
+      "activeUsers": "المستخدمون النشطون",
+      "superAdmins": "المشرفون العامون",
+      "admins": "المديرون",
+      "regularUsers": "المستخدمون العاديون",
+      "recentActivity": "النشاط الأخير"
+    },
+  "users": {
+    "title": "المستخدمون",
+    "addUser": "إضافة مستخدم",
+    "headerTitle": "المستخدمون",
+    "headerSubtitle": "افحص كل المستخدمين وأضفهم وعدّل عليهم بسهولة من مكان واحد.",
+    "inviteUser": "دعوة مستخدم",
+      "searchUsers": "البحث عن المستخدمين...",
+      "noUsersFound": "لا توجد مستخدمون",
+      "selectedUsers": "المستخدمون المحددون",
+      "selectAll": "تحديد الكل",
+      "clearSelection": "إلغاء التحديد",
+      "bulkActions": "العمليات المجمعة",
+      "export": "تصدير",
+      "columns": {
+        "email": "البريد الإلكتروني",
+        "name": "الاسم",
+        "role": "نوع المستخدم",
+        "status": "الحالة",
+        "lastLogin": "آخر تسجيل دخول",
+        "dateJoined": "تاريخ الانضمام",
+        "actions": "الإجراءات"
+      },
+      "roles": {
+        "super_admin": "مشرف عام",
+        "admin": "مدير",
+        "user": "مستخدم"
+      },
+      "status": {
+        "active": "نشط",
+        "inactive": "غير نشط"
+      },
+      "actions": {
+        "view": "عرض",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "changeRole": "تغيير الدور",
+        "addToGroup": "إضافة إلى مجموعة",
+        "removeFromGroup": "إزالة من المجموعة",
+        "viewGroups": "عرض المجموعات",
+        "bulkDelete": "حذف جماعي"
+      }
+    },
+  "groups": {
+    "title": "المجموعات",
+    "addGroup": "إضافة مجموعة",
+    "headerTitle": "المجموعات",
+    "headerSubtitle": "رتب فرقك وخصص الأعضاء وتابع نشاط كل مجموعة بسهولة من مكان واحد.",
+    "searchGroups": "البحث عن المجموعات...",
+      "noGroupsFound": "لا توجد مجموعات",
+      "selectedGroups": "المجموعات المحددة",
+      "columns": {
+        "name": "الاسم",
+        "description": "الوصف",
+        "adminCount": "عدد المديرين",
+        "userCount": "عدد المستخدمين",
+        "createdAt": "تاريخ الإنشاء",
+        "actions": "الإجراءات"
+      },
+      "actions": {
+        "view": "عرض",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "addUsers": "إضافة مستخدمين",
+        "removeUsers": "إزالة مستخدمين",
+        "viewMembers": "عرض الأعضاء"
+      }
+    },
+    "modals": {
+      "user": {
+        "create": {
+          "title": "إضافة مستخدم جديد",
+          "subtitle": "إنشاء حساب مستخدم جديد"
+        },
+        "edit": {
+          "title": "تعديل المستخدم",
+          "subtitle": "تحديث معلومات المستخدم"
+        },
+        "view": {
+          "title": "تفاصيل المستخدم",
+          "subtitle": "عرض معلومات المستخدم"
+        },
+        "invite": {
+          "title": "دعوة مستخدم",
+          "subtitle": "إرسال دعوة لمستخدم جديد"
+        },
+        "resetPassword": {
+          "title": "إعادة تعيين كلمة مرور المستخدم"
+        },
+        "delete": {
+          "title": "حذف المستخدم",
+          "subtitle": "هل أنت متأكد من حذف هذا المستخدم؟",
+          "warning": "هذا الإجراء لا يمكن التراجع عنه"
+        }
+      },
+      "group": {
+        "create": {
+          "title": "إنشاء مجموعة جديدة",
+          "subtitle": "إضافة مجموعة جديدة للنظام"
+        },
+        "edit": {
+          "title": "تعديل المجموعة",
+          "subtitle": "تحديث معلومات المجموعة"
+        },
+        "view": {
+          "title": "تفاصيل المجموعة",
+          "subtitle": "عرض معلومات المجموعة وأعضائها"
+        },
+        "delete": {
+          "title": "حذف المجموعة",
+          "subtitle": "هل أنت متأكد من حذف هذه المجموعة؟",
+          "warning": "سيتم إزالة جميع المستخدمين من هذه المجموعة"
+        }
+      },
+      "bulkActions": {
+        "title": "العمليات المجمعة",
+        "subtitle": "تطبيق إجراءات على المستخدمين المحددين",
+        "addToGroup": "إضافة إلى مجموعة",
+        "removeFromGroup": "إزالة من مجموعة",
+        "changeRole": "تغيير الدور",
+        "bulkDelete": "حذف المستخدمين المحددين"
+      },
+      "addUsersToGroup": {
+        "title": "إضافة مستخدمين إلى المجموعة",
+        "selectUsers": "اختر المستخدمين",
+        "helpText": "اختر المستخدمين الذين تريد إضافتهم إلى هذه المجموعة",
+        "makeGroupAdmin": "جعل المستخدمين مديري مجموعة",
+        "selectedUsers": "مستخدم(مستخدمين) محدد",
+        "noAvailableUsers": "لا توجد مستخدمون متاحون للإضافة"
+      },
+      "changeRole": {
+        "title": "تغيير دور المستخدم",
+        "currentRole": "الدور الحالي",
+        "newRole": "الدور الجديد",
+        "selectRole": "اختر الدور...",
+        "descriptions": {
+          "user": "مستخدم عادي - صلاحيات محدودة للمشاهدة والاستخدام الأساسي",
+          "admin": "مدير - صلاحيات إدارة المجموعات والمستخدمين ضمن نطاقه",
+          "super_admin": "مشرف عام - صلاحيات كاملة على النظام"
+        },
+        "warnings": {
+          "demoteFromSuperAdmin": "تحذير: سيؤدي هذا إلى إزالة جميع الصلاحيات الإدارية العامة",
+          "promoteToSuperAdmin": "تحذير: سيحصل المستخدم على صلاحيات كاملة على النظام"
+        }
+      }
+    },
+    "forms": {
+      "user": {
+        "email": "البريد الإلكتروني",
+        "firstName": "الاسم الأول",
+        "lastName": "اسم العائلة",
+        "role": "نوع المستخدم",
+        "authType": "نوع المصادقة",
+        "authTypeRegular": "عادي (البريد الإلكتروني/كلمة المرور)",
+        "authTypeAzure": "Azure AD",
+        "password": "كلمة المرور",
+        "passwordPlaceholder": "أدخل كلمة مرور آمنة",
+        "showPassword": "إظهار كلمة المرور",
+        "hidePassword": "إخفاء كلمة المرور",
+        "groups": "المجموعات",
+        "isActive": "مستخدم نشط",
+        "makeGroupAdmin": "مدير المجموعة"
+      },
+      "group": {
+        "name": "اسم المجموعة",
+        "description": "الوصف",
+        "admins": "المديرون",
+        "selectAdmins": "اختر المديرين...",
+        "adminHelpText": "اختر المستخدمين الذين سيكونون مديرين لهذه المجموعة (مطلوب مدير واحد على الأقل)",
+        "selectedAdmins": "مدير(مديرين) محدد"
+      },
+      "search": {
+        "placeholder": "البحث...",
+        "byEmail": "بحث بالبريد الإلكتروني",
+        "byName": "بحث بالاسم",
+        "byRole": "بحث بالدور"
+      }
+    },
+    "filters": {
+      "all": "الكل",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "superAdmin": "مشرف عام",
+      "admin": "مدير",
+      "user": "مستخدم",
+      "hasAdmins": "لديها مديرون",
+      "noAdmins": "بدون مديرين",
+      "clear": "مسح المرشحات",
+      "apply": "تطبيق"
+    },
+    "sorting": {
+      "sortBy": "ترتيب حسب",
+      "email": "البريد الإلكتروني",
+      "name": "الاسم",
+      "role": "نوع المستخدم",
+      "dateJoined": "تاريخ الانضمام",
+      "lastLogin": "آخر تسجيل دخول",
+      "groupName": "اسم المجموعة",
+      "userCount": "عدد المستخدمين",
+      "createdAt": "تاريخ الإنشاء",
+      "ascending": "تصاعدي",
+      "descending": "تنازلي"
+    },
+    "pagination": {
+      "showing": "عرض",
+      "of": "من",
+      "results": "نتيجة",
+      "previous": "السابق",
+      "next": "التالي",
+      "first": "الأول",
+      "last": "الأخير"
+    },
+    "messages": {
+      "userCreated": "تم إنشاء المستخدم بنجاح",
+      "userUpdated": "تم تحديث المستخدم بنجاح",
+      "userDeleted": "تم حذف المستخدم بنجاح",
+      "userInvited": "تم إرسال الدعوة بنجاح",
+      "groupCreated": "تم إنشاء المجموعة بنجاح",
+      "groupUpdated": "تم تحديث المجموعة بنجاح",
+      "groupDeleted": "تم حذف المجموعة بنجاح",
+      "userAddedToGroup": "تم إضافة المستخدم إلى المجموعة",
+      "userRemovedFromGroup": "تم إزالة المستخدم من المجموعة",
+      "roleUpdated": "تم تحديث دور المستخدم",
+      "bulkActionCompleted": "تم تطبيق العملية المجمعة بنجاح",
+      "error": "حدث خطأ",
+      "permissionDenied": "ليس لديك صلاحية لهذا الإجراء",
+      "networkError": "خطأ في الشبكة",
+      "unknownError": "خطأ غير معروف",
+      "bulkDelete": {
+        "confirm": {
+          "title": "حذف المستخدمين المحددين؟",
+          "text": "هذا الإجراء لا يمكن التراجع عنه.",
+          "confirmButtonText": "تأكيد الحذف",
+          "cancelButtonText": "إلغاء",
+          "largeBatchWarning": "أنت على وشك حذف {{count}} مستخدمًا. يرجى التأكيد."
+        },
+        "results": {
+          "success": {
+            "title": "تم الحذف بنجاح",
+            "text": "اكتمل حذف المستخدمين.\nالإجمالي المطلوب: {{total}} • تم الحذف: {{success}} • فشل: {{failed}}",
+            "confirmButtonText": "حسنًا"
+          },
+          "partial": {
+            "title": "تم الحذف جزئيًا",
+            "text": "بعض المستخدمين لم يتم حذفهم.\nالإجمالي المطلوب: {{total}} • تم الحذف: {{success}} • فشل: {{failed}}\nتفاصيل الإخفاقات ستظهر في الجدول.",
+            "confirmButtonText": "عرض التفاصيل"
+          },
+          "badRequest": {
+            "title": "تعذر تنفيذ العملية",
+            "texts": {
+              "invalidData": "بيانات غير صالحة. يرجى التحقق من القائمة.",
+              "cannotDeleteSelf": "لا يمكنك حذف حسابك الشخصي.",
+              "noUsersDeleted": "لم يتم حذف أي مستخدم. تحقق من المعرفات.",
+              "cannotDeleteCurrentUser": "لا يمكن حذف الحساب الحالي",
+              "cannotDeleteCurrentUserDesc": "لا يُسمح بحذف حساب المستخدم الذي قام بتسجيل الدخول.",
+              "cannotDeleteLastSuperAdmin": "عملية مرفوضة",
+              "cannotDeleteLastSuperAdminDesc": "لا يمكن حذف آخر حساب مدير عام (Super Admin)."
+            },
+            "confirmButtonText": "فهمت"
+          },
+          "unauthorized": {
+            "title": "غير مصرح",
+            "text": "يرجى تسجيل الدخول بصلاحيات إدارية ثم المحاولة مرة أخرى.",
+            "confirmButtonText": "تسجيل الدخول"
+          },
+          "forbidden": {
+            "title": "صلاحيات غير كافية",
+            "text": "ليست لديك صلاحية تنفيذ هذا الإجراء.",
+            "confirmButtonText": "فهمت"
+          },
+          "serverError": {
+            "title": "خطأ غير متوقع",
+            "text": "حدث خطأ أثناء حذف المستخدمين. يرجى المحاولة لاحقًا.",
+            "confirmButtonText": "إعادة المحاولة"
+          }
+        }
+      },
+      "singleDelete": {
+        "confirm": {
+          "title": "تأكيد حذف المستخدم",
+          "text": "هل أنت متأكد من حذف المستخدم '{{email}}'؟ هذا الإجراء لا يمكن التراجع عنه.",
+          "confirmButtonText": "نعم، احذف المستخدم",
+          "cancelButtonText": "إلغاء"
+        },
+        "results": {
+          "success": {
+            "title": "تم حذف المستخدم بنجاح",
+            "text": "تم حذف المستخدم '{{email}}' بنجاح.",
+            "confirmButtonText": "موافق"
+          },
+          "error": {
+            "title": "فشل في حذف المستخدم",
+            "text": "حدث خطأ أثناء حذف المستخدم. يرجى المحاولة مرة أخرى لاحقاً.",
+            "confirmButtonText": "موافق"
+          }
+        }
+      },
+      "resetPassword": {
+        "success": {
+          "title": "تم إعادة تعيين كلمة المرور بنجاح",
+          "text": "تم إعادة تعيين كلمة المرور للمستخدم '{{email}}' بنجاح."
+        },
+        "error": {
+          "title": "فشل في إعادة تعيين كلمة المرور",
+          "text": "حدث خطأ أثناء إعادة تعيين كلمة المرور للمستخدم. يرجى المحاولة مرة أخرى لاحقاً.",
+          "userNotFound": "المستخدم غير موجود أو غير متاح.",
+          "forbidden": {
+            "title": "تم رفض الإذن",
+            "text": "ليس لديك صلاحية لإعادة تعيين كلمة المرور لهذا المستخدم."
+          }
+        }
+      }
+    },
+    "buttons": {
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "edit": "تعديل",
+      "view": "عرض",
+      "add": "إضافة",
+      "invite": "دعوة",
+      "send": "إرسال",
+      "apply": "تطبيق",
+      "reset": "إعادة تعيين",
+      "close": "إغلاق",
+      "confirm": "تأكيد",
+      "back": "رجوع",
+      "next": "التالي",
+      "finish": "إنهاء",
+      "refresh": "تحديث",
+      "export": "تصدير",
+      "import": "استيراد",
+      "selectAll": "تحديد الكل",
+      "deselectAll": "إلغاء تحديد الكل",
+      "addUsers": "إضافة مستخدمين",
+      "changeRole": "تغيير الدور",
+      "resetPassword": "إعادة تعيين كلمة المرور",
+      "ok": "موافق"
+    },
+    "validation": {
+      "required": "هذا الحقل مطلوب",
+      "password": {
+        "requirements": "متطلبات كلمة المرور:",
+        "minLength": "يجب أن تكون كلمة المرور 8 أحرف على الأقل",
+        "notOnlyNumbers": "لا يجب أن تحتوي على أرقام فقط",
+        "notCommon": "يجب ألا تكون كلمة مرور شائعة",
+        "notSimilar": "يجب ألا تكون مشابهة لمعلوماتك الشخصية",
+        "tooCommon": "هذه كلمة المرور شائعة جدًا.",
+        "onlyNumbers": "لا يمكن أن تحتوي كلمة المرور على أرقام فقط",
+        "tooSimilar": "كلمة المرور مشابهة جداً لمعلوماتك الشخصية"
+      }
+    },
+    "tooltips": {
+      "viewUser": "عرض تفاصيل المستخدم",
+      "editUser": "تعديل المستخدم",
+      "resetPassword": "إعادة تعيين كلمة مرور المستخدم",
+      "deleteUser": "حذف المستخدم",
+      "changeRole": "تغيير دور المستخدم",
+      "addToGroup": "إضافة المستخدم إلى مجموعة",
+      "viewGroups": "عرض مجموعات المستخدم",
+      "viewGroup": "عرض تفاصيل المجموعة",
+      "editGroup": "تعديل المجموعة",
+      "deleteGroup": "حذف المجموعة",
+      "addUsers": "إضافة مستخدمين إلى المجموعة",
+      "viewMembers": "عرض أعضاء المجموعة",
+      "refresh": "تحديث البيانات",
+      "export": "تصدير البيانات",
+      "filter": "تصفية النتائج",
+      "sort": "ترتيب النتائج"
+    }
+  }
+}

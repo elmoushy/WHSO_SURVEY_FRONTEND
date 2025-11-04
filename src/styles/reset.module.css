@@ -1,0 +1,172 @@
+/* reset.module.css - Global base styles and typography */
+
+/* CSS Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  /* Fluid typography as per WPC | WeaponpowerCloud theme rules */
+  font-size: clamp(14px, 0.9vw + 0.4rem, 18px);
+  scroll-behavior: smooth;
+  /* Default to night theme */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Arabic font support */
+html[lang="ar"] {
+  font-family: 'Tajawal', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+  font-weight: 400;
+  line-height: 1.6;
+  /* text-night-muted */
+  color: #8C949E;
+  /* bg-night-primary */
+  background-color: #0B0F10;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Light theme styles */
+[data-theme="light"] body {
+  /* text-light-muted */
+  color: #4F5560;
+  /* bg-light-primary */
+  background-color: #F8F9FA;
+}
+
+/* Dark theme styles */
+[data-theme="night"] body {
+  /* text-dark-muted */
+  color: #A5A5A5;
+  /* bg-dark-primary */
+  background-color: #141414;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid #00FFC2; /* accent-neon */
+  outline-offset: 2px;
+}
+
+[data-theme="light"] *:focus {
+  outline-color: #00FFC2; /* accent-neon */
+}
+
+[data-theme="night"] *:focus {
+  outline-color: #18F2A3; /* accent-emerald */
+}
+
+/* Remove focus outline for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+
+
+
+h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.875rem);
+}
+
+h4 {
+  font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+}
+
+h5 {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+}
+
+h6 {
+  font-size: clamp(0.875rem, 1.5vw, 1.125rem);
+}
+
+p {
+  margin-bottom: 1rem;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Form elements */
+input, button, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* Images */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Lists */
+ul, ol {
+  list-style: none;
+}
+
+/* Tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* RTL Support - Global logical properties overrides */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+/* Ensure all elements respect text direction */
+[dir="rtl"] * {
+  direction: rtl;
+}
+
+/* Fix common layout issues in RTL */
+[dir="rtl"] .flex {
+  flex-direction: row-reverse;
+}
+
+/* Accessibility - Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  * {
+    border-color: currentColor !important;
+  }
+}

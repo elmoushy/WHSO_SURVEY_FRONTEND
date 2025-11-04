@@ -1,0 +1,607 @@
+/* Template Gallery Modal Styles */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.877);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modalContainer {
+  position: relative;
+  width: 100%;
+  max-width: 80rem;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  border-radius: 1rem;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+.modalContainer[data-theme="night"] {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+}
+
+.modalContainer[data-theme="day"] {
+  background-color: #ffffff;
+  color: #1a1a1a;
+}
+
+/* Header */
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid;
+}
+
+.modalContainer[data-theme="night"] .modalHeader {
+  background-color: #2d2d2d;
+  border-bottom-color: #495057;
+}
+
+.modalContainer[data-theme="day"] .modalHeader {
+  background-color: #f8f9fa;
+  border-bottom-color: #e9ecef;
+}
+
+.modalTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.modalIcon {
+  color: #B78A41;
+}
+
+.closeButton {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modalContainer[data-theme="night"] .closeButton {
+  background-color: #343a40;
+  color: #f1f1f1;
+}
+
+.modalContainer[data-theme="day"] .closeButton {
+  background-color: #e9ecef;
+  color: #1a1a1a;
+}
+
+.closeButton:hover {
+  transform: scale(1.05);
+}
+
+.modalContainer[data-theme="night"] .closeButton:hover {
+  background-color: #495057;
+}
+
+.modalContainer[data-theme="day"] .closeButton:hover {
+  background-color: #dee2e6;
+}
+
+/* Body */
+.modalBody {
+  padding: 1.5rem 2rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Tabs */
+.tabsContainer {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0;
+  border-bottom: 2px solid;
+}
+
+.modalContainer[data-theme="night"] .tabsContainer {
+  border-bottom-color: #495057;
+}
+
+.modalContainer[data-theme="day"] .tabsContainer {
+  border-bottom-color: #e9ecef;
+}
+
+.tabButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  background-color: transparent;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+  margin-bottom: -2px;
+}
+
+.modalContainer[data-theme="night"] .tabButton {
+  color: #adb5bd;
+}
+
+.modalContainer[data-theme="day"] .tabButton {
+  color: #6c757d;
+}
+
+.tabButton:hover {
+  color: #B78A41;
+}
+
+.modalContainer[data-theme="night"] .tabButton:hover {
+  background-color: #343a40;
+}
+
+.modalContainer[data-theme="day"] .tabButton:hover {
+  background-color: #f8f9fa;
+}
+
+.tabButton.active {
+  color: #B78A41;
+  border-bottom-color: #B78A41;
+}
+
+.tabBadge {
+  background-color: #B78A41;
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  min-width: 20px;
+  text-align: center;
+}
+
+/* Loading State */
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.75rem 0;
+  gap: 1rem;
+}
+
+.loadingSpinner {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 4px solid;
+  animation: spin 0.8s linear infinite;
+}
+
+.modalContainer[data-theme="night"] .loadingSpinner {
+  border-color: #495057;
+  border-top-color: #B78A41;
+}
+
+.modalContainer[data-theme="day"] .loadingSpinner {
+  border-color: #e9ecef;
+  border-top-color: #B78A41;
+}
+
+/* Tab Content */
+.tabContent {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Templates Grid */
+.templatesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+.surveysGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.25rem;
+  padding: 0.5rem 0;
+}
+
+/* Template Card */
+.templateCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modalContainer[data-theme="night"] .templateCard {
+  background-color: #2d2d2d;
+  border-color: #495057;
+}
+
+.modalContainer[data-theme="day"] .templateCard {
+  background-color: #ffffff;
+  border-color: #e9ecef;
+}
+
+.templateCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #B78A41;
+}
+
+.templateIcon {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #B78A41, #A17D23);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.templateContent {
+  flex: 1;
+}
+
+.templateTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem 0;
+}
+
+.templateDescription {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 0.75rem 0;
+}
+
+.modalContainer[data-theme="night"] .templateDescription {
+  color: #adb5bd;
+}
+
+.modalContainer[data-theme="day"] .templateDescription {
+  color: #6c757d;
+}
+
+.templateMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+.modalContainer[data-theme="night"] .metaItem {
+  color: #adb5bd;
+}
+
+.modalContainer[data-theme="day"] .metaItem {
+  color: #6c757d;
+}
+
+.metaIcon {
+  color: #B78A41;
+}
+
+.categoryBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.modalContainer[data-theme="night"] .categoryBadge {
+  background-color: rgba(183, 138, 65, 0.2);
+  color: #D3B079;
+}
+
+.modalContainer[data-theme="day"] .categoryBadge {
+  background-color: rgba(183, 138, 65, 0.1);
+  color: #B78A41;
+}
+
+.templateActions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.primaryButton {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  background-color: #B78A41;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.primaryButton:hover {
+  background-color: #A17D23;
+  transform: translateY(-2px);
+}
+
+.deleteButton {
+  padding: 0.625rem 0.75rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.deleteButton:hover {
+  background-color: #bb2d3b;
+  transform: scale(1.05);
+}
+
+/* Survey Card Specific */
+.surveyCard {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modalContainer[data-theme="night"] .surveyCard {
+  background-color: #2d2d2d;
+  border-color: #495057;
+}
+
+.modalContainer[data-theme="day"] .surveyCard {
+  background-color: #ffffff;
+  border-color: #e9ecef;
+}
+
+.surveyCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #B78A41;
+}
+
+.surveyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 0.75rem;
+}
+
+.surveyTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  flex: 1;
+}
+
+.statusBadge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Status badges */
+.statusBadge.active {
+  background-color: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.modalContainer[data-theme="night"] .statusBadge.active {
+  background-color: rgba(40, 167, 69, 0.3);
+  color: #5cb85c;
+}
+
+.statusBadge.draft {
+  background-color: rgba(13, 110, 253, 0.2);
+  color: #0d6efd;
+}
+
+.modalContainer[data-theme="night"] .statusBadge.draft {
+  background-color: rgba(13, 110, 253, 0.3);
+  color: #5ea3f7;
+}
+
+.statusBadge.inactive {
+  background-color: rgba(255, 193, 7, 0.2);
+  color: #ffc107;
+}
+
+.modalContainer[data-theme="night"] .statusBadge.inactive {
+  background-color: rgba(255, 193, 7, 0.3);
+  color: #ffd454;
+}
+
+.surveyDescription {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.modalContainer[data-theme="night"] .surveyDescription {
+  color: #adb5bd;
+}
+
+.modalContainer[data-theme="day"] .surveyDescription {
+  color: #6c757d;
+}
+
+.surveyMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid;
+}
+
+.modalContainer[data-theme="night"] .surveyMeta {
+  border-top-color: #495057;
+}
+
+.modalContainer[data-theme="day"] .surveyMeta {
+  border-top-color: #e9ecef;
+}
+
+.surveyActions {
+  padding-top: 0.75rem;
+}
+
+.fullWidthButton {
+  width: 100%;
+  padding: 0.625rem 1rem;
+  background-color: #B78A41;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.fullWidthButton:hover {
+  background-color: #A17D23;
+  transform: translateY(-2px);
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.75rem 0;
+  gap: 1rem;
+}
+
+.modalContainer[data-theme="night"] .emptyState {
+  color: #adb5bd;
+}
+
+.modalContainer[data-theme="day"] .emptyState {
+  color: #6c757d;
+}
+
+.emptyIcon {
+  font-size: 3.75rem;
+  opacity: 0.3;
+}
+
+.emptyText {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.createTemplateButton {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #B78A41;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.createTemplateButton:hover {
+  background-color: #A17D23;
+  transform: translateY(-2px);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .templatesGrid,
+  .surveysGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modalContainer {
+    max-width: 95%;
+  }
+  
+  .modalHeader,
+  .modalBody {
+    padding: 1rem 1.25rem;
+  }
+}

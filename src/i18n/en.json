@@ -1,0 +1,1490 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "username": "Username",
+    "email": "Email",
+    "password": "Password",
+    "loginButton": "Sign In",
+    "registerButton": "Create Account",
+    "welcomeAuth": "Welcome to WeaponPowerCloud",
+    "subtitle": "Your Future Starts Here"
+  },
+  "navigation": {
+    "menu": "Menu",
+    "main": "Main Navigation",
+    "welcome": "Welcome",
+    "home": "Home",
+    "homeDesc": "Return to welcome page",
+    "dashboard": "Dashboard",
+    "dashboardDesc": "Overview and analytics",
+    "businessQuarters": "Business Quarters",
+    "businessQuartersDesc": "Quarterly performance data",
+    "analytics": "Analytics",
+    "analyticsDesc": "Deep insights and reports",
+    "projects": "My Files",
+    "projectsDesc": "Manage your files and storage",
+    "news": "News",
+    "newsDesc": "Latest updates and announcements",
+    "control": "Control Panel",
+    "controlDesc": "Manage system controls and configurations",
+    "surveys": "Surveys",
+    "surveysDesc": "View and participate in available surveys",
+    "quickActions": "Quick Actions",
+    "newProject": "New Project",
+    "notifications": "Notifications",
+    "help": "Help & Support",
+    "profile": "Profile",
+    "settings": "Settings"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark All as Read",
+    "noNotifications": "No notifications",
+    "noNotificationsDesc": "You're all caught up! No new notifications.",
+    "viewAll": "View All Notifications",
+    "refresh": "Refresh",
+    "filter": "Filter",
+    "search": "Search notifications...",
+    "filterBy": "Filter by",
+    "sortBy": "Sort by",
+    "priority": "Priority",
+    "type": "Type",
+    "status": "Status",
+    "dateRange": "Date Range",
+    "showRead": "Show Read",
+    "showUnread": "Show Unread",
+    "showAll": "Show All",
+    "deleteSelected": "Delete Selected",
+    "markAsRead": "Mark as Read",
+    "markAsUnread": "Mark as Unread",
+    "delete": "Delete",
+    "preferences": "Notification Preferences",
+    "settings": "Settings",
+    "emailNotifications": "Email Notifications",
+    "websocketNotifications": "Real-time Notifications",
+    "quietHours": "Quiet Hours",
+    "language": "Notification Language",
+    "timezone": "Timezone",
+    "types": {
+      "survey_assigned": "Survey Assigned",
+      "survey_completed": "Survey Completed",
+      "survey_shared": "Survey Shared",
+      "survey_updated": "Survey Updated",
+      "survey_deleted": "Survey Deleted",
+      "admin_message": "Admin Message",
+      "system_alert": "System Alert",
+      "user_mention": "User Mention",
+      "group_invitation": "Group Invitation",
+      "response_received": "Response Received"
+    },
+    "priorities": {
+      "low": "Low",
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "minutes ago",
+      "hourAgo": "hour ago",
+      "hoursAgo": "hours ago",
+      "dayAgo": "day ago",
+      "daysAgo": "days ago"
+    },
+    "actions": {
+      "markAllRead": "Mark all notifications as read",
+      "bulkDelete": "Delete selected notifications",
+      "refresh": "Refresh notifications",
+      "goToSurvey": "Go to Survey",
+      "viewDetails": "View Details"
+    },
+    "stats": {
+      "total": "Total Notifications",
+      "unread": "Unread",
+      "recent": "Recent (7 days)"
+    }
+  },
+  "welcome": {
+    "heroTitle": "WPC | WeaponpowerCloud",
+    "heroDescription": "Experience the next generation of secure cloud systems designed for military excellence and strategic operations. Our platform delivers unmatched security, real-time intelligence, and seamless collaboration capabilities for defense organizations worldwide.",
+    "greeting": "Welcome to",
+    "staticText": "WPC WeaponPowerCloud",
+    "animatedTexts": {
+      "innovation": "Innovation",
+      "security": "Security", 
+      "cloudPower": "Cloud Power",
+      "excellence": "Excellence"
+    },
+    "servicesTitle": "Our ",
+    "servicesSubtitle": "Comprehensive solutions designed to meet your business needs",
+    "services": {
+      "security": {
+        "title": "Security",
+        "description": "Protect your sensitive data with military grade encryption, role based access controls and audit logs all hosted in your own private cloud."
+      },
+      "fastUpload": {
+        "title": "Fast Upload Files",
+        "description": "Leverage optimized transfer protocols and parallel streams for lightning fast uploads, even on high latency or low bandwidth networks."
+      },
+      "easyShare": {
+        "title": "Easy Share Big Files", 
+        "description": "Seamlessly share files of any size within your organization—no third party limits—with granular permissions and real time notifications."
+      },
+      "dataManagement": {
+        "title": "Data Management",
+        "description": "Organize and manage your files with advanced categorization, tagging, and search capabilities powered by AI-driven insights."
+      },
+      "realTimeSync": {
+        "title": "Real-time Sync",
+        "description": "Keep your files synchronized across all devices and platforms with automatic conflict resolution and version control."
+      },
+      "analytics": {
+        "title": "Analytics & Insights",
+        "description": "Monitor file usage, access patterns, and storage metrics with comprehensive analytics and detailed reporting dashboards."
+      }
+    },
+    "latestNews": "Latest News & Updates",
+    "readMore": "Read More",
+    "slideIndicator": "Go to slide",
+    "news": {
+      "news1": {
+        "date": "Dec 20, 2024",
+        "category": "Security",
+        "title": "Enhanced Encryption Protocol Deployed",
+        "excerpt": "Our latest security update introduces military-grade quantum encryption protocols, ensuring unprecedented data protection for all defense communications."
+      },
+      "news2": {
+        "date": "Dec 18, 2024",
+        "category": "Feature",
+        "title": "Real-Time Intelligence Dashboard Released",
+        "excerpt": "Access critical intelligence data through our new real-time dashboard, featuring advanced analytics and predictive modeling capabilities."
+      },
+      "news3": {
+        "date": "Dec 15, 2024",
+        "category": "System",
+        "title": "Global Infrastructure Expansion",
+        "excerpt": "WeaponpowerCloud now operates across 15 secure data centers worldwide, providing faster access and improved redundancy for mission-critical operations."
+      }
+    },
+    "features": {
+      "security": {
+        "title": "More Security",
+        "description": "Advanced military-grade encryption and multi-layer security protocols protect your most sensitive data with quantum-resistant algorithms and zero-trust architecture."
+      },
+      "sharing": {
+        "title": "Easy to Share",
+        "description": "Seamlessly collaborate with authorized personnel through secure channels, encrypted communications, and granular permission controls designed for defense operations."
+      },
+      "upload": {
+        "title": "Upload Large Files Fast",
+        "description": "Transfer massive datasets, intelligence reports, and tactical documents at lightning speed with our optimized compression and parallel upload technology."
+      }
+    },
+    "hero": {
+      "slide1": {
+        "title": "Stealth fighter jet pilot forced to eject as $100M aircraft crashes in rural California",
+        "source": "The Independent • 14h"
+      },
+      "slide2": {
+        "title": "Breaking: Major tech company announces revolutionary AI breakthrough",
+        "source": "TechCrunch • 8h"
+      },
+      "slide3": {
+        "title": "Climate summit reaches historic agreement on global carbon reduction",
+        "source": "BBC News • 5h"
+      }
+    },
+    "slider": {
+      "previous": "Previous",
+      "next": "Next",
+      "slide": "Slide"
+    },
+    "achievements": {
+      "title": "Achievements"
+    },
+    "newsCards": {
+      "card1": {
+        "title": "Neighbor Grew Concerned by Teens at Church Next Door, Then First Responder..."
+      }
+    },
+    "loading": "Loading news...",
+    "loadMore": "Load More News",
+    "error": {
+      "title": "Error Loading News",  
+      "retry": "Try Again"
+    }
+  },
+  "control": {
+    "title": "Control Panel",
+    "subtitle": "Manage all system controls and configurations",
+    "backToControlPanel": "Back to Control Panel",
+    "newsManagement": {
+      "title": "News Management Control Panel",
+      "subtitle": "Manage slider news, cards news, and achievements"
+    },
+    "refresh": "Refresh Data",
+    "loading": "Loading...",
+    "confirmClose": "You have unsaved changes. Are you sure you want to close?",
+    "confirmDelete": "Are you sure you want to delete this item?",
+    "modules": {
+      "news": {
+        "title": "News Management",
+        "description": "Manage news articles, sliders, and content",
+        "button": "Manage News"
+      },
+      "survey": {
+        "title": "Survey Management",
+        "description": "Create and manage surveys and polls",
+        "button": "Manage Surveys",
+        "comingSoon": "Coming Soon"
+      },
+      "users": {
+        "title": "User Management",
+        "description": "Manage user accounts and permissions",
+        "button": "Manage Users",
+        "comingSoon": "Coming Soon"
+      },
+      "analytics": {
+        "title": "Analytics Control",
+        "description": "Configure analytics and reporting",
+        "button": "Analytics Settings",
+        "comingSoon": "Coming Soon"
+      },
+      "settings": {
+        "title": "System Settings",
+        "description": "Configure global system settings",
+        "button": "System Config",
+        "comingSoon": "Coming Soon"
+      },
+      "backup": {
+        "title": "Backup & Recovery",
+        "description": "Manage data backup and recovery",
+        "button": "Backup Center",
+        "comingSoon": "Coming Soon"
+      }
+    },
+    "stats": {
+      "modules": "Control Modules",
+      "active": "Active",
+      "coming": "Coming Soon"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "superAdminOnly": "Only available to super admin"
+    },
+    "quickActions": {
+      "title": "Quick Actions",
+      "subtitle": "Commonly used control actions",
+      "addNews": "Add News",
+      "createSurvey": "Create Survey",
+      "backup": "Backup Data"
+    },
+    "tabs": {
+      "slider": "Slider News",
+      "cards": "Cards News", 
+      "achievements": "Achievements"
+    },
+    "slider": {
+      "title": "Slider News Management",
+      "description": "Manage homepage slider/banner news items",
+      "create": "Add Slider News",
+      "empty": "No slider news found. Create your first one!"
+    },
+    "cards": {
+      "title": "Cards News Management", 
+      "description": "Manage main news articles and cards",
+      "create": "Add Cards News",
+      "empty": "No cards news found. Create your first one!"
+    },
+    "achievements": {
+      "title": "Achievements Management",
+      "description": "Manage achievements and accomplishments", 
+      "create": "Add Achievement",
+      "empty": "No achievements found. Create your first one!"
+    },
+    "modal": {
+      "create": "Create",
+      "edit": "Edit",
+      "save": "Save Changes",
+      "cancel": "Cancel"
+    },
+    "form": {
+      "titleArabic": "Title (Arabic)",
+      "titleArabicPlaceholder": "Enter Arabic title",
+      "titleEnglish": "Title (English)",
+      "titleEnglishPlaceholder": "Enter English title",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter description",
+      "category": "Category",
+      "priority": "Priority",
+      "priorityPlaceholder": "Enter priority (1-100)",
+      "displayDuration": "Display Duration (seconds)",
+      "durationPlaceholder": "Enter duration in seconds",
+      "date": "Article Date",
+      "achievementDate": "Achievement Date",
+      "articleDate": "Article Date",
+      "featured": "Featured",
+      "active": "Active",
+      "mainImage": "Main Image",
+      "imageHelp": "Supported formats: JPEG, PNG, GIF, WebP. Max size: 10MB",
+      "dragDropImage": "Drag & drop image or click to browse",
+      "supportedFormats": "Supported: JPG, PNG, GIF (Max: 5MB)",
+      "changeImage": "Change",
+      "removeImage": "Remove",
+      "create": "Create",
+      "update": "Update"
+    },
+    "categories": {
+      "general": "General",
+      "news": "News",
+      "military": "Military",
+      "technology": "Technology", 
+      "training": "Training",
+      "announcement": "Announcement",
+      "pressRelease": "Press Release",
+      "event": "Event",
+      "update": "Update",
+      "other": "Other"
+    },
+    "success": {
+      "sliderCreated": "Slider news created successfully",
+      "sliderUpdated": "Slider news updated successfully",
+      "sliderDeleted": "Slider news deleted successfully",
+      "cardsCreated": "Cards news created successfully",
+      "cardsUpdated": "Cards news updated successfully", 
+      "cardsDeleted": "Cards news deleted successfully",
+      "achievementsCreated": "Achievement created successfully",
+      "achievementsUpdated": "Achievement updated successfully",
+      "achievementsDeleted": "Achievement deleted successfully"
+    },
+    "errors": {
+      "titleArabicRequired": "Arabic title is required",
+      "titleEnglishRequired": "English title is required",
+      "descriptionRequired": "Description is required",
+      "priorityRange": "Priority must be between 1 and 100",
+      "durationRange": "Display duration must be between 3 and 30 seconds",
+      "submitFailed": "Failed to submit form",
+      "deleteFailed": "Failed to delete item"
+    }
+  },
+  "survey": {
+    "title": "Survey Management",
+    "subtitle": "Create, manage, and analyze surveys for your organization",
+    "backToSurveyList": "Back to Surveys",
+    "dashboard": {
+      "title": "Survey Dashboard",
+      "totalSurveys": "Total Surveys",
+      "activeSurveys": "Active Surveys",
+      "totalResponses": "Total Responses",
+      "avgResponseRate": "Avg Response Rate",
+      "recentActivity": "Recent Activity",
+      "newSurveysThisWeek": "New Surveys This Week",
+      "newResponsesThisWeek": "New Responses This Week",
+      "topSurveys": "Top Performing Surveys",
+      "completionRate": "Completion Rate"
+    },
+    "list": {
+      "title": "Surveys",
+      "createSurvey": "Create Survey",
+      "searchPlaceholder": "Search surveys...",
+      "filterBy": "Filter by",
+      "sortBy": "Sort by",
+      "selectAll": "Select All",
+      "bulkActions": "Bulk Actions",
+      "selectedItems": "items selected",
+      "noSurveys": "No surveys found. Create your first survey!",
+      "loading": "Loading surveys...",
+      "refreshData": "Refresh Data",
+      "stats": "Statistics",
+      "status": "Status",
+      "lastUpdated": "Last Updated",
+      "actions": "Actions"
+    },
+    "pagination": {
+      "showing": "Showing",
+      "of": "of",
+      "items": "items",
+      "previous": "Previous",
+      "next": "Next",
+      "itemsPerPage": "Items per page"
+    },
+    "filters": {
+      "all": "All Surveys",
+      "active": "Active",
+      "inactive": "Inactive",
+      "private": "Private",
+      "auth": "Authenticated Users",
+      "public": "Public",
+      "myCreated": "Created by Me",
+      "shared": "Shared with Me",
+      "locked": "Locked"
+    },
+    "shared": {
+      "title": "Shared Surveys",
+      "subtitle": "Surveys shared with you by other users",
+      "overview": {
+        "totalShared": "Total Shared",
+        "authSurveys": "Public Surveys",
+        "privateShared": "Private Shared",
+        "available": "Available to Take"
+      },
+      "filters": {
+        "allShared": "All Shared",
+        "authOnly": "Auth Access Only",
+        "publicOnly": "Public Access Only",
+        "privateOnly": "Private Shared Only",
+        "groupsOnly": "Groups Only",
+        "activeOnly": "Active Only",
+        "unlockedOnly": "Unlocked Only"
+      },
+      "accessType": {
+        "auth": "Auth Access",
+        "shared": "Private Shared",
+        "public": "Public Access",
+        "private": "Private Access",
+        "groups": "Groups Access"
+      },
+      "reason": {
+        "auth": "Auth Access",
+        "public": "Public Access",
+        "private": "Private Access",
+        "groups": "Groups Access"
+      },
+      "card": {
+        "createdBy": "Created by",
+        "questionsCount": "questions",
+        "estimatedTime": "min estimated",
+        "canSubmit": "Available to submit",
+        "hasSubmitted": "Already submitted",
+        "isLocked": "Survey locked",
+        "isInactive": "Survey inactive",
+        "isScheduled": "Survey scheduled",
+        "takeNow": "Take Survey",
+        "viewOnly": "View Only",
+        "alreadySubmitted": "Completed"
+      },
+      "search": {
+        "placeholder": "Search shared surveys...",
+        "noResults": "No shared surveys found",
+        "emptyState": "No surveys have been shared with you yet"
+      },
+      "errors": {
+        "loadFailed": "Failed to load shared surveys",
+        "authRequired": "Authentication required",
+        "permissionDenied": "Permission denied"
+      }
+    },
+    "auth": {
+      "loading": "Loading survey...",
+      "accessDenied": "Access Denied",
+      "error": "Error",
+      "questionsCount": "questions",
+      "estimatedMinutes": "minutes estimated",
+      "authenticatedSurvey": "Authenticated Survey",
+      "welcomeTitle": "Welcome to our survey",
+      "welcomeText": "We appreciate your time and valuable feedback. Your responses will help us improve our services and create a better experience for everyone. The survey is easy and quick, and all your answers are kept completely confidential.",
+      "questionsPreview": "Questions Preview",
+      "moreQuestions": "More questions",
+      "startSurvey": "Start Survey",
+      "pleaseAnswer": "Please answer the following questions carefully",
+      "errors": {
+        "noSurveyId": "Survey ID not provided",
+        "surveyNotFound": "Survey not found",
+        "accessDenied": "You don't have permission to access this survey",
+        "authenticationRequired": "Authentication required to access this survey",
+        "loadFailed": "Failed to load survey",
+        "submitFailed": "Failed to submit survey response"
+      }
+    },
+    "sorting": {
+      "newest": "Newest First",
+      "oldest": "Oldest First",
+      "titleAZ": "Title A-Z",
+      "titleZA": "Title Z-A",
+      "mostResponses": "Most Responses",
+      "leastResponses": "Least Responses",
+      "lastUpdated": "Last Updated"
+    },
+    "card": {
+      "responses": "responses",
+      "createdBy": "Created by",
+      "lastUpdated": "Last updated",
+      "visibility": "Visibility",
+      "status": "Status",
+      "actions": "Actions",
+      "edit": "Edit",
+      "clone": "Clone",
+      "delete": "Delete",
+      "viewResponses": "View Responses",
+      "share": "Share",
+      "shareLink": "Share Link",
+      "manageAccess": "Manage Access",
+      "export": "Export",
+      "analytics": "Analytics",
+      "preview": "Preview",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "lock": "Lock",
+      "unlock": "Unlock"
+    },
+    "form": {
+      "basicInfo": "Basic Information",
+      "title": "Survey Title",
+      "titlePlaceholder": "Enter survey title",
+      "description": "Description",
+      "descriptionPlaceholder": "Enter survey description",
+      "visibility": "Visibility",
+      "visibilityDescription": "Who can access this survey",
+      "default": "Default",
+      "scheduling": "Scheduling",
+      "schedulingDescription": "Control when your survey is active",
+      "startDate": "Start Date",
+      "startDateHelp": "Survey will start at this date/time. Leave empty to start immediately.",
+      "endDate": "End Date", 
+      "endDateHelp": "Survey will stop accepting responses after this date/time. Leave empty to run indefinitely.",
+      "settings": "Settings",
+      "isActive": "Active",
+      "isActiveDescription": "Survey accepts responses",
+      "allowAnonymous": "Allow Anonymous Responses",
+      "allowAnonymousDescription": "Respondents don't need to sign in",
+      "requireCompletion": "Require Complete Responses",
+      "requireCompletionDescription": "All required questions must be answered",
+      "showProgressBar": "Show Progress Bar",
+      "showProgressBarDescription": "Display completion progress to respondents",
+      "allowEditResponses": "Allow Editing Responses",
+      "allowEditResponsesDescription": "Respondents can modify their answers",
+      "submit": "Create Survey",
+      "update": "Update Survey",
+      "cancel": "Cancel",
+      "saveDraft": "Save as Draft"
+    },
+    "visibility": {
+      "private": "Private",
+      "privateDescription": "Only shared users can access",
+      "auth": "Authenticated Users",
+      "authDescription": "All signed-in users can access",
+      "public": "Public",
+      "publicDescription": "Anyone with the link can access"
+    },
+    "questions": {
+      "title": "Questions",
+      "addQuestion": "Add Question",
+      "editQuestion": "Edit Question",
+      "deleteQuestion": "Delete Question",
+      "reorderQuestions": "Reorder Questions",
+      "questionText": "Question Text",
+      "questionTextPlaceholder": "Enter your question",
+      "questionType": "Question Type",
+      "isRequired": "Required",
+      "isRequiredDescription": "Respondents must answer this question",
+      "questionOrder": "Order",
+      "options": "Options",
+      "addOption": "Add Option",
+      "optionPlaceholder": "Enter option text",
+      "removeOption": "Remove Option",
+      "dragToReorder": "Drag to reorder",
+      "save": "Save Question",
+      "cancel": "Cancel",
+      "noQuestions": "No questions added yet. Add your first question!",
+      "ratingSettings": "Rating Scale Settings",
+      "minValue": "Minimum Value",
+      "maxValue": "Maximum Value",
+      "preview": "Preview",
+      "shortAnswerPlaceholder": "Short answer",
+      "longAnswerPlaceholder": "Long answer",
+      "yes": "Yes",
+      "no": "No",
+      "optionDefaultText": "Option"
+    },
+    "questionTypes": {
+      "text": "Short Text",
+      "textarea": "Long Text",
+      "single_choice": "Single Choice",
+      "multiple_choice": "Multiple Choice",
+      "rating": "Rating Scale",
+      "yes_no": "Yes/No"
+    },
+    "required": "*",
+    "requiredField": "This field is required",
+    "progress": {
+      "currentQuestion": "Question"
+    },
+    "placeholders": {
+      "shortText": "Enter your answer here...",
+      "longText": "Enter your detailed answer here... You can write multiple lines"
+    },
+    "singleChoice": {
+      "instruction": "Choose one answer:"
+    },
+    "multipleChoice": {
+      "instruction": "You can choose multiple answers:"
+    },
+    "rating": {
+      "instruction": "Rate from 1 to 5:",
+      "poor": "Poor",
+      "excellent": "Excellent"
+    },
+    "yesNo": {
+      "instruction": "Choose your answer:",
+      "yes": "Yes",
+      "no": "No"
+    },
+    "navigation": {
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "submit": "Submit Survey",
+    "submitting": "Submitting...",
+    "success": {
+      "title": "Thank you for your participation!",
+      "message": "Your responses have been submitted successfully. We appreciate your time and feedback.",
+      "backToSurveys": "Back to Surveys"
+    },
+    "analytics": {
+      "title": "Survey Analytics",
+      "overview": "Overview",
+      "questions": "Question Analysis",
+      "demographics": "Demographics",
+      "timeline": "Response Timeline",
+      "insights": "Insights",
+      "questionStats": "Question Statistics",
+      "responseDistribution": "Response Distribution",
+      "completionFunnel": "Completion Funnel",
+      "dropOffPoints": "Drop-off Points",
+      "timeToComplete": "Time to Complete",
+      "deviceBreakdown": "Device Breakdown",
+      "locationData": "Location Data",
+      "trendAnalysis": "Trend Analysis",
+      "dashboard": "Analytics Dashboard",
+      "loadingAnalytics": "Loading analytics...",
+      "loadError": "Failed to load analytics",
+      "noData": "No Analytics Data",
+      "noDataDescription": "There is no data available for this survey yet. Check back once responses are submitted.",
+      "textualAnalysis": "Text Response Analysis",
+      "avgWords": "Avg Words",
+      "avgChars": "Avg Characters",
+      "responses": "Responses",
+      "responseLengthDistribution": "Response Length Distribution",
+      "wordCountAnalysis": "Word Count Analysis",
+      "averageWords": "Average Words",
+      "averageChars": "Average Characters",
+      "perResponse": "per response",
+      "verbosityLevel": "Response Detail",
+      "engagementScore": "Engagement Score",
+      "responseQuality": "Response Quality",
+      "detailLevel": "Detail Level",
+      "consistencyLevel": "Response Consistency",
+      "participation": "Participation Rate",
+      "providedText": "provided text responses",
+      "lengthDistribution": "Length Distribution",
+      "lengths": {
+        "short": "Short",
+        "medium": "Medium",  
+        "long": "Long",
+        "shortDesc": "Brief responses (1-10 words)",
+        "mediumDesc": "Standard responses (11-50 words)",
+        "longDesc": "Detailed responses (50+ words)"
+      },
+      "verbosityTypes": {
+        "brief": "Brief",
+        "moderate": "Moderate",
+        "detailed": "Detailed", 
+        "extensive": "Extensive"
+      },
+      "engagementLevels": {
+        "low": "Low engagement responses",
+        "moderate": "Moderate engagement",
+        "high": "High engagement responses"
+      },
+      "detailTypes": {
+        "minimal": "Minimal Detail",
+        "basic": "Basic Detail",
+        "detailed": "Detailed",
+        "comprehensive": "Comprehensive"
+      },
+      "consistencyTypes": {
+        "high": "Highly Consistent",
+        "moderate": "Moderately Consistent",
+        "low": "Varied Responses"
+      },
+      "wordsPerResponse": "words per response",
+      "charsPerResponse": "characters per response",
+      "inSameCategory": "in the same response category",
+      "unknown": "Unknown"
+    },
+    "sharing": {
+      "title": "Share Survey",
+      "shareLink": "Share Link",
+      "copyLink": "Copy Link",
+      "linkCopied": "Link copied to clipboard",
+      "emailInvite": "Email Invitation",
+      "enterEmails": "Enter email addresses",
+      "emailPlaceholder": "Enter email addresses separated by commas",
+      "customMessage": "Custom Message",
+      "messagePlaceholder": "Add a personal message (optional)",
+      "sendInvites": "Send Invitations",
+      "embedCode": "Embed Code",
+      "copyEmbed": "Copy Embed Code",
+      "qrCode": "QR Code",
+      "downloadQR": "Download QR Code",
+      "shareOptions": "Sharing Options",
+      "setPassword": "Set Password",
+      "passwordProtected": "Password Protected",
+      "expirationDate": "Expiration Date",
+      "limitResponses": "Limit Responses",
+      "maxResponses": "Maximum Responses"
+    },
+    "export": {
+      "title": "Export Survey Data",
+      "format": "Export Format",
+      "includePersonalData": "Include Personal Data",
+      "includePersonalDataDescription": "Include respondent email addresses",
+      "dateRange": "Date Range",
+      "allResponses": "All Responses",
+      "customRange": "Custom Range",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "exportOptions": "Export Options",
+      "includeQuestions": "Include Questions",
+      "includeResponses": "Include Responses",
+      "includeAnalytics": "Include Analytics",
+      "downloadExport": "Download Export",
+      "generating": "Generating export...",
+      "formats": {
+        "csv": "CSV File",
+        "excel": "Excel Spreadsheet",
+        "json": "JSON Data"
+      }
+    },
+    "bulk": {
+      "title": "Bulk Operations",
+      "selectAction": "Select Action",
+      "confirmAction": "Confirm Action",
+      "processing": "Processing...",
+      "completed": "Operation Completed",
+      "operations": {
+        "activate": "Activate Surveys",
+        "deactivate": "Deactivate Surveys",
+        "lock": "Lock Surveys",
+        "unlock": "Unlock Surveys",
+        "delete": "Delete Surveys"
+      },
+      "confirmations": {
+        "activate": "Are you sure you want to activate {count} surveys?",
+        "deactivate": "Are you sure you want to deactivate {count} surveys?",
+        "lock": "Are you sure you want to lock {count} surveys?",
+        "unlock": "Are you sure you want to unlock {count} surveys?",
+        "delete": "Are you sure you want to delete {count} surveys? This action cannot be undone."
+      },
+      "results": {
+        "successful": "Successful",
+        "failed": "Failed",
+        "errors": "Errors"
+      }
+    },
+    "responses": {
+      "title": "Survey Responses",
+      "loading": "Loading responses...",
+      "error": "Error loading responses",
+      "retry": "Retry",
+      "totalResponses": "Total Responses",
+      "completed": "Completed",
+      "incomplete": "Incomplete",
+      "completionRate": "Completion Rate",
+      "noResponses": "No Responses Yet",
+      "noResponsesDescription": "This survey hasn't received any responses yet. Share it to start collecting responses.",
+      "searchPlaceholder": "Search by respondent email...",
+      "filterBy": "Filter by",
+      "sortBy": "Sort by",
+      "showAll": "Show All",
+      "exportData": "Export Data",
+      "refreshData": "Refresh",
+      "downloadCSV": "Download CSV",
+      "downloadJSON": "Download JSON",
+      "exportAction": "Export Responses",
+      "exportTitle": "Export Survey Responses",
+      "exporting": "Exporting responses...",
+      "exportError": "Failed to export responses",
+      "exportSingle": "Export This Response",
+      "viewDetails": "View Details",
+      "responseDetails": "Response Details",
+      "answersProvided": "answers provided",
+      "authenticatedUser": "Authenticated User",
+      "anonymousUser": "Anonymous User",
+      "respondent": "Respondent",
+      "submittedAt": "Submitted At",
+      "status": "Status",
+      "ipAddress": "IP Address",
+      "answers": "Answers",
+      "noAnswer": "No answer provided",
+      "questionText": "Question",
+      "answerText": "Answer",
+      "submissionDate": "Submission Date",
+      "responseId": "Response ID",
+      "surveyTitle": "Survey Title",
+      "includeHeaders": "Include Headers",
+      "includeDateRange": "Include Date Range",
+      "fromDate": "From Date",
+      "toDate": "To Date",
+      "generating": "Generating export...",
+      "close": "Close",
+      "export": "Export",
+      "filters": {
+        "all": "All Responses",
+        "completed": "Completed Only",
+        "incomplete": "Incomplete Only",
+        "allRespondents": "All Respondents",
+        "authenticated": "Authenticated Users",
+        "anonymous": "Anonymous Users"
+      },
+      "sorting": {
+        "newest": "Newest First",
+        "oldest": "Oldest First"
+      },
+      "dateRange": {
+        "startDate": "Start Date",
+        "endDate": "End Date"
+      },
+      "exportOptions": {
+        "csv": "CSV Format",
+        "csvDescription": "Export responses as a CSV file for spreadsheet analysis",
+        "json": "JSON Format",
+        "jsonDescription": "Export responses as JSON data for API integration",
+        "includeIncomplete": "Include incomplete responses",
+        "confirm": "Export Responses"
+      }
+    },
+    "clone": {
+      "title": "Clone Survey",
+      "description": "Create a copy of this survey",
+      "newTitle": "New Survey Title",
+      "newTitlePlaceholder": "Enter title for cloned survey",
+      "cloneQuestions": "Clone Questions",
+      "cloneSettings": "Clone Settings",
+      "cloneSurvey": "Clone Survey",
+      "cloning": "Cloning survey...",
+      "success": "Survey cloned successfully"
+    },
+    "status": {
+      "draft": "Draft",
+      "active": "Active",
+      "inactive": "Inactive",
+      "locked": "Locked",
+      "expired": "Expired",
+      "private": "Private",
+      "auth": "Auth Required",
+      "public": "Public",
+      "groups": "Groups"
+    },
+    "notifications": {
+      "surveyCreated": "Survey created successfully",
+      "surveyUpdated": "Survey updated successfully",
+      "surveyDeleted": "Survey deleted successfully",
+      "surveyCloned": "Survey cloned successfully",
+      "surveyActivated": "Survey activated successfully",
+      "surveyDeactivated": "Survey deactivated successfully",
+      "surveyLocked": "Survey locked successfully",
+      "surveyUnlocked": "Survey unlocked successfully",
+      "questionAdded": "Question added successfully",
+      "questionUpdated": "Question updated successfully",
+      "questionDeleted": "Question deleted successfully",
+      "invitationsSent": "Invitations sent successfully",
+      "exportGenerated": "Export generated successfully",
+      "bulkOperationComplete": "Bulk operation completed successfully"
+    },
+    "errors": {
+      "titleRequired": "Survey title is required",
+      "titleTooLong": "Title must be less than 200 characters",
+      "descriptionTooLong": "Description must be less than 1000 characters",
+      "questionTextRequired": "Question text is required",
+      "questionTextTooLong": "Question text must be less than 500 characters",
+      "optionsRequired": "Options are required for choice questions",
+      "optionsMinimum": "Choice questions must have at least 2 options",
+      "invalidOptions": "Options must be a valid JSON array",
+      "loadFailed": "Failed to load surveys",
+      "createFailed": "Failed to create survey",
+      "updateFailed": "Failed to update survey",
+      "deleteFailed": "Failed to delete survey",
+      "cloneFailed": "Failed to clone survey",
+      "questionAddFailed": "Failed to add question",
+      "questionUpdateFailed": "Failed to update question",
+      "questionDeleteFailed": "Failed to delete question",
+      "responseLoadFailed": "Failed to load responses",
+      "exportFailed": "Failed to generate export",
+      "shareFailed": "Failed to share survey",
+      "bulkOperationFailed": "Bulk operation failed",
+      "unauthorized": "You don't have permission to perform this action",
+      "surveyLocked": "Cannot modify a locked survey",
+      "surveyNotFound": "Survey not found",
+      "networkError": "Network error. Please check your connection.",
+      "serverError": "Server error. Please try again later."
+    },
+    "access": {
+      "title": "Access Management",
+      "level": "Access Level",
+      "public": {
+        "title": "Public",
+        "description": "Anyone can access this survey"
+      },
+      "authenticated": {
+        "title": "Authenticated Users",
+        "description": "Only registered users can access"
+      },
+      "private": {
+        "title": "Private",
+        "description": "Only owner and invited people can access"
+      },
+      "generateLink": "Generate Link",
+      "regenerateLink": "Regenerate Link",
+      "revokeLink": "Revoke Link",
+      "noPublicLink": "No public link currently exists",
+      "searchUsers": "Search users",
+      "sharedWith": "Shared with",
+      "noUsersSelected": "No users selected",
+      "removeUser": "Remove user",
+      "inviteByEmail": "Invite by Email",
+      "emailPlaceholder": "Enter email address",
+      "saveChanges": "Save Changes",
+      "confirmRegenerateLink": "Are you sure you want to regenerate the link?",
+      "confirmRevokeLink": "Are you sure you want to revoke the link?"
+    },
+    "confirmations": {
+      "deleteSurvey": "Are you sure you want to delete this survey? This action cannot be undone.",
+      "deleteQuestion": "Are you sure you want to delete this question?",
+      "lockSurvey": "Are you sure you want to lock this survey? Locked surveys cannot be modified.",
+      "deactivateSurvey": "Are you sure you want to deactivate this survey? It will stop accepting responses.",
+      "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+    },
+    "validation": {
+      "required": "This field is required",
+      "titleMinLength": "Title must be at least 3 characters",
+      "titleMaxLength": "Title must be less than 200 characters",
+      "descriptionMaxLength": "Description must be less than 1000 characters",
+      "questionTextMinLength": "Question text must be at least 3 characters",
+      "questionTextMaxLength": "Question text must be less than 500 characters",
+      "optionMinLength": "Option must be at least 1 character",
+      "optionMaxLength": "Option must be less than 100 characters",
+      "minOptions": "Must have at least 2 options",
+      "maxOptions": "Cannot have more than 10 options",
+      "emailFormat": "Please enter a valid email address",
+      "dateRange": "End date must be after start date",
+      "positiveNumber": "Must be a positive number"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "close": "Close",
+    "save": "Save",
+    "saving": "Saving...",
+    "create": "Create",
+    "copy": "Copy",
+    "saveChanges": "Save Changes",
+    "selectOption": "Select an option",
+    "enter": "Enter",
+    "user": "User",
+    "services": "Services",
+    "futureStartsHere": "Future Starts Here",
+    "lastUpdate": "Last Update",
+    "refresh": "Refresh",
+    "retry": "Retry",
+    "created": "Created",
+    "updated": "Updated",
+    "documents": "Documents",
+    "images": "Images", 
+    "videos": "Videos",
+    "others": "Others",
+    "blocked": "Blocked Attempts",
+    "back": "Back",
+    "goBack": "Go Back",
+    "to": "to",
+    "notAvailable": "Not Available",
+    "yes": "Yes",
+    "no": "No",
+    "pagination": {
+      "showing": "Showing",
+      "of": "of",
+      "previous": "Previous",
+      "next": "Next"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalidPercentage": "Please enter a valid percentage (0-100)",
+    "answerRequired": "Please answer this question to continue",
+    "titleRequired": "Survey title is required",
+    "titleTooLong": "Survey title must be less than 200 characters",
+    "descriptionTooLong": "Survey description must be less than 1000 characters"
+  },
+  "themes": {
+    "toggleTheme": "Toggle Theme",
+    "nightMode": "Night Mode",
+    "lightMode": "Light Mode", 
+    "darkMode": "Dark Mode",
+    "language": "Language",
+    "english": "English",
+    "arabic": "العربية"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "newNotification": "New Notification",
+    "markAsRead": "Mark as Read",
+    "clearAll": "Clear All",
+    "noNotifications": "No notifications"
+  },
+  "dashboard": {
+    "title": "Command Dashboard",
+    "overview": "System Overview",
+    "totalUsers": "Total Users",
+    "topStorageUsers": "Top Storage Users",
+    "privateFiles": "Private Files",
+    "systemActivity": "System Activity",
+    "storageUsage": "Storage Usage",
+    "fileSharing": "File Sharing",
+    "userActivity": "User Activity",
+    "analytics": "Analytics & Insights",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "today": "Today",
+    "thisWeek": "This Week",
+    "thisMonth": "This Month",
+    "viewAll": "View All",
+    "users": "Users",
+    "files": "Files",
+    "shared": "Shared",
+    "uploads": "Uploads",
+    "downloads": "Downloads",
+    "active": "Active",
+    "inactive": "Inactive",
+    "security": "Security Status",
+    "operational": "Operational",
+    "secure": "Secure",
+    "totalStorage": "Total Storage",
+    "usedStorage": "Used Storage",
+    "availableStorage": "Available Storage",
+    "recentActivity": "Recent Activity",
+    "fileUploaded": "File uploaded",
+    "fileShared": "File shared",
+    "userRegistered": "User registered",
+    "systemAlert": "System alert",
+    "minutes": "minutes ago",
+    "hours": "hours ago",
+    "days": "days ago",
+    "gb": "GB",
+    "mb": "MB",
+    "kb": "KB",
+    "bytes": "Bytes"
+  },
+  "files": {
+    "title": "My Files",
+    "storageUsed": "Storage Used",
+    "storageLimit": "Storage Limit",
+    "uploadFiles": "Upload Files",
+    "dragDropFiles": "Drag and drop files here or click to select",
+    "maxFileSize": "Maximum file size: 100MB",
+    "selectFiles": "Select Files",
+    "uploadProgress": "Upload Progress",
+    "uploading": "Uploading...",
+    "uploadComplete": "Upload Complete",
+    "uploadFailed": "Upload Failed",
+    "fileName": "File Name",
+    "fileSize": "Size",
+    "dateModified": "Date Modified",
+    "owner": "Owner",
+    "sharedWith": "Shared With",
+    "actions": "Actions",
+    "download": "Download",
+    "share": "Share",
+    "delete": "Delete",
+    "rename": "Rename",
+    "details": "Details",
+    "preview": "Preview",
+    "shareFile": "Share File",
+    "shareWithUser": "Share with user",
+    "selectUser": "Select a user",
+    "sharePermissions": "Permissions",
+    "permission": "Permission",
+    "permissionView": "View Only",
+    "permissionDownload": "Can Download",
+    "permissionEdit": "Can Edit",
+    "viewOnly": "View Only",
+    "canDownload": "Can Download",
+    "edit": "Can Edit",
+    "fullAccess": "Full Access",
+    "shareButton": "Share",
+    "cancelShare": "Cancel",
+    "stopSharing": "Stop Sharing",
+    "sharedFiles": "Shared Files",
+    "myFiles": "My Files",
+    "recentFiles": "Recent Files",
+    "noFiles": "No files found",
+    "createFolder": "Create Folder",
+    "folderName": "Folder Name",
+    "enterFolderName": "Enter folder name",
+    "create": "Create",
+    "cancel": "Cancel",
+    "chooseUser": "Choose a user",
+    "searching": "Searching...",
+    "searchPlaceholder": "Search files and folders...",
+    "sortBy": "Sort by",
+    "sortName": "Name",
+    "sortDate": "Date",
+    "sortSize": "Size",
+    "sortType": "Type",
+    "viewGrid": "Grid View",
+    "viewList": "List View",
+    "selectAll": "Select All",
+    "selectedItems": "items selected",
+    "deleteSelected": "Delete Selected",
+    "shareSelected": "Share Selected",
+    "moveSelected": "Move Selected",
+    "copySelected": "Copy Selected",
+    
+    "versioning": {
+      "title": "Version History",
+      "currentVersion": "Current Version",
+      "previousVersions": "Previous Versions",
+      "restoreVersion": "Restore This Version",
+      "compareVersions": "Compare Versions",
+      "versionNotes": "Version Notes"
+    },
+    
+    "collaboration": {
+      "title": "Collaborative Editing",
+      "activeUsers": "Active Users",
+      "comments": "Comments",
+      "addComment": "Add Comment",
+      "resolveComment": "Resolve",
+      "replyComment": "Reply",
+      "realTimeEdit": "Real-time Editing"
+    },
+    
+    "ai": {
+      "title": "AI Analysis",
+      "analyze": "Analyze File",
+      "summary": "Content Summary",
+      "keywords": "Keywords",
+      "sentiment": "Sentiment Analysis",
+      "security": "Security Classification",
+      "recommendations": "Recommendations",
+      "smartSearch": "AI-Powered Search",
+      "predictiveText": "Predictive Search",
+      "autoTags": "Auto-Generated Tags"
+    },
+    
+    "duplicates": {
+      "title": "Duplicate Detector",
+      "scanDuplicates": "Scan for Duplicates",
+      "duplicatesFound": "Duplicates Found",
+      "similarity": "Similarity",
+      "mergeFiles": "Merge Files",
+      "keepOriginal": "Keep Original",
+      "deleteAll": "Delete All Duplicates"
+    },
+    
+    "security": {
+      "title": "Advanced Security",
+      "encrypt": "Encrypt File",
+      "decrypt": "Decrypt File",
+      "accessLogs": "Access Logs",
+      "securityAlerts": "Security Alerts",
+      "permissions": "Permissions",
+      "auditTrail": "Audit Trail",
+      "twoFactorAuth": "Two-Factor Authentication",
+      "digitalSignature": "Digital Signature"
+    },
+    
+    "previewFeature": {
+      "title": "File Preview",
+      "generating": "Generating Preview...",
+      "notSupported": "Preview not supported for this file type",
+      "thumbnailView": "Thumbnail View",
+      "fullscreen": "Fullscreen"
+    },
+    
+    "advancedActions": {
+      "star": "Star File",
+      "unstar": "Unstar File",
+      "copyLink": "Copy Link",
+      "properties": "Properties",
+      "history": "View History",
+      "collaborate": "Collaborate",
+      "analyze": "AI Analysis",
+      "compress": "Compress",
+      "extract": "Extract"
+    }
+  },
+  "news": {
+    "title": "News & Updates",
+    "subtitle": "Stay informed with the latest developments and announcements",
+    "topNews": "Breaking News",
+    "announcements": "Announcements",
+    "achievements": "Recent Achievements",
+    "loadMore": "Load More",
+    "types": {
+      "maintenance": "Maintenance",
+      "security": "Security",
+      "feature": "New Feature",
+      "training": "Training",
+      "general": "General",
+      "urgent": "Urgent"
+    },
+    "categories": {
+      "technology": "Technology",
+      "partnership": "Partnership",
+      "awards": "Awards",
+      "innovation": "Innovation",
+      "security": "Security",
+      "training": "Training"
+    },
+    "actions": {
+      "readMore": "Read More",
+      "viewDetails": "View Details",
+      "share": "Share",
+      "bookmark": "Bookmark"
+    },
+    "meta": {
+      "publishedOn": "Published on",
+      "by": "by",
+      "category": "Category",
+      "readTime": "min read",
+      "views": "views"
+    }
+  },
+  "surveys": {
+    "title": "Surveys",
+    "subtitle": "View and participate in available surveys",
+    "loading": "Loading surveys...",
+    "noSurveys": "No surveys available",
+    "error": {
+      "title": "Error Loading Surveys",
+      "message": "Failed to load surveys. Please try again.",
+      "invalidToken": "Invalid token provided",
+      "expiredToken": "Your token has expired",
+      "inactiveSurvey": "This survey is no longer active",
+      "retry": "Retry"
+    },
+    "tokenInput": {
+      "placeholder": "Enter your survey access token...",
+      "label": "Survey Access Token",
+      "button": "Load Surveys",
+      "required": "Token is required"
+    },
+    "surveyCard": {
+      "estimatedTime": "Estimated time",
+      "minutes": "minutes",
+      "questionsCount": "Questions",
+      "question": "question",
+      "questions": "questions",
+      "createdBy": "Created by",
+      "createdAt": "Created on",
+      "expiresAt": "Expires on",
+      "expired": "Expired",
+      "active": "Active",
+      "inactive": "Inactive",
+      "takeSurvey": "Take Survey",
+      "viewSurvey": "View Survey"
+    },
+    "permissions": {
+      "canSubmit": "Can submit responses",
+      "canViewResults": "Can view results",
+      "accessType": "Access type",
+      "token": "Token access"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "expired": "Expired"
+    }
+  },
+  "userManagement": {
+    "title": "User Management",
+    "subtitle": "Manage users and groups in your organization",
+  "users": {
+    "title": "Users",
+    "addUser": "Add User",
+    "headerTitle": "Users",
+    "headerSubtitle": "Review every user, add new members, and edit their permissions with ease."
+  },
+  "groups": {
+    "title": "Groups",
+    "addGroup": "Add Group",
+    "headerTitle": "Groups",
+    "headerSubtitle": "Organise teams, assign members, and track group activity in one place."
+  },
+    "buttons": {
+      "refresh": "Refresh",
+      "save": "Save",
+      "cancel": "Cancel",
+      "resetPassword": "Reset Password",
+      "ok": "OK"
+    },
+    "tooltips": {
+      "viewUser": "View user details",
+      "editUser": "Edit user information",
+      "resetPassword": "Reset user password",
+      "deleteUser": "Delete user"
+    },
+    "validation": {
+      "required": "This field is required",
+      "password": {
+        "requirements": "Password Requirements:",
+        "minLength": "Password must be at least 8 characters long",
+        "notOnlyNumbers": "Must not contain only numbers",
+        "notCommon": "Must not be a common password",
+        "notSimilar": "Must not be similar to your personal information",
+        "tooCommon": "This password is too common.",
+        "onlyNumbers": "Password cannot contain only numbers",
+        "tooSimilar": "Password is too similar to your personal information"
+      }
+    },
+    "dashboard": {
+      "totalUsers": "Total Users",
+      "activeUsers": "Active Users",
+      "totalGroups": "Total Groups",
+      "admins": "Administrators"
+    },
+    "forms": {
+      "user": {
+        "email": "Email Address",
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "role": "Role",
+        "authType": "Authentication Type",
+        "authTypeRegular": "Regular (Email/Password)",
+        "authTypeAzure": "Azure AD",
+        "password": "Password",
+        "passwordPlaceholder": "Enter a secure password",
+        "showPassword": "Show password",
+        "hidePassword": "Hide password",
+        "groups": "Groups"
+      }
+    },
+    "modals": {
+      "user": {
+        "create": {
+          "title": "Create New User"
+        },
+        "edit": {
+          "title": "Edit User"
+        },
+        "view": {
+          "title": "View User"
+        },
+        "invite": {
+          "title": "Invite User"
+        },
+        "resetPassword": {
+          "title": "Reset User Password"
+        },
+        "delete": {
+          "subtitle": "Are you sure you want to delete this user?"
+        }
+      },
+      "group": {
+        "create": {
+          "title": "Create New Group"
+        },
+        "edit": {
+          "title": "Edit Group"
+        },
+        "view": {
+          "title": "View Group"
+        },
+        "delete": {
+          "subtitle": "Are you sure you want to delete this group?"
+        }
+      }
+    },
+    "messages": {
+      "bulkDelete": {
+        "confirm": {
+          "title": "Confirm Bulk User Deletion",
+          "text": "Are you sure you want to delete the selected users? This action cannot be undone.",
+          "largeBatchWarning": "You are about to delete {{count}} users. This is a large batch operation. Are you sure you want to continue?",
+          "confirmButtonText": "Yes, Delete Users",
+          "cancelButtonText": "Cancel"
+        },
+        "results": {
+          "success": {
+            "title": "Users Deleted Successfully",
+            "text": "{{success}} out of {{total}} users were deleted successfully.",
+            "confirmButtonText": "OK"
+          },
+          "partial": {
+            "title": "Partial Success",
+            "text": "{{success}} out of {{total}} users were deleted. {{failed}} users could not be deleted.",
+            "confirmButtonText": "OK"
+          },
+          "badRequest": {
+            "title": "Delete Operation Failed",
+            "texts": {
+              "cannotDeleteCurrentUser": "Cannot Delete Current User",
+              "cannotDeleteCurrentUserDesc": "You cannot delete your own account while logged in.",
+              "cannotDeleteLastSuperAdmin": "Cannot Delete Last Super Admin",
+              "cannotDeleteLastSuperAdminDesc": "The last super administrator cannot be deleted to maintain system security.",
+              "invalidData": "Invalid request data provided.",
+              "noUsersDeleted": "No users were deleted due to validation errors."
+            },
+            "confirmButtonText": "OK"
+          },
+          "unauthorized": {
+            "title": "Unauthorized",
+            "text": "You don't have permission to perform this operation.",
+            "confirmButtonText": "OK"
+          },
+          "forbidden": {
+            "title": "Access Denied",
+            "text": "You don't have sufficient privileges to delete these users.",
+            "confirmButtonText": "OK"
+          },
+          "serverError": {
+            "title": "Server Error",
+            "text": "An error occurred while processing your request. Please try again later.",
+            "confirmButtonText": "OK"
+          }
+        }
+      },
+      "singleDelete": {
+        "confirm": {
+          "title": "Confirm User Deletion",
+          "text": "Are you sure you want to delete the user '{{email}}'? This action cannot be undone.",
+          "confirmButtonText": "Yes, Delete User",
+          "cancelButtonText": "Cancel"
+        },
+        "results": {
+          "success": {
+            "title": "User Deleted Successfully",
+            "text": "The user '{{email}}' has been deleted successfully.",
+            "confirmButtonText": "OK"
+          },
+          "error": {
+            "title": "Failed to Delete User",
+            "text": "An error occurred while deleting the user. Please try again later.",
+            "confirmButtonText": "OK"
+          }
+        }
+      },
+      "resetPassword": {
+        "success": {
+          "title": "Password Reset Successfully",
+          "text": "The password for user '{{email}}' has been reset successfully."
+        },
+        "error": {
+          "title": "Failed to Reset Password",
+          "text": "An error occurred while resetting the user's password. Please try again later.",
+          "userNotFound": "User not found or does not exist.",
+          "forbidden": {
+            "title": "Permission Denied",
+            "text": "You don't have permission to reset this user's password."
+          }
+        }
+      }
+    }
+  }
+}

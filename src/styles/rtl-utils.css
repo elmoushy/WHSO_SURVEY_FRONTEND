@@ -1,0 +1,201 @@
+/* RTL Utility Classes and Global RTL Support */
+
+/* Global RTL fixes for common patterns */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+/* Fix flexbox layouts for RTL */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+/* Fix common positioning issues */
+[dir="rtl"] .position-left {
+  left: auto;
+  right: var(--position-value, 0);
+}
+
+[dir="rtl"] .position-right {
+  right: auto;
+  left: var(--position-value, 0);
+}
+
+/* Fix text alignment */
+[dir="rtl"] .text-left {
+  text-align: right;
+}
+
+[dir="rtl"] .text-right {
+  text-align: left;
+}
+
+/* Fix margins and padding */
+[dir="rtl"] .margin-left {
+  margin-left: 0;
+  margin-right: var(--margin-value, 1rem);
+}
+
+[dir="rtl"] .margin-right {
+  margin-right: 0;
+  margin-left: var(--margin-value, 1rem);
+}
+
+[dir="rtl"] .padding-left {
+  padding-left: 0;
+  padding-right: var(--padding-value, 1rem);
+}
+
+[dir="rtl"] .padding-right {
+  padding-right: 0;
+  padding-left: var(--padding-value, 1rem);
+}
+
+/* Fix border radius for common patterns */
+[dir="rtl"] .border-left {
+  border-left: none;
+  border-right: var(--border-value, 1px solid currentColor);
+}
+
+[dir="rtl"] .border-right {
+  border-right: none;
+  border-left: var(--border-value, 1px solid currentColor);
+}
+
+/* Fix transforms for RTL */
+[dir="rtl"] .translate-x-positive {
+  transform: translateX(calc(-1 * var(--translate-value, 8px)));
+}
+
+[dir="rtl"] .translate-x-negative {
+  transform: translateX(var(--translate-value, 8px));
+}
+
+/* Fix animations for RTL */
+[dir="rtl"] .slide-in-left {
+  animation: slideInFromRight var(--animation-duration, 0.6s) ease-out forwards;
+}
+
+[dir="rtl"] .slide-in-right {
+  animation: slideInFromLeft var(--animation-duration, 0.6s) ease-out forwards;
+}
+
+/* Common dropdown positioning fix */
+[dir="rtl"] .dropdown {
+  left: auto;
+  right: 0;
+}
+
+/* Common navigation slider positioning */
+[dir="rtl"] .navigation-slider {
+  left: auto;
+  right: 0;
+}
+
+/* Arrow direction fixes */
+[dir="rtl"] .arrow-right::before {
+  content: "◀";
+}
+
+[dir="rtl"] .arrow-left::before {
+  content: "▶";
+}
+
+/* Icon positioning fixes */
+[dir="rtl"] .icon-left {
+  left: auto;
+  right: var(--icon-position, 1rem);
+}
+
+[dir="rtl"] .icon-right {
+  right: auto;
+  left: var(--icon-position, 1rem);
+}
+
+/* Table cell alignment */
+[dir="rtl"] .table-cell-start {
+  text-align: right;
+}
+
+[dir="rtl"] .table-cell-end {
+  text-align: left;
+}
+
+/* Button group fixes */
+[dir="rtl"] .button-group {
+  flex-direction: row-reverse;
+}
+
+/* Form field fixes */
+[dir="rtl"] .form-field-icon {
+  left: auto;
+  right: var(--field-padding, 1rem);
+}
+
+/* Gradient direction fixes for RTL */
+[dir="rtl"] .gradient-horizontal {
+  background: linear-gradient(270deg, var(--gradient-colors));
+}
+
+/* Animation keyframes for RTL */
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutToRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+}
+
+/* Specific fixes for common UI patterns */
+[dir="rtl"] .modal {
+  text-align: right;
+}
+
+[dir="rtl"] .modal .close-button {
+  left: var(--close-position, 1rem);
+  right: auto;
+}
+
+[dir="rtl"] .breadcrumb::after {
+  content: "◀";
+}
+
+[dir="ltr"] .breadcrumb::after {
+  content: "▶";
+}
+
+/* Sidebar positioning */
+[dir="rtl"] .sidebar {
+  left: auto;
+  right: 0;
+}
+
+/* Tooltip positioning */
+[dir="rtl"] .tooltip {
+  text-align: right;
+}
+
+/* Progress bar direction */
+[dir="rtl"] .progress-bar {
+  direction: ltr; /* Keep progress bars LTR for consistency */
+}
+
+/* Chart and graph direction */
+[dir="rtl"] .chart,
+[dir="rtl"] .graph {
+  direction: ltr; /* Keep data visualizations LTR for readability */
+}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="night">
+  <head>
+    <meta charset="UTF-8">
+    <!-- <link rel="icon" href="/News-Logo.png"> -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WHSO Survey</title>
+    
+    <!-- Security Headers (Note: CSP and X-Frame-Options should be set via HTTP headers in production) -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta http-equiv="Permissions-Policy" content="geolocation=(), microphone=(), camera=()">
+    
+    <!-- All CSS and fonts loaded locally via main.ts for CORS compliance -->
+    
+    <!-- Disable zoom on mobile for better UX -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  
+  </head>
+  <body data-bs-spy="scroll" data-bs-target="#mainNav">
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+    <!-- All JavaScript libraries loaded locally via main.ts for CORS compliance -->
+  </body>
+</html>
