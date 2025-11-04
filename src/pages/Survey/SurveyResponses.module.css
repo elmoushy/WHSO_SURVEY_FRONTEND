@@ -1055,8 +1055,7 @@
 }
 
 .modalClose {
-  width: 36px;
-  height: 36px;
+
   background: var(--bg-glass);
   border: none;
   border-radius: 8px;

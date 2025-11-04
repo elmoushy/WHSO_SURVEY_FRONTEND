@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Arabic PDF - اختبار PDF العربي</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #A17D23;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        button {
+            background: #A17D23;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        button:hover {
+            background: #8a6a1e;
+        }
+        .test-text {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-right: 4px solid #A17D23;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>اختبار دعم اللغة العربية في PDF</h1>
+        
+        <div class="test-text">
+            <p><strong>النص التجريبي:</strong></p>
+            <p>هذا نص تجريبي باللغة العربية لاختبار خط Amiri في ملف PDF</p>
+            <p>يجب أن يظهر هذا النص بشكل صحيح في الملف المُصدَّر</p>
+            <p><strong>الأرقام:</strong> ١٢٣٤٥٦٧٨٩٠</p>
+        </div>
+
+        <button onclick="testArabicPDF()">تصدير PDF اختباري</button>
+        
+        <div id="status" class="status"></div>
+    </div>
+
+    <script type="module">
+        import jsPDF from 'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/+esm';
+        
+        // You'll need to load the font data from your generated file
+        window.testArabicPDF = async function() {
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'status';
+            statusEl.textContent = 'جاري إنشاء PDF...';
+            statusEl.classList.add('success');
+            
+            try {
+                const pdf = new jsPDF({
+                    orientation: 'p',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                // Note: In production, you would import and use addAmiriFont here
+                // For now, this is a placeholder to show the structure
+                
+                // Add title
+                pdf.setFontSize(20);
+                pdf.text('اختبار اللغة العربية', 105, 30, { align: 'center' });
+                
+                // Add content
+                pdf.setFontSize(14);
+                pdf.text('هذا نص تجريبي باللغة العربية', 105, 50, { 
+                    align: 'center',
+                    isInputRtl: true 
+                });
+                
+                pdf.text('يجب أن يظهر هذا النص بشكل صحيح', 105, 70, { 
+                    align: 'center',
+                    isInputRtl: true 
+                });
+                
+                // Save the PDF
+                pdf.save('test-arabic-pdf.pdf');
+                
+                statusEl.textContent = '✅ تم إنشاء PDF بنجاح!';
+                statusEl.classList.add('success');
+            } catch (error) {
+                statusEl.textContent = '❌ خطأ: ' + error.message;
+                statusEl.classList.remove('success');
+                statusEl.classList.add('error');
+                console.error('Error generating PDF:', error);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -541,13 +541,14 @@
       >
         <div :class="$style.formatModal" @click.stop>
           <div :class="$style.modalHeader">
+              <button :class="$style.modalClose" @click="showFormatModal = false">
+              <i class="fas fa-times"></i>
+            </button>
             <h3 :class="$style.modalTitle">
               <i class="fas fa-file-export"></i>
               اختر صيغة التصدير
             </h3>
-            <button :class="$style.modalClose" @click="showFormatModal = false">
-              <i class="fas fa-times"></i>
-            </button>
+          
           </div>
 
           <div :class="$style.modalContent">
@@ -593,7 +594,7 @@
               </div>
 
               <!-- PDF export - Hidden for next release -->
-              <!-- <div
+              <div
                 :class="[
                   $style.formatOption,
                   { [$style.selected]: selectedFormat === 'pdf' },
@@ -607,7 +608,7 @@
                   <h4 :class="$style.formatTitle">PDF</h4>
                   <p :class="$style.formatDesc">تقرير منسق وجاهز للطباعة</p>
                 </div>
-              </div> -->
+              </div>
 
               <div
                 :class="[
@@ -820,7 +821,7 @@ import { useAppStore } from "../../stores/useAppStore";
 import { apiClient } from "../../services/jwtAuthService";
 import Swal from "sweetalert2";
 import jsPDF from "jspdf";
-import "../../lib/fonts/Amiri-normal.js";
+import { addAmiriFont } from "../../lib/fonts/Amiri-normal";
 
 // Analytics Components
 import SurveyAnalytics from "../../components/Analytics/SurveyAnalytics.vue";
@@ -829,6 +830,9 @@ import MultipleChoiceAnalytics from "../../components/Analytics/MultipleChoiceAn
 import RatingAnalytics from "../../components/Analytics/RatingAnalytics.vue";
 import YesNoAnalytics from "../../components/Analytics/YesNoAnalytics.vue";
 import TextAnalytics from "../../components/Analytics/TextAnalytics.vue";
+
+import { reshape } from "arabic-persian-reshaper";
+
 
 // Props
 interface Props {
@@ -848,6 +852,29 @@ const currentTheme = computed(() => store.currentTheme);
 const isRTL = computed(() => store.currentLanguage === "ar");
 const t = computed(() => store.t);
 
+// Clean Unicode direction markers that cause display issues in PDF
+function cleanDirectionMarkers(text: string): string {
+  if (!text) return text;
+  // Remove all Unicode direction markers
+  return text
+    .replace(/[\u200E\u200F\u202A\u202B\u202C\u202D\u202E\u2066\u2067\u2068\u2069]/g, '')
+    .trim();
+}
+
+function shapeArabicText(text: string, rtl: boolean): string {
+  if (!rtl || !text) return text;
+  try {
+    // Clean direction markers first
+    const cleaned = cleanDirectionMarkers(text);
+    // تشكيل وربط الحروف
+    const shaped = reshape(cleaned);
+    // jsPDF يرسم من اليسار إلى اليمين دائماً، لذا نقلب الترتيب بعد التشكيل
+    return shaped.split('').reverse().join('');
+  } catch (e) {
+    console.warn("Arabic shaping error:", e);
+    return text;
+  }
+}
 
 const ARABIC_DIGIT_MAP: Record<string, string> = {
   "0": "٠",
@@ -862,33 +889,65 @@ const ARABIC_DIGIT_MAP: Record<string, string> = {
   "9": "٩",
 };
 
-const pdfColors = {
-  primary: "#A17D23",
-  secondary: "#181B25",
-  subtitle: "#4A5565",
-  border: "#E5E7EB",
-  light: "#F5F7FA",
-  white: "#FFFFFF",
+// Dynamic PDF colors based on theme
+const getPdfColors = (theme: string) => {
+  // Light theme colors (matching design-tokens.css)
+  const lightTheme = {
+    primary: "#A17D23",        // --color-gold-700 (main gold)
+    primaryLight: "#CEA55B",   // --color-gold-500 (lighter gold)
+    secondary: "#231F20",      // --color-gray-900 (dark gray)
+    subtitle: "#4D4D4F",       // --color-gray-700 (medium gray)
+    text: "#231F20",           // --color-gray-900 (primary text)
+    textMuted: "#808285",      // --color-gray-500 (muted text)
+    border: "#E5E8E1",         // --color-gray-100 (light border)
+    light: "#F8F9FA",          // Light surface
+    surface: "#FFFFFF",        // White background
+    accent: "#D8CFBB",         // --color-beige-300 (beige accent)
+  };
+
+  // Dark theme colors
+  const darkTheme = {
+    primary: "#CEA55B",        // Lighter gold for dark background
+    primaryLight: "#D3B079",   // --color-gold-400
+    secondary: "#E5E8E1",      // Light gray for dark bg
+    subtitle: "#A5A5A5",       // Muted gray
+    text: "#E5E8E1",           // Light text
+    textMuted: "#A5A5A5",      // Muted light text
+    border: "#4D4D4F",         // Dark border
+    light: "#1F1F1F",          // Dark surface
+    surface: "#141414",        // Dark background
+    accent: "#2A2A2A",         // Dark accent
+  };
+
+  return theme === "light" ? lightTheme : darkTheme;
 };
 
-const LRM = "\u200E";
-const RLM = "\u200F";
-const RLI = "\u2067";
-const PDI = "\u2069";
+// Unicode direction markers (not used in PDF rendering to avoid display issues)
+// const LRM = "\u200E"; // Left-to-Right Mark
+// const RLM = "\u200F"; // Right-to-Left Mark
+// const RLI = "\u2067"; // Right-to-Left Isolate
+// const PDI = "\u2069"; // Pop Directional Isolate
 
 function isArabicLine(s: string): boolean {
   return /[\u0600-\u06FF]/.test(String(s || ""));
 }
 
-function protectLTRSegments(s: string): string {
-  if (!s) return "";
-  return String(s)
-    .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, m => `${RLI}${m}${PDI}`)
-    .replace(/(https?:\/\/\S+|www\.\S+)/g, m => `${RLI}${m}${PDI}`)
-    .replace(/\b[0-9][0-9A-Za-z\-_.:/]*\b/g, m => `${RLI}${m}${PDI}`);
-}
+// Not used in PDF rendering - direction markers cause display issues
+// function protectLTRSegments(s: string): string {
+//   if (!s) return "";
+//   const RLI = "\u2067";
+//   const PDI = "\u2069";
+//   return String(s)
+//     .replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, m => `${RLI}${m}${PDI}`)
+//     .replace(/(https?:\/\/\S+|www\.\S+)/g, m => `${RLI}${m}${PDI}`)
+//     .replace(/\b[0-9][0-9A-Za-z\-_.:/]*\b/g, m => `${RLI}${m}${PDI}`);
+// }
 
-const asLTR = (s: string) => `${RLI}${s}${PDI}`;
+// const asLTR = (s: string) => {
+//   const RLI = "\u2067";
+//   const PDI = "\u2069";
+//   return `${RLI}${s}${PDI}`;
+// };
 
 const localizeDigits = (value: string, rtl: boolean) =>
   rtl ? value.replace(/[0-9]/g, (digit) => ARABIC_DIGIT_MAP[digit] ?? digit) : value;
@@ -923,25 +982,33 @@ const drawText = (
     align?: "left" | "right" | "center";
   },
 ) => {
-  const { rtl, size = 12, weight = "normal", color = pdfColors.secondary } =
+  const { rtl, size = 12, weight = "normal", color = "#231F20" } =
     options;
   const align = options.align ?? (rtl ? "right" : "left");
 
   const base = text ?? "";
   const localized = rtl ? localizeDigits(base, true) : base;
   const lineHasArabic = isArabicLine(localized);
-  const guarded =
-    localized.includes(RLI) && localized.includes(PDI)
-      ? localized
-      : protectLTRSegments(localized);
+  
+  // For PDF rendering, we don't need direction markers
+  // They cause display issues - clean text works better
+  const cleaned = cleanDirectionMarkers(localized);
+  
+  // For Arabic text: reshape + reverse, then render as LTR
+  // This gives us full control over the text rendering
+  const shaped = shapeArabicText(cleaned, rtl && lineHasArabic);
+
   const fontWeight = weight === "bold" ? "bold" : "normal";
 
   pdf.setFont("Amiri", fontWeight);
   pdf.setFontSize(size);
   pdf.setTextColor(color);
-  pdf.text(guarded, x, y, {
+  
+  // When text is reshaped and reversed, we render it as LTR
+  // This prevents double reversal by jsPDF
+  pdf.text(shaped, x, y, {
     align,
-    isInputRtl: rtl && lineHasArabic,
+    isInputRtl: false, // Always false because we handle reversal in shapeArabicText
   });
 };
 
@@ -1444,7 +1511,15 @@ const downloadAsPDF = async (responses: any[]) => {
   try {
     const rtl = isRTL.value;
     const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+    
+    // Add and set Amiri font for Arabic support
+    addAmiriFont(pdf);
     pdf.setFont("Amiri", "normal");
+    
+    // Get theme-based colors for PDF
+    const theme = currentTheme.value;
+    const pdfColors = getPdfColors(theme);
+    
     const locale = rtl ? 'ar-SA' : 'en-US';
     const numberFormatter = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 });
 
@@ -1452,16 +1527,29 @@ const downloadAsPDF = async (responses: any[]) => {
       if (!value) return '';
       const date = new Date(value);
       if (Number.isNaN(date.getTime())) return '';
-      const formatted = date.toLocaleString(locale, {
-        calendar: 'gregory',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      });
-      return rtl ? localizeDigits(formatted, true) : formatted;
+      
+      if (rtl) {
+        // Format manually for Arabic to avoid Unicode markers
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+        
+        // Format as: YYYY/MM/DD HH:MM:SS and convert to Arabic numerals
+        const formatted = `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+        return localizeDigits(formatted, true);
+      } else {
+        return date.toLocaleString('en-US', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        });
+      }
     };
 
     const strings = {
@@ -1509,7 +1597,7 @@ const downloadAsPDF = async (responses: any[]) => {
       rtl: reportTitleRtl,
       size: 18,
       weight: 'bold',
-      color: pdfColors.white,
+      color: '#FFFFFF', // White text on primary background
       align: 'center',
     });
     const subtitle = rtl
@@ -1519,7 +1607,7 @@ const downloadAsPDF = async (responses: any[]) => {
     drawText(pdf, subtitle, pageWidth / 2, yPosition + 23, {
       rtl: subtitleRtl,
       size: 11,
-      color: pdfColors.white,
+      color: '#FFFFFF', // White text on primary background
       align: 'center',
     });
     yPosition += 42;
@@ -1533,12 +1621,11 @@ const downloadAsPDF = async (responses: any[]) => {
       const submittedAt = formatDateForPdf(response?.submitted_at);
       const headingPrefix = rtl ? 'الاستجابة رقم' : 'Response #';
       const heading = rtl
-        ? (submittedAt ? `${submittedAt} - ${responseOrder} ${headingPrefix}` : `${responseOrder} ${headingPrefix}`)
+        ? (submittedAt ? `${headingPrefix} ${responseOrder} - ${submittedAt}` : `${headingPrefix} ${responseOrder}`)
         : (submittedAt ? `${headingPrefix} ${responseOrder} - ${submittedAt}` : `${headingPrefix} ${responseOrder}`);
       const headingRtl = isArabicLine(heading);
-      const headingContent = rtl && !headingRtl ? asLTR(heading) : heading;
       const headingX = headingRtl ? pageWidth - margin - 6 : margin + 6;
-      drawText(pdf, headingContent, headingX, yPosition + 8, {
+      drawText(pdf, heading, headingX, yPosition + 8, {
         rtl: headingRtl,
         size: 13,
         weight: 'bold',
@@ -1573,12 +1660,14 @@ const downloadAsPDF = async (responses: any[]) => {
         const rawValue = typeof value === 'string' ? value : String(value ?? '');
         const valueHasArabic = isArabicLine(rawValue);
         const labelHasArabic = isArabicLine(label);
-        const lineRtl = rtl && valueHasArabic;
-        const labelSegment =
-          rtl && !lineRtl && labelHasArabic ? `${RLM}${label}` : label;
-        const separator = rtl && !lineRtl ? `${LRM}: ` : ': ';
-        const fullLine = `${labelSegment}${separator}${rawValue}`.trim();
+        
+        // Determine if the whole line should be RTL (when both label and value are Arabic)
+        const lineRtl = rtl && labelHasArabic && valueHasArabic;
+        
+        // Simple formatting without direction markers
+        const fullLine = `${label}: ${rawValue}`;
         const anchorX = lineRtl ? pageWidth - margin : margin;
+        
         yPosition = drawParagraph(
           pdf,
           fullLine,
@@ -1683,9 +1772,8 @@ const downloadAsPDF = async (responses: any[]) => {
             },
           ) + 4;
 
-          const answerValueRaw = formatAnswerForCSV(answer) || strings.noAnswer;
-          const answerValue = protectLTRSegments(answerValueRaw);
-          const answerValueHasArabic = isArabicLine(answerValueRaw);
+          const answerValue = formatAnswerForCSV(answer) || strings.noAnswer;
+          const answerValueHasArabic = isArabicLine(answerValue);
           const answerValueRtl = rtl && answerValueHasArabic;
           ensureSpace(16);
           pdf.setFillColor(pdfColors.light);
