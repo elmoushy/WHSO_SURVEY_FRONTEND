@@ -596,7 +596,12 @@ color: #A17D23;
   color:var(--card-text);
   text-align:right;
   margin:0;
-
+  display:-webkit-box;
+  -webkit-line-clamp:5;
+  line-clamp:5;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  text-overflow:ellipsis;
 }
 .cardDivider{
   height:2px;

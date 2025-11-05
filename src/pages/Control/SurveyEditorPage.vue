@@ -96,7 +96,31 @@ onMounted(async () => {
         const response = await templateService.getPredefinedTemplates()
         const template = response.templates.find(t => t.id === templateId)
         if (template) {
-          templateData.value = template
+          console.log('📋 Found predefined template:', template)
+          
+          // Transform predefined template to survey format with bilingual support
+          const transformedTemplate = {
+            title: isArabic ? (template.name_ar || template.name) : template.name,
+            description: isArabic ? (template.description_ar || template.description) : template.description,
+            questions: template.questions.map((q: any, index: number) => ({
+              text: isArabic ? (q.text_ar || q.text) : q.text,
+              question_type: q.question_type,
+              options: q.options || undefined,
+              is_required: q.is_required || false,
+              order: q.order || index + 1,
+              placeholder: q.placeholder || undefined,
+              validation_type: q.validation_type || 'none',
+              NPS_Calculate: false,
+              CSAT_Calculate: false,
+              min_scale: 0,
+              max_scale: 5,
+              semantic_tag: 'none',
+              options_satisfaction_values: []
+            }))
+          }
+          
+          console.log('✅ Transformed template:', transformedTemplate)
+          templateData.value = transformedTemplate as any
         }
       } else if (type === 'custom') {
         const response = await templateService.getTemplate(templateId)
@@ -165,7 +189,7 @@ const handlePublish = async (data: any) => {
     const surveyId = route.params.id as string
     
     Swal.fire({
-      title: isArabic ? 'جاري إنشاء الاستطلاع...' : 'Creating Survey...',
+      title: isArabic ? 'جاري حفظ الاستطلاع...' : 'Saving Survey...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     })
@@ -182,6 +206,7 @@ const handlePublish = async (data: any) => {
     Swal.close()
     
     // Navigate to access management with the created survey
+    // The access modal will handle the final submission after access is configured
     router.push({
       name: 'SurveyControl',
       query: { 
@@ -195,7 +220,7 @@ const handlePublish = async (data: any) => {
     Swal.fire({
       icon: 'error',
       title: isArabic ? 'خطأ' : 'Error',
-      text: error.message || (isArabic ? 'فشل في إنشاء الاستطلاع' : 'Failed to create survey'),
+      text: error.message || (isArabic ? 'فشل في حفظ الاستطلاع' : 'Failed to save survey'),
       confirmButtonText: isArabic ? 'موافق' : 'OK'
     })
   }

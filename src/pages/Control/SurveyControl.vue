@@ -250,7 +250,7 @@
               </button>
 
               <button
-                v-if="(survey.status === 'submitted' || survey.status === 'active') && survey.response_count > 0"
+                v-if="survey.status === 'submitted'"
                 :class="[$style.actionButton, $style.outlinedAction]"
                 @click.stop="viewResponses(survey.id)"
                 :title="t('survey.card.viewResponses')"
@@ -1114,7 +1114,7 @@ const handleClickOutside = (e: Event) => {
 }
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
   refreshData()
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('click', handleDropdownClickOutside)
@@ -1122,7 +1122,20 @@ onMounted(() => {
   // Check if we need to open access modal (from redirect after publish)
   if (route.query.openAccess === 'true' && route.query.surveyId) {
     const surveyId = route.query.surveyId as string
-    const survey = surveys.value.find(s => s.id === surveyId)
+    
+    // First, try to find the survey in the existing list
+    let survey = surveys.value.find(s => s.id === surveyId)
+    
+    // If not found (new draft), fetch it from the API
+    if (!survey) {
+      try {
+        const response = await surveyService.getSurvey(surveyId)
+        survey = response.data
+      } catch (error) {
+        console.error('Failed to load survey for access modal:', error)
+      }
+    }
+    
     if (survey) {
       selectedSurveyForAccess.value = survey
       isSubmissionFlow.value = route.query.isSubmission === 'true'
