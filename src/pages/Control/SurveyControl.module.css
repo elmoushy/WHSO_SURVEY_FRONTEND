@@ -478,6 +478,8 @@ color: #A17D23;
   position:relative;
   cursor:pointer;
   transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+  min-height: 420px;
+  max-height: 550px;
 }
 .surveyCard:hover{
   transform: translateY(-6px);
@@ -585,23 +587,52 @@ color: #A17D23;
   color:#ffffff;
 }
 
+.cardContent {
+  min-height: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
 .cardTitle{
   font-size:18px;
   font-weight:800;
   color:var(--card-title-color);
   text-align:right;
+  line-height:1.35;
+  max-height:2.7em;
+  overflow:hidden;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  word-break:break-word;
+  cursor: default;
+  margin-bottom: 8px;
 }
+
+.cardTitle:hover {
+  color: var(--color-gold-700, #A17D23);
+}
+
 .cardDescription{
   font-size:16px;
   color:var(--card-text);
   text-align:right;
   margin:0;
-  display:-webkit-box;
-  -webkit-line-clamp:5;
-  line-clamp:5;
-  -webkit-box-orient:vertical;
+  line-height:1.6;
+  max-height:4.8em;
   overflow:hidden;
-  text-overflow:ellipsis;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:3;
+  line-clamp:3;
+  word-break:break-word;
+  cursor: default;
+}
+
+.cardDescription:hover {
+  color: var(--card-title-color);
 }
 .cardDivider{
   height:2px;
@@ -615,6 +646,7 @@ color: #A17D23;
   flex-wrap:wrap; 
   gap:10px;
   align-items:flex-start;
+  flex-shrink: 0;
 }
 .chip{
   display:flex;

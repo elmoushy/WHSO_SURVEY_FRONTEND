@@ -212,9 +212,9 @@
               </div>
              
             </div>
-<div>
-            <h3 :class="$style.cardTitle">{{ survey.title }}</h3>
-            <p :class="$style.cardDescription">{{ survey.description }}</p>
+<div :class="$style.cardContent">
+            <h3 :class="$style.cardTitle" :title="survey.title">{{ survey.title }}</h3>
+            <p :class="$style.cardDescription" :title="survey.description">{{ survey.description }}</p>
 </div>
 
             <div :class="$style.cardDivider"></div>
@@ -250,7 +250,7 @@
               </button>
 
               <button
-                v-if="survey.status === 'submitted'"
+                v-if="survey.status !== 'draft'"
                 :class="[$style.actionButton, $style.outlinedAction]"
                 @click.stop="viewResponses(survey.id)"
                 :title="t('survey.card.viewResponses')"
@@ -877,6 +877,12 @@ const handleAccessSave = async (_data: any) => {
   showAccessModal.value = false
   selectedSurveyForAccess.value = null
   isSubmissionFlow.value = false
+  
+  // ✅ Clear query parameters if they exist
+  if (route.query.openAccess || route.query.surveyId || route.query.isSubmission) {
+    router.replace({ name: 'SurveyControl', query: {} })
+  }
+  
   await loadSurveys()
 }
 
@@ -884,6 +890,11 @@ const closeAccessModal = () => {
   showAccessModal.value = false
   selectedSurveyForAccess.value = null
   isSubmissionFlow.value = false
+  
+  // ✅ Clear query parameters if they exist
+  if (route.query.openAccess || route.query.surveyId || route.query.isSubmission) {
+    router.replace({ name: 'SurveyControl', query: {} })
+  }
 }
 const closeLinkSharingModal = () => {
   showLinkSharingModal.value = false
@@ -1140,9 +1151,13 @@ onMounted(async () => {
       selectedSurveyForAccess.value = survey
       isSubmissionFlow.value = route.query.isSubmission === 'true'
       showAccessModal.value = true
+      
+      // ✅ Clear query parameters to prevent modal from reopening on refresh
+      router.replace({ name: 'SurveyControl', query: {} })
     }
   }
 })
+
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('click', handleDropdownClickOutside)
