@@ -253,10 +253,17 @@
                 :pattern="getInputConfig(question.validation_type || 'none').pattern"
                 :class="[$style.textInput, { [$style.inputError]: getValidationError(question.id) }]"
                 v-model="answers[question.id]"
+                :maxlength="getMaxLength('text')"
                 @blur="handleInputBlur(question)"
-                @input="clearValidationError(question.id)"
+                @input="(e) => { clearValidationError(question.id); handleTextInput(question.id, 'text', e); }"
                 :placeholder="getInputConfig(question.validation_type || 'none').placeholder || 'اكتب إجابتك هنا...'"
               />
+            </div>
+            <div :class="$style.characterCount" :data-warning="getRemainingCharacters(question.id, 'text') < 100">
+              <span>{{ getCharacterCount(question.id) }} / {{ getMaxLength('text') }}</span>
+              <span v-if="getRemainingCharacters(question.id, 'text') < 100" :class="$style.remainingWarning">
+                ({{ getRemainingCharacters(question.id, 'text') }} حرف متبقي)
+              </span>
             </div>
             <div v-if="getValidationError(question.id)" :class="$style.errorMessage">
               <i class="fas fa-exclamation-circle"></i>
@@ -270,9 +277,17 @@
               <textarea
                 :class="$style.textArea"
                 v-model="answers[question.id]"
+                :maxlength="getMaxLength('textarea')"
+                @input="(e) => handleTextInput(question.id, 'textarea', e)"
                 placeholder="اكتب إجابتك المفصلة هنا... يمكنك كتابة عدة أسطر"
                 rows="4"
               ></textarea>
+            </div>
+            <div :class="$style.characterCount" :data-warning="getRemainingCharacters(question.id, 'textarea') < 200">
+              <span>{{ getCharacterCount(question.id) }} / {{ getMaxLength('textarea') }}</span>
+              <span v-if="getRemainingCharacters(question.id, 'textarea') < 200" :class="$style.remainingWarning">
+                ({{ getRemainingCharacters(question.id, 'textarea') }} حرف متبقي)
+              </span>
             </div>
           </div>
 
@@ -473,11 +488,18 @@
                   :pattern="getInputConfig(currentQuestion.validation_type || 'none').pattern"
                   :class="[$style.textInput, { [$style.inputError]: getValidationError(currentQuestion.id) }]"
                   v-model="answers[currentQuestion.id]"
+                  :maxlength="getMaxLength('text')"
                   @blur="handleInputBlur(currentQuestion)"
-                  @input="clearValidationError(currentQuestion.id)"
+                  @input="(e) => { if (currentQuestion) { clearValidationError(currentQuestion.id); handleTextInput(currentQuestion.id, 'text', e); } }"
                   :placeholder="getInputConfig(currentQuestion.validation_type || 'none').placeholder || 'اكتب إجابتك هنا...'"
                 />
                 <i class="fas fa-pen" :class="$style.inputIcon"></i>
+              </div>
+              <div :class="$style.characterCount" :data-warning="getRemainingCharacters(currentQuestion.id, 'text') < 100">
+                <span>{{ getCharacterCount(currentQuestion.id) }} / {{ getMaxLength('text') }}</span>
+                <span v-if="getRemainingCharacters(currentQuestion.id, 'text') < 100" :class="$style.remainingWarning">
+                  ({{ getRemainingCharacters(currentQuestion.id, 'text') }} حرف متبقي)
+                </span>
               </div>
               <div v-if="getValidationError(currentQuestion.id)" :class="$style.errorMessage">
                 <i class="fas fa-exclamation-circle"></i>
@@ -491,10 +513,18 @@
                 <textarea
                   v-model="answers[currentQuestion.id]"
                   :class="$style.textArea"
+                  :maxlength="getMaxLength('textarea')"
+                  @input="(e) => { if (currentQuestion) handleTextInput(currentQuestion.id, 'textarea', e); }"
                   placeholder="اكتب إجابتك المفصلة هنا... يمكنك كتابة عدة أسطر"
                   rows="4"
                 ></textarea>
                 <i class="fas fa-align-right" :class="$style.inputIcon"></i>
+              </div>
+              <div :class="$style.characterCount" :data-warning="getRemainingCharacters(currentQuestion.id, 'textarea') < 200">
+                <span>{{ getCharacterCount(currentQuestion.id) }} / {{ getMaxLength('textarea') }}</span>
+                <span v-if="getRemainingCharacters(currentQuestion.id, 'textarea') < 200" :class="$style.remainingWarning">
+                  ({{ getRemainingCharacters(currentQuestion.id, 'textarea') }} حrف متبقي)
+                </span>
               </div>
             </div>
 
@@ -808,6 +838,10 @@ const {
 
 // Computed
 const currentTheme = computed(() => store.currentTheme)
+
+// Constants for character limits
+const MAX_TEXT_LENGTH = 400
+const MAX_TEXTAREA_LENGTH = 2000
 
 // State
 const survey = ref<Survey | null>(null)
@@ -1484,6 +1518,33 @@ const handleModalClose = () => {
   showCountryDropdown.value = false
   searchQuery.value = ''
   showContactForm.value = false
+}
+
+// Character count helpers
+const getMaxLength = (questionType: string): number => {
+  return questionType === 'textarea' ? MAX_TEXTAREA_LENGTH : MAX_TEXT_LENGTH
+}
+
+const getCharacterCount = (questionId: string): number => {
+  const answer = answers.value[questionId]
+  return answer ? String(answer).length : 0
+}
+
+const getRemainingCharacters = (questionId: string, questionType: string): number => {
+  const max = getMaxLength(questionType)
+  const current = getCharacterCount(questionId)
+  return max - current
+}
+
+const handleTextInput = (questionId: string, questionType: string, event: Event) => {
+  const target = event.target as HTMLInputElement | HTMLTextAreaElement
+  const maxLength = getMaxLength(questionType)
+  
+  // Prevent input if max length is exceeded
+  if (target.value.length > maxLength) {
+    target.value = target.value.substring(0, maxLength)
+    answers.value[questionId] = target.value
+  }
 }
 
 // Lifecycle

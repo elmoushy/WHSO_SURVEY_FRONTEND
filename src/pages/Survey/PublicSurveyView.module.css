@@ -749,6 +749,45 @@
   color: var(--color-primary, #4a90e2);
 }
 
+/* ==============================
+   Character Counter Styles
+   ============================== */
+
+.characterCount {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  transition: color 0.3s ease;
+}
+
+.characterCount[data-warning="true"] {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.remainingWarning {
+  color: #f59e0b;
+  font-weight: 600;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.publicSurveyContainer[data-theme="night"] .characterCount {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.publicSurveyContainer[data-theme="night"] .characterCount[data-warning="true"] {
+  color: #fbbf24;
+}
+
+.publicSurveyContainer[data-theme="night"] .remainingWarning {
+  color: #fbbf24;
+}
+
 /* Input validation error styles */
 .inputError {
   border-color: #dc3545 !important;
