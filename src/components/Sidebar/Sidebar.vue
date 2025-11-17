@@ -38,6 +38,7 @@ type NavGroup = { id: string; items: NavItem[] }
 const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
         { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
+    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات' },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
     { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'إدارة المستخدمين', requiresRole: 'admin' },
   ]

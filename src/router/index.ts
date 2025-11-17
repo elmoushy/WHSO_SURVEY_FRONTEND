@@ -50,6 +50,9 @@ const SurveyEditorPage = () => import("../pages/Control/SurveyEditorPage.vue");
 // Notifications
 const Notifications = () => import("../pages/Notifications");
 
+// Chat
+const InternalChat = () => import("../pages/Chat/InternalChat.vue");
+
 /* =========================
    Routes
    ========================= */
@@ -114,6 +117,14 @@ const routes: RouteRecordRaw[] = [
     name: "Notifications",
     component: Notifications,
     meta: { title: "Notifications - WPC | WeaponpowerCloud App", requiresAuth: true },
+  },
+
+  // Internal Chat
+  {
+    path: "/chat",
+    name: "Chat",
+    component: InternalChat,
+    meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
   },
 
   // WebSocket Test (Development only)

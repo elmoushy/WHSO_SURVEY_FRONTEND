@@ -1,0 +1,542 @@
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+import { useChat } from '../../composables/useChat'
+import { validateFile } from '../../services/chatService'
+
+const {
+  sendMessage,
+  replyingTo,
+  editingMessage,
+  canPostMessages,
+  uploadFile,
+  uploadProgress,
+  removeUpload,
+  clearUploads,
+  setReplyingTo,
+  setEditingMessage,
+  editMessage
+} = useChat()
+
+const messageText = ref('')
+const fileInput = ref<HTMLInputElement | null>(null)
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const isSending = ref(false)
+
+const MAX_LENGTH = 5000
+
+// Character count
+const charCount = computed(() => messageText.value.length)
+const showCharCount = computed(() => charCount.value > 4000)
+const isOverLimit = computed(() => charCount.value > MAX_LENGTH)
+
+// Check if can send
+const canSend = computed(() => {
+  if (isSending.value || !canPostMessages.value || isOverLimit.value) return false
+  const hasText = messageText.value.trim().length > 0
+  const hasAttachments = uploadProgress.value.some(u => u.status === 'completed')
+  return hasText || hasAttachments
+})
+
+// Watch editing message to populate textarea
+watch(editingMessage, (msg) => {
+  if (msg) {
+    messageText.value = msg.content
+    textareaRef.value?.focus()
+  }
+})
+
+// Auto-resize textarea
+const autoResize = () => {
+  const textarea = textareaRef.value
+  if (textarea) {
+    textarea.style.height = 'auto'
+    textarea.style.height = textarea.scrollHeight + 'px'
+  }
+}
+
+watch(messageText, () => {
+  autoResize()
+})
+
+// Handle file selection
+const handleFileSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0) return
+
+  for (const file of Array.from(files)) {
+    const validation = validateFile(file)
+    if (!validation.valid) {
+      alert(validation.error)
+      continue
+    }
+
+    await uploadFile(file)
+  }
+
+  // Reset input
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+// Handle send
+const handleSend = async () => {
+  if (!canSend.value) return
+
+  isSending.value = true
+
+  try {
+    const attachmentIds = uploadProgress.value
+      .filter(u => u.status === 'completed' && u.attachmentId)
+      .map(u => u.attachmentId!)
+
+    if (editingMessage.value) {
+      // Edit existing message
+      await editMessage(editingMessage.value.id, messageText.value)
+      setEditingMessage(null)
+    } else {
+      // Send new message
+      await sendMessage(messageText.value, attachmentIds.length > 0 ? attachmentIds : undefined)
+    }
+
+    // Clear input
+    messageText.value = ''
+    clearUploads()
+    setReplyingTo(null)
+    
+    // Reset textarea height
+    if (textareaRef.value) {
+      textareaRef.value.style.height = 'auto'
+    }
+  } finally {
+    isSending.value = false
+  }
+}
+
+// Handle keyboard shortcuts
+const handleKeyDown = (event: KeyboardEvent) => {
+  // Enter to send (Shift+Enter for new line)
+  if (event.key === 'Enter' && !event.shiftKey) {
+    event.preventDefault()
+    handleSend()
+  }
+
+  // Escape to cancel reply/edit
+  if (event.key === 'Escape') {
+    setReplyingTo(null)
+    setEditingMessage(null)
+    messageText.value = ''
+  }
+}
+
+// Cancel reply/edit
+const cancelAction = () => {
+  setReplyingTo(null)
+  setEditingMessage(null)
+  messageText.value = ''
+}
+
+// Get file icon
+const getFileIcon = (filename: string): string => {
+  const ext = filename.split('.').pop()?.toLowerCase()
+  if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) return 'bi-file-image text-primary'
+  if (ext === 'pdf') return 'bi-file-pdf text-danger'
+  if (['doc', 'docx'].includes(ext || '')) return 'bi-file-word text-primary'
+  if (['xls', 'xlsx'].includes(ext || '')) return 'bi-file-excel text-success'
+  return 'bi-file-earmark'
+}
+</script>
+
+<template>
+  <div :class="$style.messageInput">
+    <!-- Reply/Edit Banner -->
+    <div 
+      v-if="replyingTo || editingMessage" 
+      :class="$style.actionBanner"
+    >
+      <div :class="$style.bannerContent">
+        <i :class="editingMessage ? 'bi bi-pencil' : 'bi bi-reply-fill'"></i>
+        <div>
+          <div :class="$style.bannerTitle">
+            {{ editingMessage ? 'تعديل الرسالة' : 'الرد على' }}
+            {{ replyingTo ? `${replyingTo.sender.first_name} ${replyingTo.sender.last_name}` : '' }}
+          </div>
+          <div :class="$style.bannerPreview">
+            {{ editingMessage?.content || replyingTo?.content }}
+          </div>
+        </div>
+      </div>
+      <button :class="$style.bannerClose" @click="cancelAction">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Upload Progress -->
+    <div v-if="uploadProgress.length > 0" :class="$style.uploads">
+      <div 
+        v-for="upload in uploadProgress" 
+        :key="upload.id"
+        :class="$style.uploadItem"
+      >
+        <i :class="['bi', getFileIcon(upload.filename)]"></i>
+        <div :class="$style.uploadInfo">
+          <span :class="$style.uploadName">{{ upload.filename }}</span>
+          <div 
+            v-if="upload.status === 'uploading'" 
+            :class="$style.progressBar"
+          >
+            <div 
+              :class="$style.progressFill"
+              :style="{ width: upload.progress + '%' }"
+            ></div>
+          </div>
+          <span 
+            v-else-if="upload.status === 'error'" 
+            :class="$style.uploadError"
+          >
+            فشل الرفع
+          </span>
+          <span 
+            v-else 
+            :class="$style.uploadSuccess"
+          >
+            <i class="bi bi-check-circle-fill"></i> اكتمل الرفع
+          </span>
+        </div>
+        <button 
+          :class="$style.uploadRemove"
+          @click="removeUpload(upload.id)"
+        >
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Disabled State -->
+    <div v-if="!canPostMessages" :class="$style.disabled">
+      <i class="bi bi-lock-fill"></i>
+      <span>يمكن للمسؤولين فقط نشر الرسائل</span>
+    </div>
+
+    <!-- Input Area -->
+    <div v-else :class="$style.inputArea">
+      <!-- Attach File Button -->
+      <button 
+        :class="$style.iconBtn"
+        @click="fileInput?.click()"
+        title="إرفاق ملف"
+        :disabled="uploadProgress.some(u => u.status === 'uploading')"
+      >
+        <i class="bi bi-paperclip"></i>
+      </button>
+      <input
+        ref="fileInput"
+        type="file"
+        multiple
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png,.gif"
+        style="display: none"
+        @change="handleFileSelect"
+      />
+
+      <!-- Text Input -->
+      <div :class="$style.textInputWrapper">
+        <textarea
+          ref="textareaRef"
+          v-model="messageText"
+          :class="$style.textarea"
+          placeholder="اكتب رسالة..."
+          rows="1"
+          maxlength="5000"
+          @keydown="handleKeyDown"
+        ></textarea>
+
+        <!-- Character Count -->
+        <div 
+          v-if="showCharCount" 
+          :class="[$style.charCount, { [$style.overLimit]: isOverLimit }]"
+        >
+          {{ charCount }} / {{ MAX_LENGTH }}
+        </div>
+      </div>
+
+      <!-- Send Button -->
+      <button 
+        :class="[$style.sendBtn, { [$style.canSend]: canSend }]"
+        :disabled="!canSend"
+        @click="handleSend"
+        title="إرسال الرسالة"
+      >
+        <i v-if="isSending" class="bi bi-hourglass-split"></i>
+        <i v-else class="bi bi-send-fill"></i>
+      </button>
+    </div>
+
+    <!-- Hints -->
+    <div :class="$style.hints">
+      <span>اضغط Enter للإرسال، Shift+Enter لسطر جديد</span>
+    </div>
+  </div>
+</template>
+
+<style module>
+.messageInput {
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.actionBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: #fef3c7;
+  border-bottom: 1px solid #fde68a;
+}
+
+.bannerContent {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.bannerContent i {
+  color: #d4af37;
+  font-size: 1rem;
+}
+
+.bannerTitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 0.125rem;
+}
+
+.bannerPreview {
+  font-size: 0.875rem;
+  color: #78350f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bannerClose {
+  padding: 0.25rem;
+  background: transparent;
+  border: none;
+  color: #92400e;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.bannerClose:hover {
+  background: rgba(146, 64, 14, 0.1);
+}
+
+.uploads {
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.uploadItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+}
+
+.uploadItem i:first-child {
+  font-size: 1.5rem;
+}
+
+.uploadInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.uploadName {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.progressBar {
+  height: 0.25rem;
+  background: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #d4af37 0%, #f4d03f 100%);
+  transition: width 0.3s;
+}
+
+.uploadSuccess {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: #10b981;
+}
+
+.uploadError {
+  font-size: 0.75rem;
+  color: #ef4444;
+}
+
+.uploadRemove {
+  padding: 0.375rem;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.uploadRemove:hover {
+  background: #f3f4f6;
+  color: #ef4444;
+}
+
+.disabled {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
+
+.inputArea {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.iconBtn {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  font-size: 1.25rem;
+}
+
+.iconBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.iconBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.textInputWrapper {
+  flex: 1;
+  position: relative;
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  color: #111827;
+  resize: none;
+  max-height: 8rem;
+  overflow-y: auto;
+  transition: all 0.2s;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: #d4af37;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.charCount {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.75rem;
+  font-size: 0.6875rem;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+.charCount.overLimit {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.sendBtn {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e5e7eb;
+  border: none;
+  color: #9ca3af;
+  cursor: not-allowed;
+  border-radius: 50%;
+  transition: all 0.2s;
+  font-size: 1rem;
+}
+
+.sendBtn.canSend {
+  background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(212, 175, 55, 0.2);
+}
+
+.sendBtn.canSend:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+}
+
+.hints {
+  padding: 0.5rem 1rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.hints span {
+  font-size: 0.6875rem;
+  color: #9ca3af;
+}
+</style>

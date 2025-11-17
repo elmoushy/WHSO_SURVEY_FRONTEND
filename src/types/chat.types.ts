@@ -1,0 +1,254 @@
+// Internal Chat Type Definitions
+// Based on FRONTEND_INTEGRATION_GUIDE documentation
+
+// ============================================
+// User and Participant Types
+// ============================================
+
+export interface ChatUser {
+  id: number
+  email: string
+  first_name: string
+  last_name: string
+  full_name: string
+  role: 'admin' | 'super_admin' | 'user'
+}
+
+export type ParticipantRole = 'owner' | 'admin' | 'member'
+
+export interface ThreadParticipant {
+  user: ChatUser
+  role: ParticipantRole
+  joined_at: string
+  is_muted: boolean
+  unread_count: number
+}
+
+// ============================================
+// Thread Types
+// ============================================
+
+export type ThreadType = 'direct' | 'group'
+export type PostingMode = 'all' | 'admins_only'
+
+export interface GroupSettings {
+  posting_mode: PostingMode
+  members_can_add_others: boolean
+}
+
+export interface Thread {
+  id: string
+  type: ThreadType
+  title: string | null
+  chat_name?: string
+  created_at: string
+  updated_at: string
+  unread_count: number
+  last_message: LastMessage | null
+  participants: ThreadParticipant[]
+  my_role: ParticipantRole
+  group_settings: GroupSettings | null
+}
+
+export interface LastMessage {
+  id: string
+  sender: ChatUser
+  content: string
+  created_at: string
+  has_attachments: boolean
+}
+
+// ============================================
+// Message Types
+// ============================================
+
+export interface MessageReaction {
+  emoji: string
+  users: ChatUser[]
+}
+
+export interface MessageAttachment {
+  id: string
+  filename: string
+  file: string
+  content_type: string
+  size: number
+  checksum: string
+  created_at: string
+}
+
+export interface Message {
+  id: string
+  thread: string
+  sender: ChatUser
+  content: string
+  reply_to: string | null
+  has_attachments: boolean
+  created_at: string
+  edited_at: string | null
+  reactions: MessageReaction[]
+  attachments: MessageAttachment[]
+  is_deleted?: boolean
+}
+
+// ============================================
+// Request/Response Types
+// ============================================
+
+// Thread Creation
+export interface CreateDirectThreadRequest {
+  type: 'direct'
+  participant_ids: [number]
+}
+
+export interface CreateGroupThreadRequest {
+  type: 'group'
+  title: string
+  participant_ids: number[]
+  group_settings?: Partial<GroupSettings>
+}
+
+export type CreateThreadRequest = CreateDirectThreadRequest | CreateGroupThreadRequest
+
+// Thread Actions
+export interface AddMembersRequest {
+  user_ids: number[]
+  role?: 'admin' | 'member'
+}
+
+export interface RemoveMemberRequest {
+  user_id: number
+}
+
+export interface ChangeRoleRequest {
+  user_id: number
+  role: 'admin' | 'member'
+}
+
+export interface UpdateGroupSettingsRequest {
+  posting_mode?: PostingMode
+  members_can_add_others?: boolean
+}
+
+// Message Sending
+export interface SendMessageRequest {
+  content: string
+  reply_to?: string
+  attachment_ids?: string[]
+}
+
+export interface EditMessageRequest {
+  content: string
+}
+
+export interface AddReactionRequest {
+  emoji: string
+}
+
+// ============================================
+// Paginated Response Types
+// ============================================
+
+export interface PaginatedThreadsResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: Thread[]
+}
+
+export interface CursorPaginatedMessagesResponse {
+  next: string | null
+  previous: string | null
+  results: Message[]
+}
+
+// ============================================
+// API Response Types
+// ============================================
+
+export interface AddMembersResponse {
+  message: string
+  added_users: ChatUser[]
+}
+
+export interface RemoveMemberResponse {
+  message: string
+  removed_user: ChatUser
+}
+
+export interface ChangeRoleResponse {
+  message: string
+  user: ChatUser
+  new_role: ParticipantRole
+}
+
+export interface UpdateGroupSettingsResponse {
+  message: string
+  settings: GroupSettings
+}
+
+export interface MarkAsReadResponse {
+  message: string
+  thread_id: string
+  unread_count: number
+}
+
+export interface LeaveThreadResponse {
+  message: string
+  thread_id: string
+}
+
+export interface AttachmentUploadResponse {
+  id: string
+  filename: string
+  file: string
+  content_type: string
+  size: number
+  checksum: string
+  created_at: string
+}
+
+// ============================================
+// UI State Types
+// ============================================
+
+export interface ChatUIState {
+  selectedThreadId: string | null
+  isThreadListOpen: boolean
+  isThreadInfoOpen: boolean
+  replyingTo: Message | null
+  editingMessage: Message | null
+}
+
+export interface UploadProgress {
+  id: string
+  filename: string
+  progress: number
+  status: 'uploading' | 'completed' | 'error'
+  attachmentId?: string
+}
+
+// ============================================
+// Filter and Search Types
+// ============================================
+
+export interface ThreadFilters {
+  type?: ThreadType
+  search?: string
+  page?: number
+  page_size?: number
+}
+
+export interface MessageFilters {
+  cursor?: string
+}
+
+// ============================================
+// Error Types
+// ============================================
+
+export interface ChatAPIError {
+  error?: string
+  detail?: string
+  [key: string]: any
+}
