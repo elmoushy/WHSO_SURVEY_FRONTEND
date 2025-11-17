@@ -32,8 +32,7 @@ if (process.argv.includes('--enable')) {
   // Enable WebSocket
   envContent = envContent
     .replace('VITE_WEBSOCKET_ENABLED=false', 'VITE_WEBSOCKET_ENABLED=true')
-    .replace('# VITE_WS_BASE_URL=', 'VITE_WS_BASE_URL=')
-    .replace('# VITE_NOTIFICATIONS_ENDPOINT=', 'VITE_NOTIFICATIONS_ENDPOINT=');
+    .replace('# VITE_WS_URL=', 'VITE_WS_URL=');
   
   fs.writeFileSync(envPath, envContent);
   console.log('✅ WebSocket ENABLED');
@@ -43,8 +42,7 @@ if (process.argv.includes('--enable')) {
   // Disable WebSocket
   envContent = envContent
     .replace('VITE_WEBSOCKET_ENABLED=true', 'VITE_WEBSOCKET_ENABLED=false')
-    .replace(/^VITE_WS_BASE_URL=/gm, '# VITE_WS_BASE_URL=')
-    .replace(/^VITE_NOTIFICATIONS_ENDPOINT=/gm, '# VITE_NOTIFICATIONS_ENDPOINT=');
+    .replace(/^VITE_WS_URL=/gm, '# VITE_WS_URL=');
   
   fs.writeFileSync(envPath, envContent);
   console.log('❌ WebSocket DISABLED');
@@ -55,14 +53,12 @@ if (process.argv.includes('--enable')) {
   if (isCurrentlyEnabled) {
     envContent = envContent
       .replace('VITE_WEBSOCKET_ENABLED=true', 'VITE_WEBSOCKET_ENABLED=false')
-      .replace(/^VITE_WS_BASE_URL=/gm, '# VITE_WS_BASE_URL=')
-      .replace(/^VITE_NOTIFICATIONS_ENDPOINT=/gm, '# VITE_NOTIFICATIONS_ENDPOINT=');
+      .replace(/^VITE_WS_URL=/gm, '# VITE_WS_URL=');
     console.log('❌ WebSocket DISABLED');
   } else {
     envContent = envContent
       .replace('VITE_WEBSOCKET_ENABLED=false', 'VITE_WEBSOCKET_ENABLED=true')
-      .replace('# VITE_WS_BASE_URL=', 'VITE_WS_BASE_URL=')
-      .replace('# VITE_NOTIFICATIONS_ENDPOINT=', 'VITE_NOTIFICATIONS_ENDPOINT=');
+      .replace('# VITE_WS_URL=', 'VITE_WS_URL=');
     console.log('✅ WebSocket ENABLED');
   }
   

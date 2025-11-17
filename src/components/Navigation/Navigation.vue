@@ -196,8 +196,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '../../stores/useAppStore'
 import { useSimpleAuth } from '../../composables/useSimpleAuth'
 import { notificationService } from '../../services/notificationService'
-import { websocketService } from '../../services/websocketService'
-import { useWebSocketNotifications } from '../../composables/useWebSocketNotifications'
 import { NOTIFICATION_ICONS, PRIORITY_COLORS } from '../../types/notifications.types'
 import type { Notification } from '../../types/notifications.types'
 
@@ -245,38 +243,32 @@ const hasLoadedNotifications = ref(false)
 const hasNewWebSocketNotification = ref(false)
 const newNotificationTimer = ref<NodeJS.Timeout | null>(null)
 
-// WebSocket Notifications
-const {
-  realtimeNotifications,
-  hasNewNotifications,
-  isConnected: wsConnected,
-  isConnecting: wsConnecting,
-  connectionError: wsConnectionError,
-  unreadCount: wsUnreadCount,
-  connect: wsConnect,
-  disconnect: wsDisconnect,
-  markAsRead: wsMarkAsRead,
-  requestNotificationPermission
-} = useWebSocketNotifications({
-  autoConnect: false, // Disable auto-connect, we'll connect manually when ready
-  showBrowserNotifications: true,
-  subscribeToTypes: ['survey_assigned', 'admin_message', 'system_alert']
-})
+// WebSocket Notifications - Disabled (using chat WebSocket only)
+// const {
+//   realtimeNotifications,
+//   hasNewNotifications,
+//   isConnected: wsConnected,
+//   isConnecting: wsConnecting,
+//   connectionError: wsConnectionError,
+//   unreadCount: wsUnreadCount,
+//   connect: wsConnect,
+//   disconnect: wsDisconnect,
+//   markAsRead: wsMarkAsRead,
+//   requestNotificationPermission
+// } = useWebSocketNotifications({
+//   autoConnect: false,
+//   showBrowserNotifications: true,
+//   subscribeToTypes: ['survey_assigned', 'admin_message', 'system_alert']
+// })
 
-// Add direct WebSocket service event listener for pong notifications
-const handlePongNotificationEvent = (data: any) => {
-  
-  if (data.trigger === 'new_notification') {
-    showNewNotificationIndicator()
-    
-    // Force reload notifications on next open
-    hasLoadedNotifications.value = false
-  }
-}
+// Placeholder values since WebSocket notifications are disabled
+const wsConnected = ref(false)
+const wsConnecting = ref(false)
+const wsConnectionError = ref<string | null>(null)
 
-// Combined notification count from WebSocket (real-time) and local state
+// Combined notification count from local state only (WebSocket notifications removed)
 const notificationCount = computed(() => {
-  return wsUnreadCount.value || 0
+  return notifications.value.filter(n => !n.is_read).length
 })
 
 // Computed properties
@@ -391,14 +383,7 @@ const navigationLinks = computed(() => {
   })
 })
 
-// Notification methods - Enhanced with WebSocket integration
-
-// Helper function to convert WebSocket notification to standard Notification type
-const convertWebSocketNotification = (wsNotification: any): Notification => ({
-  ...wsNotification,
-  is_expired: false,
-  sent_via_websocket: true
-})
+// Notification methods
 
 const loadNotifications = async () => {
   isLoadingNotifications.value = true
@@ -406,26 +391,13 @@ const loadNotifications = async () => {
     const lang = currentLanguage.value as 'en' | 'ar'
     const recentNotifications = await notificationService.getRecentNotifications(lang)
     
-    // Convert WebSocket notifications to standard format
-    const convertedRealtimeNotifications = realtimeNotifications.value.map(convertWebSocketNotification)
-    
-    // Merge HTTP API notifications with real-time notifications from WebSocket
-    const combinedNotifications = [...convertedRealtimeNotifications, ...recentNotifications]
-    
-    // Remove duplicates by ID and sort by created_at
-    const uniqueNotifications = combinedNotifications
-      .filter((notification, index, self) => 
-        index === self.findIndex(n => n.id === notification.id)
-      )
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-    
-    notifications.value = uniqueNotifications
+    // Sort by created_at
+    notifications.value = recentNotifications.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
     hasLoadedNotifications.value = true
   } catch (error) {
     console.error('Failed to load notifications:', error)
-    // Fallback to WebSocket notifications only
-    const convertedRealtimeNotifications = realtimeNotifications.value.map(convertWebSocketNotification)
-    notifications.value = convertedRealtimeNotifications
   } finally {
     isLoadingNotifications.value = false
   }
@@ -437,9 +409,6 @@ const handleNotificationClick = async (notification: Notification) => {
     if (!notification.is_read) {
       await notificationService.updateNotification(notification.id, true)
       notification.is_read = true
-      
-      // Also mark as read in WebSocket service
-      wsMarkAsRead(notification.id)
     }
     
     // Navigate to action URL if available
@@ -464,15 +433,6 @@ const markAllAsRead = async () => {
     notifications.value.forEach(n => {
       n.is_read = true
     })
-    
-    // Also mark all real-time notifications as read via WebSocket
-    const unreadIds = realtimeNotifications.value
-      .filter(n => !n.is_read)
-      .map(n => n.id)
-    
-    if (unreadIds.length > 0) {
-      wsMarkAsRead(unreadIds)
-    }
   } catch (error) {
     console.error('Failed to mark all notifications as read:', error)
   } finally {
@@ -504,21 +464,6 @@ const toggleNotifications = () => {
 }
 
 // New notification indicator methods
-const showNewNotificationIndicator = () => {
-  
-  hasNewWebSocketNotification.value = true
-  
-  // Clear any existing timer
-  if (newNotificationTimer.value) {
-    clearTimeout(newNotificationTimer.value)
-  }
-  
-  // Auto-hide the indicator after 5 seconds
-  newNotificationTimer.value = setTimeout(() => {
-    hasNewWebSocketNotification.value = false
-  }, 5000)
-}
-
 const hideNewNotificationIndicator = () => {
   hasNewWebSocketNotification.value = false
   if (newNotificationTimer.value) {
@@ -604,26 +549,24 @@ watch([showSettings, showNotifications, showMobileMenu, showUserMenu], () => {
   preventBodyScroll()
 })
 
-// Watch for new WebSocket notifications
-watch(
-  () => realtimeNotifications.value.length,
-  (newLength, oldLength) => {
-    // Show indicator when new WebSocket notifications arrive
-    if (newLength > (oldLength || 0)) {
-      showNewNotificationIndicator()
-    }
-  }
-)
+// WebSocket notifications disabled - chat WebSocket only
+// watch(
+//   () => realtimeNotifications.value.length,
+//   (newLength, oldLength) => {
+//     if (newLength > (oldLength || 0)) {
+//       showNewNotificationIndicator()
+//     }
+//   }
+// )
 
-// Watch for hasNewNotifications from WebSocket composable
-watch(
-  () => hasNewNotifications.value,
-  (hasNew) => {
-    if (hasNew) {
-      showNewNotificationIndicator()
-    }
-  }
-)
+// watch(
+//   () => hasNewNotifications.value,
+//   (hasNew) => {
+//     if (hasNew) {
+//       showNewNotificationIndicator()
+//     }
+//   }
+// )
 
 // Utility functions for notifications
 const getNotificationIcon = (notificationType: string): string => {
@@ -653,48 +596,27 @@ const formatTime = (createdAt: string): string => {
   }
 }
 
-// Watch for user authentication to connect WebSocket
-watch(
-  () => user.value,
-  (currentUser) => {
-    if (currentUser && !wsConnected.value) {
-      // User is authenticated, connect WebSocket
-      wsConnect().catch(error => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        if (errorMessage !== 'WebSocket feature is disabled') {
-          console.warn('WebSocket auto-connect on auth failed:', errorMessage)
-        }
-      })
-    } else if (!currentUser && wsConnected.value) {
-      // User logged out, disconnect WebSocket
-      wsDisconnect()
-    }
-  }
-)
+// WebSocket notifications disabled - chat WebSocket only
+// watch(
+//   () => user.value,
+//   (currentUser) => {
+//     if (currentUser && !wsConnected.value) {
+//       wsConnect().catch(error => {
+//         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+//         if (errorMessage !== 'WebSocket feature is disabled') {
+//           console.warn('WebSocket auto-connect on auth failed:', errorMessage)
+//         }
+//       })
+//     } else if (!currentUser && wsConnected.value) {
+//       wsDisconnect()
+//     }
+//   }
+// )
 
 // Lifecycle
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscapeKey)
-  
-  // Set up WebSocket service event listener for pong notifications
-  websocketService.on('pong_notification', handlePongNotificationEvent)
-  
-  // Request browser notification permission
-  requestNotificationPermission()
-  
-  // Connect WebSocket when authentication is ready
-  // Wait a bit to ensure authentication state is properly initialized
-  setTimeout(() => {
-    if (user.value && !wsConnected.value) {
-      wsConnect().catch(error => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        if (errorMessage !== 'WebSocket feature is disabled') {
-          console.warn('Navigation WebSocket connection failed:', errorMessage)
-        }
-      })
-    }
-  }, 500) // Longer delay to ensure auth is ready
   
   // Don't load notifications on mount - only when user clicks
 })
@@ -703,9 +625,6 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
   document.removeEventListener('keydown', handleEscapeKey)
   
-  // Clean up WebSocket service event listener
-  websocketService.off('pong_notification', handlePongNotificationEvent)
-  
   // Reset body scroll on unmount
   document.body.style.overflow = ''
   
@@ -713,7 +632,6 @@ onUnmounted(() => {
   if (newNotificationTimer.value) {
     clearTimeout(newNotificationTimer.value)
   }
-  // WebSocket will be managed by the composable lifecycle
 })
 </script>
 

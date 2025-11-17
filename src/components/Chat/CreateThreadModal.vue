@@ -38,8 +38,11 @@ const filteredUsers = computed(() => {
   
   const query = searchQuery.value.toLowerCase()
   return availableUsers.value.filter(u => {
-    const fullName = `${u.first_name} ${u.last_name}`.toLowerCase()
-    return fullName.includes(query) || u.email.toLowerCase().includes(query)
+    const firstName = u.first_name || ''
+    const lastName = u.last_name || ''
+    const email = u.email || ''
+    const fullName = `${firstName} ${lastName}`.toLowerCase()
+    return fullName.includes(query) || email.toLowerCase().includes(query)
   })
 })
 
@@ -189,11 +192,11 @@ const handleCreate = async () => {
             @click="toggleUser(user.id)"
           >
             <div :class="$style.userAvatar">
-              {{ user.first_name.charAt(0) }}{{ user.last_name.charAt(0) }}
+              {{ (user.first_name || '').charAt(0) }}{{ (user.last_name || '').charAt(0) }}
             </div>
             <div :class="$style.userInfo">
-              <span :class="$style.userName">{{ user.first_name }} {{ user.last_name }}</span>
-              <span :class="$style.userEmail">{{ user.email }}</span>
+              <span :class="$style.userName">{{ user.first_name || '' }} {{ user.last_name || '' }}</span>
+              <span :class="$style.userEmail">{{ user.email || '' }}</span>
             </div>
             <i
               v-if="selectedUsers.includes(user.id)"

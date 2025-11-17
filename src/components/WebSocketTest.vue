@@ -8,134 +8,190 @@
       <h3>Connection Status</h3>
       <p><strong>Authenticated:</strong> {{ isAuthenticated ? '✅ Yes' : '❌ No' }}</p>
       <p><strong>User:</strong> {{ user?.email || 'Not logged in' }}</p>
-      <p><strong>Connected:</strong> {{ isConnected ? '✅ Yes' : '❌ No' }}</p>
-      <p><strong>Connecting:</strong> {{ isConnecting ? '🔄 Yes' : '❌ No' }}</p>
-      <p><strong>Error:</strong> {{ connectionError || 'None' }}</p>
-      <p><strong>Unread Count:</strong> {{ unreadCount }}</p>
+      <p><strong>Global Notification WebSocket:</strong> {{ isNotificationConnected ? '✅ Connected' : '❌ Disconnected' }}</p>
+    </div>
+
+    <!-- Backend Verification -->
+    <div style="margin-bottom: 20px; padding: 15px; border-radius: 8px; background: #e7f3ff; border: 1px solid #b3d9ff;">
+      <h3>Backend Verification Test</h3>
+      <p style="margin: 5px 0; color: #666; font-size: 14px;">
+        Test direct WebSocket connection to backend (check browser console for logs)
+      </p>
+      <button @click="testBackendConnection" style="padding: 8px 16px; margin-top: 10px;">
+        🧪 Test Backend WebSocket
+      </button>
+      <div v-if="backendTestStatus" style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 4px;">
+        <strong>Status:</strong> {{ backendTestStatus }}
+      </div>
     </div>
 
     <!-- Controls -->
     <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
-      <button @click="connect" :disabled="isConnected" style="padding: 8px 16px;">
-        Connect
+      <button @click="connectNotifications" :disabled="isNotificationConnected" style="padding: 8px 16px;">
+        Connect to Notifications
       </button>
-      <button @click="disconnect" :disabled="!isConnected" style="padding: 8px 16px;">
-        Disconnect
+      <button @click="disconnectNotifications" :disabled="!isNotificationConnected" style="padding: 8px 16px;">
+        Disconnect Notifications
       </button>
-      <button @click="refreshUnreadCount" :disabled="!isConnected" style="padding: 8px 16px;">
-        Refresh Count
-      </button>
-      <button @click="requestPermission" style="padding: 8px 16px;">
-        Request Browser Permission
-      </button>
-      <button @click="clearNotifications" style="padding: 8px 16px;">
-        Clear Notifications
+      <button @click="clearMessages" style="padding: 8px 16px;">
+        Clear Messages
       </button>
     </div>
 
     <!-- Realtime Notifications -->
     <div style="margin-bottom: 20px;">
-      <h3>Real-time Notifications ({{ realtimeNotifications.length }})</h3>
-      <div v-if="realtimeNotifications.length === 0" style="padding: 20px; text-align: center; color: #666;">
-        No real-time notifications received yet
+      <h3>Real-time Messages ({{ receivedMessages.length }})</h3>
+      <div v-if="receivedMessages.length === 0" style="padding: 20px; text-align: center; color: #666;">
+        No messages received yet. Once connected, you'll see chat unread updates and other notifications here.
       </div>
-      <div v-for="notification in realtimeNotifications" :key="notification.id" 
-           style="margin-bottom: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 8px;">
+      <div v-for="(message, index) in receivedMessages" :key="index" 
+           style="margin-bottom: 10px; padding: 15px; border: 1px solid #ddd; border-radius: 8px; background: #f8f9fa;">
         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div style="flex: 1;">
-            <h4 style="margin: 0 0 5px 0;">{{ notification.title_localized }}</h4>
-            <p style="margin: 0 0 10px 0; color: #666;">{{ notification.body_localized }}</p>
-            <small style="color: #999;">
-              {{ notification.notification_type }} | 
-              {{ notification.priority }} | 
-              {{ formatTime(notification.created_at) }}
+            <h4 style="margin: 0 0 5px 0; color: #2563eb;">{{ message.type }}</h4>
+            <pre style="margin: 0; font-size: 12px; color: #666; white-space: pre-wrap; word-wrap: break-word;">{{ JSON.stringify(message.data, null, 2) }}</pre>
+            <small style="color: #999; display: block; margin-top: 8px;">
+              {{ formatTimestamp(message.timestamp) }}
             </small>
-          </div>
-          <div style="display: flex; gap: 10px; margin-left: 15px;">
-            <span :style="{ 
-              padding: '4px 8px', 
-              borderRadius: '4px', 
-              fontSize: '12px', 
-              background: notification.is_read ? '#d4edda' : '#fff3cd',
-              color: notification.is_read ? '#155724' : '#856404'
-            }">
-              {{ notification.is_read ? 'Read' : 'Unread' }}
-            </span>
-            <button v-if="!notification.is_read" @click="markAsRead(notification.id)" 
-                    style="padding: 4px 8px; font-size: 12px;">
-              Mark Read
-            </button>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- Connection Info -->
-    <div style="margin-top: 30px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
-      <h3>Connection Details</h3>
-      <pre style="background: #fff; padding: 10px; border-radius: 4px; font-size: 12px;">{{ 
-        JSON.stringify(getConnectionStatus(), null, 2) 
-      }}</pre>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useWebSocketNotifications } from '../composables/useWebSocketNotifications'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { websocketService } from '../services/websocketService'
 import { useSimpleAuth } from '../composables/useSimpleAuth'
 
 // Authentication state
 const { isAuthenticated, user } = useSimpleAuth()
 
-// WebSocket composable
-const {
-  realtimeNotifications,
-  isConnected,
-  isConnecting,
-  connectionError,
-  unreadCount,
-  connect,
-  disconnect,
-  markAsRead,
-  refreshUnreadCount,
-  requestNotificationPermission,
-  clearRealtimeNotifications,
-  getConnectionStatus
-} = useWebSocketNotifications({
-  autoConnect: false, // Manual control for testing
-  showBrowserNotifications: true,
-  subscribeToTypes: ['survey_assigned', 'admin_message', 'system_alert', 'test_notification']
-})
+// Backend test status
+const backendTestStatus = ref<string>('')
+
+// Received messages
+const receivedMessages = ref<Array<{ type: string; data: any; timestamp: Date }>>([])
+
+// Connection state
+const isNotificationConnected = computed(() => websocketService.isNotificationWsConnected())
 
 // Methods
-const requestPermission = async () => {
-  const permission = await requestNotificationPermission()
-  alert(`Browser notification permission: ${permission}`)
-}
-
-const clearNotifications = () => {
-  clearRealtimeNotifications()
-}
-
-const formatTime = (createdAt: string): string => {
-  const now = new Date()
-  const notificationDate = new Date(createdAt)
-  const diffInMinutes = Math.floor((now.getTime() - notificationDate.getTime()) / (1000 * 60))
-
-  if (diffInMinutes < 1) {
-    return 'Just now'
-  } else if (diffInMinutes < 60) {
-    return `${diffInMinutes} minutes ago`
-  } else if (diffInMinutes < 1440) { // 24 hours
-    const hours = Math.floor(diffInMinutes / 60)
-    return `${hours} hour${hours > 1 ? 's' : ''} ago`
-  } else {
-    const days = Math.floor(diffInMinutes / 1440)
-    if (days < 7) {
-      return `${days} day${days > 1 ? 's' : ''} ago`
-    } else {
-      return notificationDate.toLocaleDateString('en-US', { calendar: 'gregory' })
-    }
+const connectNotifications = async () => {
+  try {
+    await websocketService.connectToNotifications()
+  } catch (error) {
+    console.error('Failed to connect:', error)
   }
 }
+
+const disconnectNotifications = () => {
+  websocketService.disconnectFromNotifications()
+}
+
+const clearMessages = () => {
+  receivedMessages.value = []
+}
+
+const testBackendConnection = () => {
+  backendTestStatus.value = '🔄 Testing connection... Check browser console'
+  
+  // Get JWT token
+  const token = localStorage.getItem('access_token')
+  
+  if (!token) {
+    backendTestStatus.value = '❌ No authentication token found'
+    console.error('❌ Cannot test: No authentication token available')
+    return
+  }
+  
+  // Verify Backend is Working
+  // Open browser console on frontend
+  const ws = new WebSocket(`ws://localhost:8000/ws/notifications/?token=${token}`)
+
+  ws.onopen = () => {
+    console.log('✅ Connected')
+    backendTestStatus.value = '✅ Connected - Check console for details'
+  }
+
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data)
+    console.log('📨 Received:', data)
+    backendTestStatus.value = `📨 Receiving messages - Check console`
+  }
+
+  ws.onerror = (error) => {
+    console.error('❌ WebSocket Error:', error)
+    backendTestStatus.value = '❌ Connection error - Check console'
+  }
+
+  ws.onclose = (event) => {
+    console.log('🔌 Connection closed:', event.code, event.reason)
+    backendTestStatus.value = `🔌 Connection closed (${event.code})`
+  }
+
+  // Close connection after 10 seconds
+  setTimeout(() => {
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.close()
+      console.log('🛑 Test connection closed after 10 seconds')
+    }
+  }, 10000)
+}
+
+const formatTimestamp = (timestamp: Date): string => {
+  const now = new Date()
+  const diffInSeconds = Math.floor((now.getTime() - timestamp.getTime()) / 1000)
+
+  if (diffInSeconds < 1) {
+    return 'Just now'
+  } else if (diffInSeconds < 60) {
+    return `${diffInSeconds} seconds ago`
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60)
+    return `${minutes} minute${minutes > 1 ? 's' : ''} ago`
+  } else {
+    return timestamp.toLocaleTimeString()
+  }
+}
+
+// Setup event listeners
+const handleChatUnreadUpdate = (data: any) => {
+  receivedMessages.value.unshift({
+    type: 'chat.unread.update',
+    data,
+    timestamp: new Date()
+  })
+}
+
+const handleNotificationMessage = (data: any) => {
+  receivedMessages.value.unshift({
+    type: 'notification.message',
+    data,
+    timestamp: new Date()
+  })
+}
+
+const handleConnectionSuccess = () => {
+  receivedMessages.value.unshift({
+    type: 'connection.success',
+    data: { message: 'Connected to notification WebSocket' },
+    timestamp: new Date()
+  })
+}
+
+onMounted(() => {
+  // Listen for events
+  websocketService.on('chat.unread.update', handleChatUnreadUpdate)
+  websocketService.on('notification.message', handleNotificationMessage)
+  websocketService.on('notification.connected', handleConnectionSuccess)
+})
+
+onUnmounted(() => {
+  // Cleanup listeners
+  websocketService.off('chat.unread.update', handleChatUnreadUpdate)
+  websocketService.off('notification.message', handleNotificationMessage)
+  websocketService.off('notification.connected', handleConnectionSuccess)
+})
 </script>

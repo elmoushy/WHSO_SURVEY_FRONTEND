@@ -5,6 +5,7 @@ import Navigation from './components/Navigation/Navigation.vue'
 import Sidebar from './components/Sidebar/Sidebar.vue'
 import { useSimpleAuth } from './composables/useSimpleAuth'
 import { useAppStore } from './stores/useAppStore'
+import { websocketService } from './services/websocketService'
 
 const route = useRoute()
 const showNavigation = computed(
@@ -18,6 +19,114 @@ const sidebarTheme = computed<'day' | 'night'>(() =>
   store.currentTheme === 'night' ? 'night' : 'day'
 )
 const toggleTheme = () => store.toggleTheme()
+
+const { isAuthenticated } = useSimpleAuth()
+
+// Track if WebSocket setup is complete
+const wsSetupComplete = ref(false)
+const hasAttemptedConnection = ref(false)
+
+// Setup global notification WebSocket connection
+const setupNotificationWebSocket = () => {
+  if (wsSetupComplete.value) return
+  
+  // Listen for chat unread updates
+  websocketService.on('chat.unread.update', (data: any) => {
+    console.log('📨 Chat unread update received in App:', data)
+  })
+  
+  // Listen for connection events
+  websocketService.on('notification.connected', () => {
+    console.log('✅ Notification WebSocket connected')
+  })
+  
+  websocketService.on('notification.disconnected', () => {
+    console.log('🔌 Notification WebSocket disconnected')
+  })
+  
+  wsSetupComplete.value = true
+}
+
+// Attempt WebSocket connection - now checks for actual token availability
+const attemptWebSocketConnection = async (force = false) => {
+  if (hasAttemptedConnection.value && !force) {
+    console.log('⏭️ WebSocket connection already attempted, skipping')
+    return
+  }
+  
+  console.log('🔄 Attempting WebSocket connection...')
+  
+  // Import the auth initialization and wait for it
+  const { initializeAuth, getAccessToken } = await import('./services/jwtAuthService')
+  
+  // Ensure auth is initialized first
+  await initializeAuth()
+  
+  // Now check if token is available
+  const token = getAccessToken()
+  if (!token) {
+    console.log('⏳ Auth initialized but no token available yet')
+    hasAttemptedConnection.value = false // Allow retry
+    return
+  }
+  
+  console.log('✅ Token found, connecting to notification WebSocket...')
+  hasAttemptedConnection.value = true
+  
+  try {
+    await websocketService.connectToNotifications()
+    console.log('✅ WebSocket connection successful')
+  } catch (error) {
+    console.error('❌ Failed to connect to notification WebSocket:', error)
+    hasAttemptedConnection.value = false // Allow retry
+  }
+}
+
+// Connect/disconnect based on authentication state
+watch(isAuthenticated, async (authenticated, wasAuthenticated) => {
+  console.log('🔐 Auth state changed:', { authenticated, wasAuthenticated, hasAttempted: hasAttemptedConnection.value })
+  
+  if (authenticated) {
+    // User is authenticated - connect WebSocket
+    if (wasAuthenticated === undefined) {
+      // Initial load with existing token - connect immediately
+      console.log('🚀 Initial load with existing auth, connecting WebSocket...')
+      await attemptWebSocketConnection()
+    } else if (!wasAuthenticated) {
+      // Transition from unauthenticated to authenticated (fresh login)
+      console.log('🔑 Fresh login detected, connecting WebSocket...')
+      // Add small delay to ensure token is saved
+      setTimeout(async () => {
+        await attemptWebSocketConnection(true) // Force reconnect
+      }, 200)
+    }
+  } else if (wasAuthenticated) {
+    // Only disconnect when we transition from authenticated to unauthenticated
+    console.log('🔌 Logging out, disconnecting WebSocket...')
+    websocketService.disconnectFromNotifications()
+    hasAttemptedConnection.value = false
+  }
+}, { immediate: true }) // Run immediately on component mount
+
+// Setup on mount
+onMounted(async () => {
+  console.log('🎬 App mounted, setting up WebSocket listeners...')
+  setupNotificationWebSocket()
+  
+  // Check authentication and connect if needed
+  // The watch will handle this with immediate: true, but we add a fallback
+  if (isAuthenticated.value && !hasAttemptedConnection.value) {
+    console.log('🔄 Fallback: Attempting WebSocket connection on mount...')
+    setTimeout(async () => {
+      await attemptWebSocketConnection()
+    }, 500) // Slightly longer delay for safety
+  }
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  websocketService.disconnectFromNotifications()
+})
 
 const { user, logout } = useSimpleAuth()
 const userRole = computed(() => user.value?.role ?? null)

@@ -35,10 +35,31 @@ type NavItem = {
 
 type NavGroup = { id: string; items: NavItem[] }
 
+// Import useChat for real-time unread count
+import { useChat } from '../../composables/useChat'
+
+// Get unread count from chat composable
+const { totalUnreadCount } = useChat()
+
+// Create a computed badge value that updates reactively
+const chatBadge = computed(() => {
+  const count = totalUnreadCount.value
+  // Only log when count is greater than 0 to reduce console noise
+  if (count > 0) {
+    console.log('🔔 Sidebar chatBadge:', count)
+  }
+  return count || undefined
+})
+
+// Watch for changes in totalUnreadCount for debugging
+watch(totalUnreadCount, (newVal, oldVal) => {
+  console.log('🔔 Sidebar totalUnreadCount changed:', { oldVal, newVal })
+}, { immediate: true })
+
 const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
         { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
-    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات' },
+    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', badge: chatBadge.value },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
     { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'إدارة المستخدمين', requiresRole: 'admin' },
   ]

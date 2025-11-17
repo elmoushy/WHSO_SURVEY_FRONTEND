@@ -4,9 +4,14 @@ import { useChat } from '../../composables/useChat'
 import { formatRelativeTime } from '../../services/chatService'
 import type { Thread } from '../../types/chat.types'
 
+defineProps<{
+  isCollapsed?: boolean
+}>()
+
 const emit = defineEmits<{
   selectThread: [threadId: string]
   createThread: []
+  toggleCollapse: []
 }>()
 
 const {
@@ -14,8 +19,7 @@ const {
   fetchThreads,
   selectedThreadId,
   totalUnreadCount,
-  currentUserId,
-  startThreadPolling
+  currentUserId
 } = useChat()
 
 const searchQuery = ref('')
@@ -25,8 +29,8 @@ const isLoading = ref(false)
 onMounted(async () => {
   isLoading.value = true
   await fetchThreads()
-  startThreadPolling()
   isLoading.value = false
+  // WebSocket will handle real-time updates, no polling needed
 })
 
 const filteredThreads = computed(() => {
@@ -76,12 +80,25 @@ const handleThreadClick = (threadId: string) => {
 const handleCreateThread = () => {
   emit('createThread')
 }
+
+const handleToggleCollapse = () => {
+  emit('toggleCollapse')
+}
 </script>
 
 <template>
-  <div :class="$style.threadList">
+  <div :class="[$style.threadList, { [$style.collapsed]: isCollapsed }]">
+    <!-- Toggle Button -->
+    <button 
+      :class="$style.toggleBtn" 
+      @click="handleToggleCollapse"
+      :title="isCollapsed ? 'فتح قائمة المحادثات' : 'إغلاق قائمة المحادثات'"
+    >
+      <i :class="['bi', isCollapsed ? 'bi-chevron-left' : 'bi-chevron-right']"></i>
+    </button>
+
     <!-- Header -->
-    <div :class="$style.header">
+    <div :class="$style.header" v-show="!isCollapsed">
       <div :class="$style.headerContent">
         <h2 :class="$style.title">الرسائل</h2>
         <span v-if="totalUnreadCount > 0" :class="$style.unreadBadge">
@@ -98,7 +115,7 @@ const handleCreateThread = () => {
     </div>
 
     <!-- Search and Filter -->
-    <div :class="$style.searchSection">
+    <div :class="$style.searchSection" v-show="!isCollapsed">
       <div :class="$style.searchBox">
         <i class="bi bi-search" :class="$style.searchIcon"></i>
         <input
@@ -132,7 +149,7 @@ const handleCreateThread = () => {
     </div>
 
     <!-- Thread List -->
-    <div :class="$style.threads">
+    <div :class="$style.threads" v-show="!isCollapsed">
       <div v-if="isLoading" :class="$style.loading">
         <i class="bi bi-hourglass-split"></i>
         <span>جاري تحميل المحادثات...</span>
@@ -151,7 +168,8 @@ const handleCreateThread = () => {
         :key="thread.id"
         :class="[
           $style.threadItem,
-          { [$style.active]: thread.id === selectedThreadId }
+          { [$style.active]: thread.id === selectedThreadId },
+          { [$style.hasUnread]: thread.unread_count > 0 }
         ]"
         @click="handleThreadClick(thread.id)"
       >
@@ -163,6 +181,12 @@ const handleCreateThread = () => {
             class="bi bi-people-fill" 
             :class="$style.groupIcon"
           ></i>
+          <!-- Unread indicator dot -->
+          <span 
+            v-if="thread.unread_count > 0" 
+            :class="$style.unreadDot"
+            :title="`${thread.unread_count} رسالة غير مقروءة`"
+          ></span>
         </div>
 
         <!-- Thread Info -->

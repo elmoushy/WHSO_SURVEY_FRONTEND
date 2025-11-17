@@ -51,12 +51,10 @@ function toggleWebSocket(enable) {
   // Handle WebSocket URL commenting/uncommenting
   if (enable) {
     // Uncomment WebSocket URLs
-    envContent = envContent.replace(/# (VITE_WS_BASE_URL=.*)/g, '$1');
-    envContent = envContent.replace(/# (VITE_NOTIFICATIONS_ENDPOINT=.*)/g, '$1');
+    envContent = envContent.replace(/# (VITE_WS_URL=.*)/g, '$1');
   } else {
     // Comment out WebSocket URLs
-    envContent = envContent.replace(/^(VITE_WS_BASE_URL=.*)/gm, '# $1');
-    envContent = envContent.replace(/^(VITE_NOTIFICATIONS_ENDPOINT=.*)/gm, '# $1');
+    envContent = envContent.replace(/^(VITE_WS_URL=.*)/gm, '# $1');
   }
   
   writeEnvFile(envContent);
@@ -77,7 +75,6 @@ function showUsage() {
 function getCurrentStatus() {
   const envContent = readEnvFile();
   const websocketEnabledMatch = envContent.match(/VITE_WEBSOCKET_ENABLED=(true|false)/);
-  const wsUrlCommented = /# VITE_WS_BASE_URL=/.test(envContent);
   
   if (websocketEnabledMatch) {
     const isEnabled = websocketEnabledMatch[1] === 'true';

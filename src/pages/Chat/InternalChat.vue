@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useChat } from '../../composables/useChat'
 import ChatThreadList from '../../components/Chat/ChatThreadList.vue'
 import ChatMessageList from '../../components/Chat/ChatMessageList.vue'
@@ -14,12 +14,13 @@ const {
   deleteMessage,
   setReplyingTo,
   setEditingMessage,
-  stopThreadPolling,
-  stopMessagePolling
+  disconnectFromChatWebSocket,
+  setChatPageVisibility
 } = useChat()
 
 const showCreateModal = ref(false)
 const showThreadInfo = ref(false)
+const isThreadListCollapsed = ref(false)
 
 const handleSelectThread = (threadId: string) => {
   selectThread(threadId)
@@ -48,20 +49,35 @@ const toggleThreadInfo = () => {
   showThreadInfo.value = !showThreadInfo.value
 }
 
+const toggleThreadList = () => {
+  isThreadListCollapsed.value = !isThreadListCollapsed.value
+}
+
+// Set chat page visibility on mount
+onMounted(() => {
+  setChatPageVisibility(true)
+  // Request notification permission if not granted
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission()
+  }
+})
+
 // Cleanup on unmount
 onUnmounted(() => {
-  stopThreadPolling()
-  stopMessagePolling()
+  setChatPageVisibility(false)
+  disconnectFromChatWebSocket()
 })
 </script>
 
 <template>
   <div :class="$style.chatPage">
     <!-- Thread List Sidebar -->
-    <aside :class="$style.threadListSidebar">
+    <aside :class="[$style.threadListSidebar, { [$style.collapsed]: isThreadListCollapsed }]">
       <ChatThreadList
+        :is-collapsed="isThreadListCollapsed"
         @select-thread="handleSelectThread"
         @create-thread="handleCreateThread"
+        @toggle-collapse="toggleThreadList"
       />
     </aside>
 
@@ -70,12 +86,14 @@ onUnmounted(() => {
       <!-- No thread selected -->
       <div v-if="!currentThread" :class="$style.noThread">
         <div :class="$style.noThreadContent">
-          <i class="bi bi-chat-left-dots"></i>
-          <h2>المحادثات</h2>
-          <p>اختر محادثة للبدء</p>
+          <div :class="$style.iconWrapper">
+            <i class="bi bi-chat-left-dots"></i>
+          </div>
+          <h2>المحادثات الداخلية</h2>
+          <p>اختر محادثة من القائمة للبدء في المراسلة</p>
           <button :class="$style.startBtn" @click="showCreateModal = true">
             <i class="bi bi-plus-circle"></i>
-            ابدأ محادثة
+            <span>ابدأ محادثة جديدة</span>
           </button>
         </div>
       </div>
@@ -191,9 +209,12 @@ onUnmounted(() => {
 }
 
 .threadListSidebar {
-  width: 320px;
   flex-shrink: 0;
-  border-right: 1px solid #e5e7eb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.threadListSidebar.collapsed {
+  width: auto;
 }
 
 .chatMain {
@@ -213,48 +234,108 @@ onUnmounted(() => {
 
 .noThreadContent {
   text-align: center;
-  max-width: 400px;
-  padding: 2rem;
+  max-width: 480px;
+  padding: 3rem 2rem;
+  animation: fadeIn 0.4s ease-in;
 }
 
-.noThreadContent i {
-  font-size: 5rem;
-  color: #d1d5db;
-  margin-bottom: 1.5rem;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.iconWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 1rem;
+  margin: 0 auto 1.5rem;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.15);
+}
+
+.iconWrapper i {
+  font-size: 2rem;
+  color: #d4af37;
 }
 
 .noThreadContent h2 {
-  font-size: 1.875rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.625rem 0;
+  letter-spacing: -0.01em;
 }
 
 .noThreadContent p {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: #6b7280;
+  line-height: 1.6;
   margin: 0 0 2rem 0;
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .startBtn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
+  gap: 0.625rem;
+  padding: 0.875rem 1.75rem;
   background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
   color: #ffffff;
   border: none;
-  border-radius: 0.5rem;
-  font-size: 1rem;
+  border-radius: 0.625rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 6px rgba(212, 175, 55, 0.2);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+
+.startBtn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.25s;
 }
 
 .startBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 6px 16px rgba(212, 175, 55, 0.35);
+}
+
+.startBtn:hover::before {
+  opacity: 1;
+}
+
+.startBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.25);
+}
+
+.startBtn i {
+  font-size: 1.125rem;
+}
+
+.startBtn span {
+  position: relative;
+  z-index: 1;
 }
 
 .chatContainer {
@@ -475,12 +556,8 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .threadListSidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    z-index: 90;
-    box-shadow: 4px 0 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    width: auto;
   }
 }
 </style>

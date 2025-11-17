@@ -16,7 +16,8 @@ const {
   hasMoreMessages,
   loadMoreMessages,
   addReaction,
-  removeReaction
+  removeReaction,
+  typingUsers
 } = useChat()
 
 const messagesContainer = ref<HTMLElement | null>(null)
@@ -24,6 +25,14 @@ const isLoadingMore = ref(false)
 const showEmojiPicker = ref<string | null>(null)
 
 const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏']
+
+// Typing indicator text
+const typingText = computed(() => {
+  const users = Array.from(typingUsers.value.values())
+  if (users.length === 0) return ''
+  if (users.length === 1) return `${users[0]} يكتب...`
+  return `${users.join(', ')} يكتبون...`
+})
 
 // Group messages by date
 const groupedMessages = computed(() => {
@@ -296,6 +305,18 @@ const getFileIcon = (contentType: string): string => {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Typing Indicator -->
+    <div v-if="typingText" :class="$style.typingIndicator">
+      <div :class="$style.typingBubble">
+        <span :class="$style.typingDots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </span>
+        <span :class="$style.typingText">{{ typingText }}</span>
       </div>
     </div>
   </div>
@@ -611,5 +632,60 @@ const getFileIcon = (contentType: string): string => {
 .emojiBtn:hover {
   background: #f3f4f6;
   transform: scale(1.1);
+}
+
+.typingIndicator {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0;
+  padding: 0 1rem;
+}
+
+.typingBubble {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f1f1f1;
+  border-radius: 1rem;
+  max-width: 70%;
+}
+
+.typingDots {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.typingDots span {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: #9ca3af;
+  border-radius: 50%;
+  animation: typingDot 1.4s infinite;
+}
+
+.typingDots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  30% {
+    transform: translateY(-0.5rem);
+    opacity: 1;
+  }
+}
+
+.typingText {
+  font-size: 0.75rem;
+  color: #6b7280;
+  font-style: italic;
 }
 </style>

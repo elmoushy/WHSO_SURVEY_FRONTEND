@@ -53,7 +53,7 @@ class EnvironmentManager {
       // API Configuration - NO fallbacks in production
       apiBaseUrl: this.getRequiredEnvVar('VITE_API_BASE_URL', !IS_PRODUCTION ? 'http://127.0.0.1:8000/api/' : ''),
       frontendBaseUrl: this.getRequiredEnvVar('VITE_FRONTEND_BASE_URL', !IS_PRODUCTION ? 'http://localhost:5173' : ''),
-      wsBaseUrl: websocketEnabled ? this.getRequiredEnvVar('VITE_WS_BASE_URL', !IS_PRODUCTION ? 'ws://127.0.0.1:8000/ws' : '') : '',
+      wsBaseUrl: websocketEnabled ? this.getRequiredEnvVar('VITE_WS_URL', !IS_PRODUCTION ? 'ws://127.0.0.1:8000' : '') : '',
       
       // Security Settings
       maxLoginAttempts: parseInt(import.meta.env.VITE_MAX_LOGIN_ATTEMPTS || '3'),

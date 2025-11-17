@@ -1,6 +1,5 @@
 import { ref, computed, type Ref } from 'vue'
 import { getAccessToken } from './jwtAuthService'
-import { debugWebSocket } from '../utils/websocketDebug'
 import { envConfig } from '../utils/envConfig'
 import { logger } from '../utils/logger'
 
@@ -48,30 +47,74 @@ export interface PongMessageData {
   timestamp?: string
 }
 
+// Chat-specific event types
+export enum ChatEventType {
+  CONNECTION_ESTABLISHED = 'connection.established',
+  MESSAGE_NEW = 'message.new',
+  MESSAGE_UPDATED = 'message.updated',
+  MESSAGE_DELETED = 'message.deleted',
+  TYPING_START = 'typing.start',
+  TYPING_STOP = 'typing.stop',
+  RECEIPT_READ = 'receipt.read',
+  REACTION_ADDED = 'reaction.added',
+  REACTION_REMOVED = 'reaction.removed',
+  MEMBER_ADDED = 'member.added',
+  MEMBER_REMOVED = 'member.removed',
+  THREAD_UPDATED = 'thread.updated',
+  PING = 'ping',
+  PONG = 'pong',
+  ERROR = 'error'
+}
+
+// Chat WebSocket message data interfaces
+export interface ChatMessage {
+  id: string
+  thread_id: string
+  sender: {
+    id: number
+    username: string
+    first_name: string
+    last_name: string
+    avatar?: string
+  }
+  content: string
+  created_at: string
+  updated_at: string
+  edited_at?: string
+  deleted_at?: string
+  reply_to?: string
+  has_attachments: boolean
+  attachments?: any[]
+  reactions: Array<{
+    emoji: string
+    users: Array<{ id: number; username: string }>
+  }>
+}
+
 class NotificationWebSocketService {
-  private ws: WebSocket | null = null
-  private baseUrl: string
+  // Chat WebSocket
+  private chatWs: WebSocket | null = null
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private reconnectInterval = 1000
-  private heartbeatInterval: NodeJS.Timeout | null = null
-  private isIntentionalClose = false
+  private chatHeartbeatInterval: NodeJS.Timeout | null = null
+  private isChatIntentionalClose = false
+  private currentThreadId: string | null = null
+
+  // Global Notification WebSocket
+  private notificationWs: WebSocket | null = null
+  private notificationHeartbeatInterval: NodeJS.Timeout | null = null
+  private isNotificationIntentionalClose = false
+  private notificationReconnectAttempts = 0
 
   // Reactive state
   private _isConnected: Ref<boolean> = ref(false)
   private _isConnecting: Ref<boolean> = ref(false)
   private _connectionError: Ref<string | null> = ref(null)
-  private _unreadCount: Ref<number> = ref(0)
+  private _isNotificationConnected: Ref<boolean> = ref(false)
 
   // Event listeners
   private eventListeners: Map<string, Array<(data: any) => void>> = new Map()
-
-  constructor() {
-    // Get WebSocket base URL from environment
-    const wsBaseUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://127.0.0.1:8000/ws'
-    const notificationsEndpoint = import.meta.env.VITE_NOTIFICATIONS_ENDPOINT || '/notifications/'
-    this.baseUrl = `${wsBaseUrl}${notificationsEndpoint}`
-  }
 
   // Computed properties for reactive state
   get isConnected() {
@@ -86,412 +129,13 @@ class NotificationWebSocketService {
     return computed(() => this._connectionError.value)
   }
 
-  get unreadCount() {
-    return computed(() => this._unreadCount.value)
+  get isNotificationConnected() {
+    return computed(() => this._isNotificationConnected.value)
   }
 
-  /**
-   * Connect to WebSocket server
-   */
-  async connect(): Promise<void> {
-    // Check if WebSocket is enabled in configuration
-    if (!envConfig.websocketEnabled) {
-      const errorMessage = 'WebSocket is disabled in configuration'
-      logger.debug('WebSocket connection skipped:', errorMessage)
-      this._connectionError.value = errorMessage
-      this._isConnecting.value = false
-      return
-    }
-
-    const token = getAccessToken()
-    if (!token) {
-      const errorMessage = 'No authentication token available. Please login first.'
-      logger.warn('WebSocket connection aborted:', errorMessage)
-      
-      // Debug authentication state
-      debugWebSocket.checkAuthenticationState()
-      
-      this._connectionError.value = errorMessage
-      this._isConnecting.value = false
-      throw new Error(errorMessage)
-    }
-
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      logger.debug('WebSocket already connected')
-      return
-    }
-
-    // Clear any previous connection error
-    this._connectionError.value = null
-
-    this._isConnecting.value = true
-    this._connectionError.value = null
-    this.isIntentionalClose = false
-
-    try {
-      const wsUrl = `${this.baseUrl}?token=${token}`
-      logger.debug('WebSocket connecting to:', wsUrl.replace(token, '[TOKEN]'))
-      
-      this.ws = new WebSocket(wsUrl)
-      
-      this.ws.onopen = this.handleOpen.bind(this)
-      this.ws.onmessage = this.handleMessage.bind(this)
-      this.ws.onclose = this.handleClose.bind(this)
-      this.ws.onerror = this.handleError.bind(this)
-
-    } catch (error) {
-      logger.error('Failed to create WebSocket connection:', error)
-      this._isConnecting.value = false
-      this._connectionError.value = error instanceof Error ? error.message : 'Connection failed'
-      throw error
-    }
-  }
-
-  /**
-   * Check if WebSocket connection can be established
-   */
-  canConnect(): boolean {
-    // Check if WebSocket is enabled in configuration
-    if (!envConfig.websocketEnabled) {
-      return false
-    }
-    
-    const token = getAccessToken()
-    return !!token && this.ws?.readyState !== WebSocket.OPEN
-  }
-
-  /**
-   * Disconnect from WebSocket server
-   */
-  disconnect(): void {
-    this.isIntentionalClose = true
-    this.stopHeartbeat()
-    
-    if (this.ws) {
-      this.ws.close(1000, 'Client disconnect')
-      this.ws = null
-    }
-    
-    this._isConnected.value = false
-    this._isConnecting.value = false
-    this.reconnectAttempts = 0
-  }
-
-  /**
-   * Send message to WebSocket server
-   */
-  private send(data: WebSocketMessage): void {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(JSON.stringify(data))
-    } else {
-      logger.error('WebSocket is not connected')
-    }
-  }
-
-  /**
-   * Mark notifications as read
-   */
-  markAsRead(notificationIds: string | string[]): void {
-    this.send({
-      type: 'mark_read',
-      data: {
-        notification_ids: Array.isArray(notificationIds) ? notificationIds : [notificationIds]
-      }
-    })
-  }
-
-  /**
-   * Get current unread count
-   */
-  getUnreadCount(): void {
-    this.send({
-      type: 'get_unread_count'
-    })
-  }
-
-  /**
-   * Subscribe to specific notification types
-   */
-  subscribeToTypes(types: string[]): void {
-    this.send({
-      type: 'subscribe_to_types',
-      data: {
-        notification_types: types
-      }
-    })
-  }
-
-  /**
-   * Send ping to keep connection alive
-   */
-  private ping(): void {
-    this.send({
-      type: 'ping',
-      timestamp: new Date().toISOString()
-    })
-  }
-
-  /**
-   * Handle WebSocket open event
-   */
-  private handleOpen(event: Event): void {
-    logger.debug('WebSocket connected successfully')
-    this._isConnected.value = true
-    this._isConnecting.value = false
-    this._connectionError.value = null
-    this.reconnectAttempts = 0
-    
-    this.startHeartbeat()
-    this.trigger('connect', event)
-  }
-
-  /**
-   * Handle incoming WebSocket messages
-   */
-  private handleMessage(event: MessageEvent): void {
-    try {
-      const message: WebSocketMessage = JSON.parse(event.data)
-      logger.debug('WebSocket message received:', message.type, message)
-      
-      switch (message.type) {
-        case 'notification':
-          this.handleNotificationMessage(message.data)
-          break
-        case 'bulk_notifications':
-          this.handleBulkNotifications(message.data)
-          break
-        case 'connection_success':
-          this.handleConnectionSuccess(message.data)
-          break
-        case 'unread_count':
-          this.handleUnreadCount(message.data)
-          break
-        case 'mark_read_response':
-          this.handleMarkReadResponse(message.data)
-          break
-        case 'error':
-          this.handleServerError(message.data)
-          break
-        case 'pong':
-          this.handlePongMessage(message.data)
-          break
-        default:
-          logger.debug('Unknown WebSocket message type:', message.type)
-      }
-    } catch (error) {
-      logger.error('Failed to parse WebSocket message:', error)
-    }
-  }
-
-  /**
-   * Handle single notification message
-   */
-  private handleNotificationMessage(data: NotificationWebSocketData): void {
-    // Increment unread count
-    this._unreadCount.value += 1
-    
-    // Show browser notification if permission granted
-    this.showBrowserNotification(data)
-    
-    // Trigger event for components to handle
-    this.trigger('notification', data)
-  }
-
-  /**
-   * Handle bulk notifications
-   */
-  private handleBulkNotifications(data: { notifications: NotificationWebSocketData[], count: number }): void {
-    // Update unread count
-    const unreadNotifications = data.notifications.filter(n => !n.is_read)
-    this._unreadCount.value += unreadNotifications.length
-    
-    // Show browser notifications
-    data.notifications.forEach(notification => {
-      if (!notification.is_read) {
-        this.showBrowserNotification(notification)
-      }
-    })
-    
-    // Trigger event for components
-    this.trigger('bulk_notifications', data)
-  }
-
-  /**
-   * Handle connection success message
-   */
-  private handleConnectionSuccess(data: ConnectionSuccessData): void {
-    logger.debug('WebSocket connection success:', data.message)
-    this._unreadCount.value = data.unread_count
-    this.trigger('connection_success', data)
-  }
-
-  /**
-   * Handle unread count update
-   */
-  private handleUnreadCount(data: UnreadCountData): void {
-    this._unreadCount.value = data.count
-    this.trigger('unread_count', data)
-  }
-
-  /**
-   * Handle mark as read response
-   */
-  private handleMarkReadResponse(data: any): void {
-    if (data.success) {
-      // Decrease unread count by the number of notifications marked as read
-      this._unreadCount.value = Math.max(0, this._unreadCount.value - data.updated_count)
-    }
-    this.trigger('mark_read_response', data)
-  }
-
-  /**
-   * Handle server error
-   */
-  private handleServerError(data: any): void {
-    logger.error('WebSocket server error:', data)
-    this._connectionError.value = data.message || 'Server error'
-    this.trigger('error', data)
-  }
-
-  /**
-   * Handle pong message - check for new notification trigger
-   */
-  private handlePongMessage(data: PongMessageData): void {
-    logger.debug('🏓 Pong message received in WebSocket service:', data)
-    
-    // Regular heartbeat pong response - no action needed
-    if (!data || !data.trigger) {
-      logger.debug('🏓 Regular pong, no action needed')
-      return
-    }
-
-    // Check if the pong is triggered by a new notification
-    if (data.trigger === 'new_notification') {
-      logger.debug('🔔 Pong triggered by new notification:', data)
-      
-      // If notification data is included, handle it as a complete notification
-      if (data.notification) {
-        logger.debug('📨 Handling complete notification from pong:', data.notification)
-        this.handleNotificationMessage(data.notification)
-      } else if (data.notification_id) {
-        // If only notification_id is provided, create a minimal notification event
-        // This will trigger the indicator and force a refresh of notifications
-        logger.debug('📨 New notification ID received via pong:', data.notification_id)
-        
-        // Increment unread count since we know there's a new notification
-        this._unreadCount.value += 1
-        logger.debug('📊 Incremented unread count to:', this._unreadCount.value)
-      }
-      
-      // Always trigger the pong notification event for UI updates
-      logger.debug('🎯 Triggering pong_notification event for UI')
-      this.trigger('pong_notification', {
-        trigger: data.trigger,
-        notification_id: data.notification_id,
-        timestamp: data.timestamp,
-        notification: data.notification
-      })
-    }
-  }
-
-  /**
-   * Handle WebSocket close event
-   */
-  private handleClose(event: CloseEvent): void {
-    logger.debug('WebSocket closed:', event.code, event.reason)
-    this._isConnected.value = false
-    this._isConnecting.value = false
-    this.stopHeartbeat()
-    
-    this.trigger('disconnect', event)
-    
-    // Only reconnect if not intentionally closed and within retry limits
-    if (!this.isIntentionalClose && event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.scheduleReconnect()
-    } else if (event.code === 4001 || event.code === 4003) {
-      // Authentication errors - don't reconnect
-      this._connectionError.value = event.code === 4001 ? 'Authentication failed' : 'Token expired'
-    }
-  }
-
-  /**
-   * Handle WebSocket error event
-   */
-  private handleError(event: Event): void {
-    logger.error('WebSocket error:', event)
-    this._connectionError.value = 'Connection error'
-    this.trigger('error', event)
-  }
-
-  /**
-   * Schedule reconnection with exponential backoff
-   */
-  private scheduleReconnect(): void {
-    this.reconnectAttempts++
-    const delay = Math.min(this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1), 30000)
-    
-    logger.debug(`Scheduling WebSocket reconnection in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
-    
-    setTimeout(() => {
-      if (!this.isIntentionalClose) {
-        this.connect().catch(error => {
-          logger.error('Reconnection failed:', error)
-        })
-      }
-    }, delay)
-  }
-
-  /**
-   * Start heartbeat to keep connection alive
-   */
-  private startHeartbeat(): void {
-    this.stopHeartbeat() // Clear any existing interval
-    this.heartbeatInterval = setInterval(() => {
-      this.ping()
-    }, 30000) // Ping every 30 seconds
-  }
-
-  /**
-   * Stop heartbeat
-   */
-  private stopHeartbeat(): void {
-    if (this.heartbeatInterval) {
-      clearInterval(this.heartbeatInterval)
-      this.heartbeatInterval = null
-    }
-  }
-
-  /**
-   * Show browser notification if permission granted
-   */
-  private showBrowserNotification(notification: NotificationWebSocketData): void {
-    if (Notification.permission === 'granted') {
-      try {
-        new Notification(notification.title_localized, {
-          body: notification.body_localized,
-          icon: '/favicon.ico',
-          tag: notification.id, // Prevents duplicate notifications
-          requireInteraction: notification.priority === 'high'
-        })
-      } catch (error) {
-        logger.error('Failed to show browser notification:', error)
-      }
-    }
-  }
-
-  /**
-   * Request browser notification permission
-   */
-  async requestNotificationPermission(): Promise<NotificationPermission> {
-    if ('Notification' in window) {
-      const permission = await Notification.requestPermission()
-      if (envConfig.websocketEnabled) {
-        logger.debug('Browser notification permission:', permission)
-      }
-      return permission
-    }
-    return 'denied'
-  }
+  // ============================================
+  // EVENT HANDLING METHODS
+  // ============================================
 
   /**
    * Add event listener
@@ -573,25 +217,555 @@ class NotificationWebSocketService {
       isConnected: this._isConnected.value,
       isConnecting: this._isConnecting.value,
       connectionError: this._connectionError.value,
-      unreadCount: this._unreadCount.value,
-      reconnectAttempts: this.reconnectAttempts
+      reconnectAttempts: this.reconnectAttempts,
+      currentThreadId: this.currentThreadId
+    }
+  }
+
+  // ============================================
+  // CHAT WEBSOCKET METHODS
+  // ============================================
+
+  /**
+   * Connect to chat WebSocket for a specific thread
+   */
+  async connectToChat(threadId: string): Promise<void> {
+    if (!envConfig.websocketEnabled) {
+      const errorMessage = 'WebSocket is disabled in configuration'
+      logger.debug('Chat WebSocket connection skipped:', errorMessage)
+      return
+    }
+
+    // Try to get token from jwtAuthService first, fallback to localStorage
+    let token = getAccessToken()
+    if (!token) {
+      // Fallback to localStorage for compatibility
+      token = localStorage.getItem('access_token')
+    }
+    
+    if (!token) {
+      const errorMessage = 'No authentication token available for chat'
+      logger.warn('Chat WebSocket connection aborted:', errorMessage)
+      throw new Error(errorMessage)
+    }
+
+    // Disconnect from previous thread if connected
+    if (this.chatWs && this.currentThreadId !== threadId) {
+      this.disconnectFromChat()
+    }
+
+    if (this.chatWs?.readyState === WebSocket.OPEN && this.currentThreadId === threadId) {
+      logger.debug('Chat WebSocket already connected to this thread')
+      return
+    }
+
+    this.isChatIntentionalClose = false
+    this.currentThreadId = threadId
+
+    try {
+      // Use VITE_WS_URL for proper environment-based WebSocket URL
+      const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000'
+      const wsUrl = `${wsBaseUrl}/ws/internal-chat/threads/${threadId}/?token=${token}`
+      logger.debug('Chat WebSocket connecting to:', wsUrl.replace(token, '[TOKEN]'))
+      
+      this.chatWs = new WebSocket(wsUrl)
+      
+      this.chatWs.onopen = this.handleChatOpen.bind(this)
+      this.chatWs.onmessage = this.handleChatMessage.bind(this)
+      this.chatWs.onclose = this.handleChatClose.bind(this)
+      this.chatWs.onerror = this.handleChatError.bind(this)
+
+    } catch (error) {
+      logger.error('Failed to create chat WebSocket connection:', error)
+      this.currentThreadId = null
+      throw error
     }
   }
 
   /**
-   * Test method to simulate pong message for debugging
+   * Disconnect from chat WebSocket
    */
-  simulatePongMessage(data: PongMessageData) {
-    logger.debug('🧪 [WebSocket] Simulating pong message:', data)
-    this.handlePongMessage(data)
+  disconnectFromChat(): void {
+    this.isChatIntentionalClose = true
+    this.stopChatHeartbeat()
+    
+    if (this.chatWs) {
+      this.chatWs.close(1000, 'Client disconnect')
+      this.chatWs = null
+    }
+    
+    this.currentThreadId = null
   }
 
   /**
-   * Test method to expose private trigger method for debugging
+   * Send message to chat WebSocket
    */
-  testTrigger(event: string, data: any) {
-    logger.debug('🧪 [WebSocket] Test triggering event:', event, data)
-    this.trigger(event, data)
+  private sendChat(data: any): void {
+    if (this.chatWs && this.chatWs.readyState === WebSocket.OPEN) {
+      this.chatWs.send(JSON.stringify(data))
+      logger.debug('📤 Chat message sent:', data.type)
+    } else {
+      logger.error('Chat WebSocket is not connected')
+    }
+  }
+
+  /**
+   * Send a chat message
+   */
+  sendChatMessage(content: string, replyToId?: string, attachmentIds?: string[]): void {
+    this.sendChat({
+      type: 'message.send',
+      content: content,
+      reply_to: replyToId,
+      attachment_ids: attachmentIds || []
+    })
+  }
+
+  /**
+   * Send pong response to server ping
+   */
+  private sendChatPong(): void {
+    this.sendChat({
+      type: 'pong'
+    })
+  }
+
+  /**
+   * Start typing indicator
+   */
+  startTyping(): void {
+    this.sendChat({ type: 'typing.start' })
+  }
+
+  /**
+   * Stop typing indicator
+   */
+  stopTyping(): void {
+    this.sendChat({ type: 'typing.stop' })
+  }
+
+  /**
+   * Mark message as read
+   */
+  markChatMessageAsRead(messageId: string): void {
+    this.sendChat({
+      type: 'message.read',
+      message_id: messageId
+    })
+  }
+
+  /**
+   * Add reaction to chat message
+   */
+  addChatReaction(messageId: string, emoji: string): void {
+    this.sendChat({
+      type: 'reaction.add',
+      message_id: messageId,
+      emoji: emoji
+    })
+  }
+
+  /**
+   * Remove reaction from chat message
+   */
+  removeChatReaction(messageId: string, emoji: string): void {
+    this.sendChat({
+      type: 'reaction.remove',
+      message_id: messageId,
+      emoji: emoji
+    })
+  }
+
+  /**
+   * Handle chat WebSocket open event
+   */
+  private handleChatOpen(_event: Event): void {
+    logger.debug('✅ Chat WebSocket connected successfully')
+    this.startChatHeartbeat()
+    this.trigger('chat.connected', { threadId: this.currentThreadId })
+  }
+
+  /**
+   * Handle incoming chat WebSocket messages
+   */
+  private handleChatMessage(event: MessageEvent): void {
+    try {
+      const data = JSON.parse(event.data)
+      logger.debug('📨 Chat message received:', data.type, data)
+      
+      // Log full data for debugging
+      if (data.type === ChatEventType.MESSAGE_NEW) {
+        logger.debug('📩 New message data structure:', JSON.stringify(data, null, 2))
+      }
+      
+      // Handle chat unread count updates
+      if (data.type === 'chat.unread.update') {
+        console.log('📨 Received:', {
+          type: data.type,
+          thread_id: data.thread_id,
+          unread_count: data.unread_count,
+          total_unread: data.total_unread
+        })
+        this.trigger('chat.unread.update', data)
+        return
+      }
+      
+      // Trigger specific event based on message type
+      switch (data.type) {
+        case ChatEventType.CONNECTION_ESTABLISHED:
+        case 'connection.established':
+          console.log('✅ Connected to notification WebSocket')
+          this.trigger('chat.connection.established', data)
+          break
+        case ChatEventType.MESSAGE_NEW:
+        case 'message.new':
+          this.trigger('chat.message.new', data)
+          break
+        case ChatEventType.MESSAGE_UPDATED:
+        case 'message.updated':
+          this.trigger('chat.message.updated', data)
+          break
+        case ChatEventType.MESSAGE_DELETED:
+        case 'message.deleted':
+          this.trigger('chat.message.deleted', data)
+          break
+        case ChatEventType.TYPING_START:
+        case 'typing.start':
+          this.trigger('chat.typing.start', data)
+          break
+        case ChatEventType.TYPING_STOP:
+        case 'typing.stop':
+          this.trigger('chat.typing.stop', data)
+          break
+        case ChatEventType.RECEIPT_READ:
+        case 'receipt.read':
+          this.trigger('chat.receipt.read', data)
+          break
+        case ChatEventType.REACTION_ADDED:
+        case 'reaction.added':
+          this.trigger('chat.reaction.added', data)
+          break
+        case ChatEventType.REACTION_REMOVED:
+        case 'reaction.removed':
+          this.trigger('chat.reaction.removed', data)
+          break
+        case ChatEventType.MEMBER_ADDED:
+        case 'member.added':
+          this.trigger('chat.member.added', data)
+          break
+        case ChatEventType.MEMBER_REMOVED:
+        case 'member.removed':
+          this.trigger('chat.member.removed', data)
+          break
+        case ChatEventType.THREAD_UPDATED:
+        case 'thread.updated':
+          this.trigger('chat.thread.updated', data)
+          break
+        case ChatEventType.PING:
+        case 'ping':
+          // Respond to ping with pong
+          logger.debug('📡 Received ping, sending pong')
+          this.sendChatPong()
+          this.trigger('chat.ping', data)
+          break
+        case ChatEventType.PONG:
+        case 'pong':
+          // Pong received from server
+          logger.debug('📡 Received pong from server')
+          this.trigger('chat.pong', data)
+          break
+        case ChatEventType.ERROR:
+        case 'error':
+          // Only log as error if it's not about ping/pong
+          if (data.message && data.message.toLowerCase().includes('ping')) {
+            logger.debug('Ignoring ping-related error message:', data.message)
+          } else {
+            logger.error('Chat WebSocket error:', data.message)
+            this.trigger('chat.error', data)
+          }
+          break
+        default:
+          // Log unknown types but don't treat as critical error
+          logger.debug('Unhandled chat message type:', data.type)
+          // Still trigger the event in case someone is listening for it
+          this.trigger(`chat.${data.type}`, data)
+          break
+      }
+    } catch (error) {
+      logger.error('Failed to parse chat WebSocket message:', error)
+    }
+  }
+
+  /**
+   * Handle chat WebSocket close event
+   */
+  private handleChatClose(event: CloseEvent): void {
+    logger.debug('🔌 Chat WebSocket closed:', event.code, event.reason)
+    this.stopChatHeartbeat()
+    
+    this.trigger('chat.disconnected', { 
+      code: event.code, 
+      reason: event.reason,
+      threadId: this.currentThreadId
+    })
+    
+    // Only reconnect if not intentionally closed and within retry limits
+    if (!this.isChatIntentionalClose && event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
+      this.scheduleChatReconnect()
+    }
+  }
+
+  /**
+   * Handle chat WebSocket error event
+   */
+  private handleChatError(event: Event): void {
+    logger.error('❌ Chat WebSocket error:', event)
+    this.trigger('chat.error', { event })
+  }
+
+  /**
+   * Schedule chat reconnection with exponential backoff
+   */
+  private scheduleChatReconnect(): void {
+    if (!this.currentThreadId) return
+
+    this.reconnectAttempts++
+    const delay = Math.min(this.reconnectInterval * Math.pow(2, this.reconnectAttempts - 1), 30000)
+    
+    logger.debug(`🔄 Scheduling chat WebSocket reconnection in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+    
+    setTimeout(() => {
+      if (!this.isChatIntentionalClose && this.currentThreadId) {
+        this.connectToChat(this.currentThreadId).catch(error => {
+          logger.error('Chat reconnection failed:', error)
+        })
+      }
+    }, delay)
+  }
+
+  /**
+   * Start heartbeat for chat connection
+   */
+  private startChatHeartbeat(): void {
+    this.stopChatHeartbeat()
+    this.chatHeartbeatInterval = setInterval(() => {
+      if (this.chatWs && this.chatWs.readyState === WebSocket.OPEN) {
+        this.sendChat({ type: 'ping' })
+      }
+    }, 30000)
+  }
+
+  /**
+   * Stop chat heartbeat
+   */
+  private stopChatHeartbeat(): void {
+    if (this.chatHeartbeatInterval) {
+      clearInterval(this.chatHeartbeatInterval)
+      this.chatHeartbeatInterval = null
+    }
+  }
+
+  /**
+   * Check if chat WebSocket is connected
+   */
+  isChatConnected(): boolean {
+    return this.chatWs?.readyState === WebSocket.OPEN
+  }
+
+  /**
+   * Get current chat thread ID
+   */
+  getCurrentChatThreadId(): string | null {
+    return this.currentThreadId
+  }
+
+  // ============================================
+  // GLOBAL NOTIFICATION WEBSOCKET METHODS
+  // ============================================
+
+  /**
+   * Connect to global notification WebSocket
+   * This connection receives all notifications including chat unread updates
+   */
+  async connectToNotifications(): Promise<void> {
+    if (this.notificationWs?.readyState === WebSocket.OPEN) {
+      logger.debug('Notification WebSocket already connected')
+      return
+    }
+
+    // Get JWT token from the auth service (in-memory token after initialization)
+    let token = getAccessToken()
+    
+    if (!token) {
+      const errorMessage = 'No authentication token available for notification WebSocket'
+      logger.warn('Notification WebSocket connection aborted:', errorMessage)
+      logger.debug('Token status:', {
+        hasToken: !!token,
+        message: 'Make sure auth is initialized before connecting WebSocket'
+      })
+      throw new Error(errorMessage)
+    }
+
+    this.isNotificationIntentionalClose = false
+
+    try {
+      const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000'
+      const wsUrl = `${wsBaseUrl}/ws/notifications/?token=${token}`
+      
+      console.log('🔌 Connecting to notification WebSocket:', wsUrl.replace(token, '[TOKEN]'))
+      logger.debug('Notification WebSocket connecting to:', wsUrl.replace(token, '[TOKEN]'))
+      
+      this.notificationWs = new WebSocket(wsUrl)
+      
+      this.notificationWs.onopen = this.handleNotificationOpen.bind(this)
+      this.notificationWs.onmessage = this.handleNotificationMessage.bind(this)
+      this.notificationWs.onclose = this.handleNotificationClose.bind(this)
+      this.notificationWs.onerror = this.handleNotificationError.bind(this)
+      
+      this._isNotificationConnected.value = true
+    } catch (error) {
+      logger.error('Failed to create notification WebSocket connection:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Disconnect from notification WebSocket
+   */
+  disconnectFromNotifications(): void {
+    this.isNotificationIntentionalClose = true
+    this.stopNotificationHeartbeat()
+    
+    if (this.notificationWs) {
+      this.notificationWs.close(1000, 'Client disconnect')
+      this.notificationWs = null
+    }
+    
+    this._isNotificationConnected.value = false
+  }
+
+  /**
+   * Handle notification WebSocket open
+   */
+  private handleNotificationOpen(_event: Event): void {
+    console.log('✅ Connected to notification WebSocket')
+    logger.debug('✅ Notification WebSocket connected successfully')
+    this.notificationReconnectAttempts = 0
+    this.startNotificationHeartbeat()
+    this.trigger('notification.connected', { timestamp: new Date().toISOString() })
+  }
+
+  /**
+   * Handle incoming notification WebSocket messages
+   */
+  private handleNotificationMessage(event: MessageEvent): void {
+    try {
+      const data = JSON.parse(event.data)
+      
+      // Log all received messages to console
+      console.log('📨 Received:', data)
+      logger.debug('📨 Notification message received:', data.type, data)
+      
+      // Handle specific message types
+      if (data.type === 'chat.unread.update') {
+        console.log('📨 Received:', {
+          type: data.type,
+          thread_id: data.thread_id,
+          unread_count: data.unread_count,
+          total_unread: data.total_unread
+        })
+        this.trigger('chat.unread.update', data)
+      } else if (data.type === 'unread.counts.initial') {
+        console.log('📨 Initial unread counts received:', {
+          type: data.type,
+          total_unread: data.total_unread,
+          threads: data.threads
+        })
+        this.trigger('unread.counts.initial', data)
+      } else if (data.type === 'connection.success') {
+        console.log('✅ Connection confirmed by server')
+        this.trigger('notification.connection.success', data)
+      } else {
+        // Trigger generic event for any other message type
+        this.trigger(`notification.${data.type}`, data)
+        this.trigger('notification.message', data)
+      }
+    } catch (error) {
+      logger.error('Failed to parse notification WebSocket message:', error)
+    }
+  }
+
+  /**
+   * Handle notification WebSocket close
+   */
+  private handleNotificationClose(event: CloseEvent): void {
+    this._isNotificationConnected.value = false
+    this.stopNotificationHeartbeat()
+    
+    logger.debug('Notification WebSocket closed:', event.code, event.reason)
+    
+    if (!this.isNotificationIntentionalClose && this.notificationReconnectAttempts < this.maxReconnectAttempts) {
+      logger.debug('Attempting to reconnect notification WebSocket...')
+      this.scheduleNotificationReconnect()
+    }
+    
+    this.trigger('notification.disconnected', { code: event.code, reason: event.reason })
+  }
+
+  /**
+   * Handle notification WebSocket error
+   */
+  private handleNotificationError(event: Event): void {
+    logger.error('Notification WebSocket error:', event)
+    this.trigger('notification.error', { event })
+  }
+
+  /**
+   * Schedule notification WebSocket reconnection
+   */
+  private scheduleNotificationReconnect(): void {
+    this.notificationReconnectAttempts++
+    const delay = this.reconnectInterval * Math.pow(2, this.notificationReconnectAttempts - 1)
+    
+    logger.debug(`Scheduling notification reconnection in ${delay}ms (attempt ${this.notificationReconnectAttempts}/${this.maxReconnectAttempts})`)
+    
+    setTimeout(() => {
+      if (!this.isNotificationIntentionalClose && this.notificationReconnectAttempts <= this.maxReconnectAttempts) {
+        this.connectToNotifications().catch((error) => {
+          logger.error('Notification reconnection failed:', error)
+        })
+      }
+    }, delay)
+  }
+
+  /**
+   * Start heartbeat for notification connection
+   */
+  private startNotificationHeartbeat(): void {
+    this.stopNotificationHeartbeat()
+    this.notificationHeartbeatInterval = setInterval(() => {
+      if (this.notificationWs && this.notificationWs.readyState === WebSocket.OPEN) {
+        this.notificationWs.send(JSON.stringify({ type: 'ping' }))
+        logger.debug('📡 Sent ping to notification WebSocket')
+      }
+    }, 30000) // Ping every 30 seconds
+  }
+
+  /**
+   * Stop notification heartbeat
+   */
+  private stopNotificationHeartbeat(): void {
+    if (this.notificationHeartbeatInterval) {
+      clearInterval(this.notificationHeartbeatInterval)
+      this.notificationHeartbeatInterval = null
+    }
+  }
+
+  /**
+   * Check if notification WebSocket is connected
+   */
+  isNotificationWsConnected(): boolean {
+    return this.notificationWs?.readyState === WebSocket.OPEN
   }
 }
 

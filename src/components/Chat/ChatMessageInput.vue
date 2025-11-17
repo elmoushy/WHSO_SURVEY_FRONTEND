@@ -14,13 +14,15 @@ const {
   clearUploads,
   setReplyingTo,
   setEditingMessage,
-  editMessage
+  editMessage,
+  sendTypingIndicator
 } = useChat()
 
 const messageText = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const isSending = ref(false)
+const typingTimeout = ref<NodeJS.Timeout | null>(null)
 
 const MAX_LENGTH = 5000
 
@@ -54,8 +56,27 @@ const autoResize = () => {
   }
 }
 
+// Handle typing indicator with debounce
+const handleTyping = () => {
+  // Start typing indicator
+  sendTypingIndicator(true)
+  
+  // Clear existing timeout
+  if (typingTimeout.value) {
+    clearTimeout(typingTimeout.value)
+  }
+  
+  // Stop typing after 3 seconds of inactivity
+  typingTimeout.value = setTimeout(() => {
+    sendTypingIndicator(false)
+  }, 3000)
+}
+
 watch(messageText, () => {
   autoResize()
+  if (messageText.value.length > 0) {
+    handleTyping()
+  }
 })
 
 // Handle file selection
@@ -104,6 +125,12 @@ const handleSend = async () => {
     messageText.value = ''
     clearUploads()
     setReplyingTo(null)
+    
+    // Stop typing indicator
+    sendTypingIndicator(false)
+    if (typingTimeout.value) {
+      clearTimeout(typingTimeout.value)
+    }
     
     // Reset textarea height
     if (textareaRef.value) {
