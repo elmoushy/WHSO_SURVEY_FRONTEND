@@ -304,10 +304,16 @@ export const chatAPI = {
   // Upload file attachment
   uploadAttachment: async (
     file: File,
+    caption?: string,
     onProgress?: (progress: number) => void
   ): Promise<AttachmentUploadResponse> => {
     const formData = new FormData()
     formData.append('file', file)
+    
+    // Add caption if provided
+    if (caption && caption.trim()) {
+      formData.append('caption', caption.trim())
+    }
 
     const response = await apiClient.post<AttachmentUploadResponse>(
       `${CHAT_BASE}/attachments/upload/`,
@@ -340,7 +346,79 @@ export const chatAPI = {
     await apiClient.delete(`${CHAT_BASE}/attachments/${attachmentId}/`)
   },
 
-  // Download attachment
+  // Fetch image as authenticated blob for preview
+  fetchImageAsBlob: async (attachmentId: string): Promise<string> => {
+    try {
+      console.log(`🖼️ Fetching image preview for attachment: ${attachmentId}`)
+      
+      const response = await apiClient.get(
+        `${CHAT_BASE}/attachments/${attachmentId}/download/`,
+        {
+          responseType: 'blob'
+        }
+      )
+
+      // Convert blob to base64 data URL (bypasses CSP blob: restrictions)
+      const blob = new Blob([response.data])
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64data = reader.result as string
+          console.log(`✅ Image converted to base64 data URL`)
+          resolve(base64data)
+        }
+        reader.onerror = reject
+        reader.readAsDataURL(blob)
+      })
+    } catch (error) {
+      console.error('❌ Failed to fetch image:', error)
+      throw error
+    }
+  },
+
+  // Download attachment using dedicated endpoint
+  downloadAttachmentFile: async (
+    attachmentId: string,
+    filename: string
+  ): Promise<void> => {
+    try {
+      console.log(`📥 Downloading attachment: ${filename}`)
+      
+      const response = await apiClient.get(
+        `${CHAT_BASE}/attachments/${attachmentId}/download/`,
+        {
+          responseType: 'blob'
+        }
+      )
+
+      // ✅ CRITICAL: Use the filename parameter from attachment.file_name
+      // Don't rely on blob.name (it's undefined) or Content-Disposition parsing
+      const downloadFilename = filename
+
+      // Create blob URL and trigger download
+      const blob = new Blob([response.data])
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.style.display = 'none'
+      link.href = url
+      link.download = downloadFilename // ✅ Use the provided filename
+      
+      document.body.appendChild(link)
+      link.click()
+      
+      // Cleanup
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(link)
+      
+      console.log(`✅ Downloaded: ${downloadFilename}`)
+    } catch (error) {
+      console.error('❌ Download error:', error)
+      throw error
+    }
+  },
+
+  // Get attachment download URL (for simple cases)
   downloadAttachment: (attachmentUrl: string): string => {
     // If URL is relative, prepend base URL
     if (attachmentUrl.startsWith('/')) {

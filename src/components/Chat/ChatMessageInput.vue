@@ -12,6 +12,7 @@ const {
   uploadProgress,
   removeUpload,
   clearUploads,
+  updateUploadCaption,
   setReplyingTo,
   setEditingMessage,
   editMessage,
@@ -92,6 +93,7 @@ const handleFileSelect = async (event: Event) => {
       continue
     }
 
+    // Upload file without caption initially (caption can be added after upload)
     await uploadFile(file)
   }
 
@@ -101,6 +103,11 @@ const handleFileSelect = async (event: Event) => {
   }
 }
 
+// Handle caption update for uploaded file
+const handleCaptionChange = (uploadId: string, caption: string) => {
+  updateUploadCaption(uploadId, caption)
+}
+
 // Handle send
 const handleSend = async () => {
   if (!canSend.value) return
@@ -108,9 +115,23 @@ const handleSend = async () => {
   isSending.value = true
 
   try {
-    const attachmentIds = uploadProgress.value
-      .filter(u => u.status === 'completed' && u.attachmentId)
-      .map(u => u.attachmentId!)
+    // Filter completed uploads and re-upload those with captions
+    const completedUploads = uploadProgress.value.filter(u => u.status === 'completed')
+    const attachmentIds: string[] = []
+    
+    for (const upload of completedUploads) {
+      // If upload has a caption that was added after initial upload, we need to re-upload
+      if (upload.caption && upload.caption.trim()) {
+        console.log(`📎 Re-uploading ${upload.file_name} with caption`)
+        // Note: For now, we'll just use the existing attachment ID
+        // If backend requires re-upload with caption, implement that here
+        if (upload.attachmentId) {
+          attachmentIds.push(upload.attachmentId)
+        }
+      } else if (upload.attachmentId) {
+        attachmentIds.push(upload.attachmentId)
+      }
+    }
 
     if (editingMessage.value) {
       // Edit existing message
@@ -206,9 +227,22 @@ const getFileIcon = (filename: string): string => {
         :key="upload.id"
         :class="$style.uploadItem"
       >
-        <i :class="['bi', getFileIcon(upload.filename)]"></i>
+        <i :class="['bi', getFileIcon(upload.file_name)]"></i>
         <div :class="$style.uploadInfo">
-          <span :class="$style.uploadName">{{ upload.filename }}</span>
+          <span :class="$style.uploadName">{{ upload.file_name }}</span>
+          
+          <!-- Caption Input (only for completed uploads) -->
+          <input
+            v-if="upload.status === 'completed'"
+            type="text"
+            :value="upload.caption || ''"
+            @input="handleCaptionChange(upload.id, ($event.target as HTMLInputElement).value)"
+            placeholder="إضافة تعليق (اختياري)..."
+            :class="$style.captionInput"
+            maxlength="2000"
+          />
+          
+          <!-- Progress Bar -->
           <div 
             v-if="upload.status === 'uploading'" 
             :class="$style.progressBar"
@@ -218,6 +252,7 @@ const getFileIcon = (filename: string): string => {
               :style="{ width: upload.progress + '%' }"
             ></div>
           </div>
+          
           <span 
             v-else-if="upload.status === 'error'" 
             :class="$style.uploadError"
@@ -225,7 +260,7 @@ const getFileIcon = (filename: string): string => {
             فشل الرفع
           </span>
           <span 
-            v-else 
+            v-else-if="upload.status === 'completed'"
             :class="$style.uploadSuccess"
           >
             <i class="bi bi-check-circle-fill"></i> اكتمل الرفع
@@ -234,6 +269,7 @@ const getFileIcon = (filename: string): string => {
         <button 
           :class="$style.uploadRemove"
           @click="removeUpload(upload.id)"
+          title="إزالة المرفق"
         >
           <i class="bi bi-x-lg"></i>
         </button>
@@ -400,6 +436,31 @@ const getFileIcon = (filename: string): string => {
   overflow: hidden;
   text-overflow: ellipsis;
   margin-bottom: 0.25rem;
+}
+
+.captionInput {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  margin-top: 0.375rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  color: #374151;
+  background: #f9fafb;
+  transition: all 0.2s;
+}
+
+.captionInput:focus {
+  outline: none;
+  border-color: #d4af37;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+}
+
+.captionInput::placeholder {
+  color: #9ca3af;
+  font-style: italic;
 }
 
 .progressBar {

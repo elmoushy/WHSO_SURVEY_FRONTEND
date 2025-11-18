@@ -69,12 +69,13 @@ export interface MessageReaction {
 
 export interface MessageAttachment {
   id: string
-  filename: string
-  file: string
+  file_name: string  // Backend uses file_name (snake_case)
+  url: string  // Backend uses url (not 'file')
   content_type: string
   size: number
-  checksum: string
+  size_mb: number  // Backend also provides size_mb
   created_at: string
+  caption?: string  // Optional caption/comment for the attachment
 }
 
 export interface Message {
@@ -200,12 +201,13 @@ export interface LeaveThreadResponse {
 
 export interface AttachmentUploadResponse {
   id: string
-  filename: string
-  file: string
+  file_name: string  // Backend uses file_name (snake_case)
+  url: string  // Backend uses url (not 'file')
   content_type: string
   size: number
-  checksum: string
+  size_mb: number
   created_at: string
+  caption?: string  // Optional caption from upload
 }
 
 // ============================================
@@ -222,10 +224,11 @@ export interface ChatUIState {
 
 export interface UploadProgress {
   id: string
-  filename: string
+  file_name: string  // Match backend naming convention
   progress: number
   status: 'uploading' | 'completed' | 'error'
   attachmentId?: string
+  caption?: string  // Optional caption for the attachment
 }
 
 // ============================================

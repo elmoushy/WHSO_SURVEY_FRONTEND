@@ -415,7 +415,9 @@ export const useChat = () => {
 
   const addReaction = async (messageId: string, emoji: string): Promise<boolean> => {
     try {
-      // Optimistic update
+      console.log(`🚀 [useChat] Adding reaction ${emoji} to message ${messageId}`)
+      
+      // Optimistic update - immediately update UI
       const messageIndex = messages.value.findIndex(m => m.id === messageId)
       if (messageIndex !== -1) {
         const message = messages.value[messageIndex]
@@ -432,6 +434,7 @@ export const useChat = () => {
               full_name: 'You',
               role: 'user'
             })
+            console.log(`📝 [useChat] Optimistic: Added to existing reaction ${emoji}`)
           }
         } else {
           // Create new reaction
@@ -446,39 +449,87 @@ export const useChat = () => {
               role: 'user'
             }]
           })
+          console.log(`📝 [useChat] Optimistic: Created new reaction ${emoji}`)
         }
+        
+        // Trigger Vue reactivity for immediate UI update
+        triggerRef(messages)
+        console.log('🔄 [useChat] Triggered messages ref for optimistic reaction update')
       }
       
-      // Send to server
-      const updatedMessage = await chatAPI.addReaction(messageId, { emoji })
-      
-      // Update with server response
-      if (messageIndex !== -1) {
-        messages.value[messageIndex] = updatedMessage
+      // Send via WebSocket for real-time broadcast to other users
+      if (isWebSocketConnected.value) {
+        websocketService.addChatReaction(messageId, emoji)
+        console.log(`✨ [useChat] Sent reaction.add via WebSocket`)
+        return true
+      } else {
+        // Fallback to REST API if WebSocket is not connected
+        console.warn('⚠️ [useChat] WebSocket not connected, using REST API fallback')
+        const updatedMessage = await chatAPI.addReaction(messageId, { emoji })
+        
+        // Update with server response
+        if (messageIndex !== -1) {
+          messages.value[messageIndex] = updatedMessage
+          triggerRef(messages)
+        }
+        
+        return true
       }
-      
-      return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to add reaction'
-      console.error('Error adding reaction:', err)
+      console.error('❌ [useChat] Error adding reaction:', err)
       return false
     }
   }
 
   const removeReaction = async (messageId: string, emoji: string): Promise<boolean> => {
     try {
-      const updatedMessage = await chatAPI.removeReaction(messageId, emoji)
+      console.log(`🗑️ [useChat] Removing reaction ${emoji} from message ${messageId}`)
       
-      // Update message in list
+      // Optimistic update - immediately update UI
       const messageIndex = messages.value.findIndex(m => m.id === messageId)
       if (messageIndex !== -1) {
-        messages.value[messageIndex] = updatedMessage
+        const message = messages.value[messageIndex]
+        const reaction = message.reactions.find(r => r.emoji === emoji)
+        
+        if (reaction) {
+          // Remove current user from reaction
+          reaction.users = reaction.users.filter(u => u.id !== currentUserId.value)
+          console.log(`📝 [useChat] Optimistic: Removed user from reaction ${emoji}`)
+          
+          // Remove reaction if no users left
+          if (reaction.users.length === 0) {
+            message.reactions = message.reactions.filter(r => r.emoji !== emoji)
+            console.log(`📝 [useChat] Optimistic: Removed empty reaction ${emoji}`)
+          }
+          
+          // Trigger Vue reactivity for immediate UI update
+          triggerRef(messages)
+          console.log('🔄 [useChat] Triggered messages ref for optimistic reaction removal')
+        }
       }
       
-      return true
+      // Send via WebSocket for real-time broadcast to other users
+      if (isWebSocketConnected.value) {
+        websocketService.removeChatReaction(messageId, emoji)
+        console.log(`✨ [useChat] Sent reaction.remove via WebSocket`)
+        return true
+      } else {
+        // Fallback to REST API if WebSocket is not connected
+        console.warn('⚠️ [useChat] WebSocket not connected, using REST API fallback')
+        const updatedMessage = await chatAPI.removeReaction(messageId, emoji)
+        
+        // Update with server response
+        if (messageIndex !== -1) {
+          messages.value[messageIndex] = updatedMessage
+          triggerRef(messages)
+        }
+        
+        return true
+      }
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to remove reaction'
-      console.error('Error removing reaction:', err)
+      console.error('❌ [useChat] Error removing reaction:', err)
       return false
     }
   }
@@ -487,24 +538,29 @@ export const useChat = () => {
   // File Upload
   // ============================================
 
-  const uploadFile = async (file: File): Promise<string | null> => {
-    const uploadId = `upload-${Date.now()}`
+  const uploadFile = async (file: File, caption?: string): Promise<string | null> => {
+    const uploadId = `upload-${Date.now()}-${Math.random()}`
     
     try {
+      console.log(`📤 [useChat] Uploading file: ${file.name}`, caption ? `with caption: "${caption}"` : '')
+      
       // Add to upload progress
       uploadProgress.value.push({
         id: uploadId,
-        filename: file.name,
+        file_name: file.name,
         progress: 0,
-        status: 'uploading'
+        status: 'uploading',
+        caption: caption
       })
       
-      const response = await chatAPI.uploadAttachment(file, (progress) => {
+      const response = await chatAPI.uploadAttachment(file, caption, (progress) => {
         const uploadIndex = uploadProgress.value.findIndex(u => u.id === uploadId)
         if (uploadIndex !== -1) {
           uploadProgress.value[uploadIndex].progress = progress
         }
       })
+      
+      console.log(`✅ [useChat] File uploaded successfully: ${response.id}`)
       
       // Update to completed
       const uploadIndex = uploadProgress.value.findIndex(u => u.id === uploadId)
@@ -522,7 +578,7 @@ export const useChat = () => {
       }
       
       error.value = err.response?.data?.error || err.message || 'Failed to upload file'
-      console.error('Error uploading file:', err)
+      console.error('❌ [useChat] Error uploading file:', err)
       return null
     }
   }
@@ -533,6 +589,14 @@ export const useChat = () => {
 
   const clearUploads = (): void => {
     uploadProgress.value = []
+  }
+
+  const updateUploadCaption = (uploadId: string, caption: string): void => {
+    const uploadIndex = uploadProgress.value.findIndex(u => u.id === uploadId)
+    if (uploadIndex !== -1) {
+      uploadProgress.value[uploadIndex].caption = caption
+      console.log(`📝 [useChat] Updated caption for upload ${uploadId}`)
+    }
   }
 
   // ============================================
@@ -582,9 +646,15 @@ export const useChat = () => {
         showChatMessageNotification(newMessage)
       }
       
-      // Add to messages list if not already present
-      if (!messages.value.find(m => m.id === newMessage.id)) {
+      // ✅ CRITICAL FIX: Only add message to messages array if it belongs to the CURRENTLY SELECTED thread
+      // This fixes group chat real-time updates - messages were being added regardless of thread
+      const isForCurrentThread = selectedThreadId.value === newMessage.thread
+      
+      if (isForCurrentThread && !messages.value.find(m => m.id === newMessage.id)) {
         messages.value.push(newMessage)
+        console.log(`✅ Added new message to current thread ${newMessage.thread}`)
+      } else if (!isForCurrentThread) {
+        console.log(`⏭️ Message is for thread ${newMessage.thread}, but current thread is ${selectedThreadId.value}`)
       }
 
       // Update thread's last message and unread count
@@ -605,18 +675,39 @@ export const useChat = () => {
       console.log('✏️ Message updated via WebSocket:', data.message)
       const updatedMessage = data.message as Message
       
+      // ✅ Only update message if it belongs to the currently selected thread
+      if (selectedThreadId.value !== updatedMessage.thread) {
+        console.log(`⏭️ Updated message is for thread ${updatedMessage.thread}, but current thread is ${selectedThreadId.value}`)
+        return
+      }
+      
       const index = messages.value.findIndex(m => m.id === updatedMessage.id)
       if (index !== -1) {
         messages.value[index] = updatedMessage
+        console.log(`✅ Updated message ${updatedMessage.id} in current thread`)
       }
     })
 
     // Message deleted
     websocketService.on('chat.message.deleted', (data: any) => {
       console.log('🗑️ Message deleted via WebSocket:', data.message_id)
+      
+      // ✅ Check if the deleted message belongs to current thread before removing
+      const messageToDelete = messages.value.find(m => m.id === data.message_id)
+      if (!messageToDelete) {
+        console.log(`⏭️ Message ${data.message_id} not found in current messages`)
+        return
+      }
+      
+      if (selectedThreadId.value !== messageToDelete.thread) {
+        console.log(`⏭️ Deleted message is for thread ${messageToDelete.thread}, but current thread is ${selectedThreadId.value}`)
+        return
+      }
+      
       const index = messages.value.findIndex(m => m.id === data.message_id)
       if (index !== -1) {
         messages.value.splice(index, 1)
+        console.log(`✅ Removed deleted message ${data.message_id} from current thread`)
       }
     })
 
@@ -653,22 +744,35 @@ export const useChat = () => {
 
     // Reactions
     websocketService.on('chat.reaction.added', (data: any) => {
-      console.log('👍 Reaction added:', data.emoji, 'to message:', data.message_id)
+      console.log('👍 [useChat] Reaction added via WebSocket:', { emoji: data.emoji, messageId: data.message_id, userId: data.user_id })
+      console.log('🔍 [useChat] Type check - data.user_id:', data.user_id, typeof data.user_id, 'currentUserId:', currentUserId.value, typeof currentUserId.value)
       
-      const message = messages.value.find(m => m.id === data.message_id)
-      if (message) {
+      // Skip if this is from the current user (already handled by optimistic update)
+      // Use == instead of === to handle type coercion (number vs string)
+      if (data.user_id == currentUserId.value) {
+        console.log('🚫 [useChat] Ignoring own reaction event (optimistic update already applied)')
+        return
+      }
+      
+      const messageIndex = messages.value.findIndex(m => m.id === data.message_id)
+      if (messageIndex !== -1) {
+        const message = messages.value[messageIndex]
         const reaction = message.reactions.find(r => r.emoji === data.emoji)
+        
         if (reaction) {
-          // Add user to existing reaction
+          // Add user to existing reaction if not already present
           if (!reaction.users.find(u => u.id === data.user_id)) {
             reaction.users.push({
               id: data.user_id,
-              email: '',
-              first_name: data.username || 'User',
-              last_name: '',
-              full_name: data.username || 'User',
+              email: data.email || '',
+              first_name: data.first_name || data.username || 'User',
+              last_name: data.last_name || '',
+              full_name: data.full_name || data.username || 'User',
               role: 'user'
             })
+            console.log(`✅ [useChat] Added user ${data.user_id} to existing reaction ${data.emoji}`)
+          } else {
+            console.log(`⏭️ [useChat] User ${data.user_id} already has reaction ${data.emoji}`)
           }
         } else {
           // Create new reaction
@@ -676,31 +780,60 @@ export const useChat = () => {
             emoji: data.emoji,
             users: [{
               id: data.user_id,
-              email: '',
-              first_name: data.username || 'User',
-              last_name: '',
-              full_name: data.username || 'User',
+              email: data.email || '',
+              first_name: data.first_name || data.username || 'User',
+              last_name: data.last_name || '',
+              full_name: data.full_name || data.username || 'User',
               role: 'user'
             }]
           })
+          console.log(`✅ [useChat] Created new reaction ${data.emoji} for message ${data.message_id}`)
         }
+        
+        // Trigger Vue reactivity
+        triggerRef(messages)
+        console.log('🔄 [useChat] Triggered messages ref update for reaction added')
+      } else {
+        console.warn(`⚠️ [useChat] Message ${data.message_id} not found for reaction.added event`)
       }
     })
 
     websocketService.on('chat.reaction.removed', (data: any) => {
-      console.log('Reaction removed:', data.emoji, 'from message:', data.message_id)
+      console.log('❌ [useChat] Reaction removed via WebSocket:', { emoji: data.emoji, messageId: data.message_id, userId: data.user_id })
+      console.log('🔍 [useChat] Type check - data.user_id:', data.user_id, typeof data.user_id, 'currentUserId:', currentUserId.value, typeof currentUserId.value)
       
-      const message = messages.value.find(m => m.id === data.message_id)
-      if (message) {
+      // Skip if this is from the current user (already handled by optimistic update)
+      // Use == instead of === to handle type coercion (number vs string)
+      if (data.user_id == currentUserId.value) {
+        console.log('🚫 [useChat] Ignoring own reaction removal event (optimistic update already applied)')
+        return
+      }
+      
+      const messageIndex = messages.value.findIndex(m => m.id === data.message_id)
+      if (messageIndex !== -1) {
+        const message = messages.value[messageIndex]
         const reaction = message.reactions.find(r => r.emoji === data.emoji)
+        
         if (reaction) {
+          const originalUserCount = reaction.users.length
           reaction.users = reaction.users.filter(u => u.id !== data.user_id)
+          
+          console.log(`🗑️ [useChat] Removed user ${data.user_id} from reaction ${data.emoji} (${originalUserCount} → ${reaction.users.length} users)`)
           
           // Remove reaction if no users left
           if (reaction.users.length === 0) {
             message.reactions = message.reactions.filter(r => r.emoji !== data.emoji)
+            console.log(`🧹 [useChat] Removed empty reaction ${data.emoji} from message`)
           }
+          
+          // Trigger Vue reactivity
+          triggerRef(messages)
+          console.log('🔄 [useChat] Triggered messages ref update for reaction removed')
+        } else {
+          console.warn(`⚠️ [useChat] Reaction ${data.emoji} not found on message ${data.message_id}`)
         }
+      } else {
+        console.warn(`⚠️ [useChat] Message ${data.message_id} not found for reaction.removed event`)
       }
     })
 
@@ -1264,6 +1397,7 @@ export const useChat = () => {
     uploadFile,
     removeUpload,
     clearUploads,
+    updateUploadCaption,
     
     // WebSocket
     connectToChatWebSocket,
