@@ -42,6 +42,7 @@ import type {
   ResponseSubmissionResult
 } from '../types/survey.types'
 import { apiClient } from './jwtAuthService'
+import { getDeviceMacAddress, getDeviceHeaders } from '../utils/deviceFingerprint'
 
 class SurveyService {
   private baseURL = '/surveys/'
@@ -549,7 +550,16 @@ class SurveyService {
   async submitPasswordProtectedResponse(
     submissionData: PasswordProtectedResponseSubmission
   ): Promise<ApiResponse<PasswordProtectedResponseResult>> {
-    const response = await apiClient.post('/surveys/password-responses/', submissionData)
+    // Get device MAC address and additional headers for device tracking
+    const macAddress = await getDeviceMacAddress()
+    const deviceHeaders = getDeviceHeaders()
+    
+    const response = await apiClient.post('/surveys/password-responses/', submissionData, {
+      headers: {
+        'X-Mac-Address': macAddress,
+        ...deviceHeaders
+      }
+    })
     
     if (response.data.status === 'success') {
       return {
@@ -683,7 +693,16 @@ class SurveyService {
     submissionData: AnonymousResponseSubmission
   ): Promise<ApiResponse<ResponseSubmissionResult>> {
     try {
-      const response = await apiClient.post('/surveys/responses/', submissionData)
+      // Get device MAC address and additional headers for device tracking
+      const macAddress = await getDeviceMacAddress()
+      const deviceHeaders = getDeviceHeaders()
+      
+      const response = await apiClient.post('/surveys/responses/', submissionData, {
+        headers: {
+          'X-Mac-Address': macAddress,
+          ...deviceHeaders
+        }
+      })
       
       if (response.data.status === 'success') {
         return {
@@ -716,7 +735,16 @@ class SurveyService {
     submissionData: AuthenticatedResponseSubmission
   ): Promise<ApiResponse<ResponseSubmissionResult>> {
     try {
-      const response = await apiClient.post('/surveys/auth-responses/', submissionData)
+      // Get device MAC address and additional headers for device tracking
+      const macAddress = await getDeviceMacAddress()
+      const deviceHeaders = getDeviceHeaders()
+      
+      const response = await apiClient.post('/surveys/auth-responses/', submissionData, {
+        headers: {
+          'X-Mac-Address': macAddress,
+          ...deviceHeaders
+        }
+      })
       
       if (response.data.status === 'success') {
         return {
@@ -1152,7 +1180,16 @@ class SurveyService {
 
   async submitAuthResponse(submission: AuthResponseSubmission): Promise<AuthResponseResult> {
     try {
-      const response = await apiClient.post('/surveys/auth-responses/', submission)
+      // Get device MAC address and additional headers for device tracking
+      const macAddress = await getDeviceMacAddress()
+      const deviceHeaders = getDeviceHeaders()
+      
+      const response = await apiClient.post('/surveys/auth-responses/', submission, {
+        headers: {
+          'X-Mac-Address': macAddress,
+          ...deviceHeaders
+        }
+      })
       
       return {
         status: 'success',
