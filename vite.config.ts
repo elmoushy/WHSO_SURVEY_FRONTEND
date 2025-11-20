@@ -25,7 +25,17 @@ export default defineConfig(({ command, isPreview, mode }) => {
     build: {
       // Security: Ensure proper build configuration
       sourcemap: isDevelopment,
-      minify: isProduction
+      minify: isProduction,
+      // Rollup options to ensure stable chunk names
+      rollupOptions: {
+        output: {
+          manualChunks: undefined,
+          // Use hash-based naming for cache busting
+          entryFileNames: 'assets/[name]-[hash].js',
+          chunkFileNames: 'assets/[name]-[hash].js',
+          assetFileNames: 'assets/[name]-[hash].[ext]'
+        }
+      }
     },
     define: {
       // Ensure proper environment variable handling
