@@ -221,17 +221,17 @@ const getFileIcon = (filename: string): string => {
 
     <!-- Rate Limit Status (optional - show when getting close to limit) -->
     <div 
-      v-if="!isRateLimited && rateLimits.message_send.remaining < 10" 
+      v-if="!isRateLimited && rateLimits?.message_send?.remaining < 10" 
       :class="$style.rateLimitStatus"
     >
       <div :class="$style.statusBar">
         <div 
           :class="$style.statusFill"
-          :style="{ width: (rateLimits.message_send.remaining / rateLimits.message_send.limit * 100) + '%' }"
+          :style="{ width: ((rateLimits?.message_send?.remaining || 0) / (rateLimits?.message_send?.limit || 60) * 100) + '%' }"
         ></div>
       </div>
       <span :class="$style.statusText">
-        {{ rateLimits.message_send.remaining }} رسالة متبقية
+        {{ rateLimits?.message_send?.remaining || 0 }} رسالة متبقية
       </span>
     </div>
 

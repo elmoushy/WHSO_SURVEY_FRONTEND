@@ -98,6 +98,14 @@ const transformMessage = (apiMessage: any): Message => {
 // User Management
 // ============================================
 
+export interface SearchUsersResponse {
+  count: number          // Total matching results (max 100)
+  next: string | null    // URL to next page
+  previous: string | null // URL to previous page
+  results: ChatUser[]    // Array of user objects (max 50 per page)
+}
+
+// Legacy interface for backward compatibility (deprecated)
 export interface ChatUserListResponse {
   count: number
   users: Array<{
@@ -113,10 +121,30 @@ export interface ChatUserListResponse {
 // ============================================
 
 export const chatAPI = {
-  // List all users for chat participant selection (excludes current user)
-  listUsers: async (): Promise<ChatUserListResponse> => {
-    const response = await apiClient.get<ChatUserListResponse>(`${CHAT_BASE}/users/`)
+  // Search users with required search query (minimum 2 characters)
+  // Implements security fix: TASK_05 - User Enumeration Prevention
+  searchUsers: async (searchQuery: string, page: number = 1): Promise<SearchUsersResponse> => {
+    // Validate search query on frontend (critical security requirement)
+    if (!searchQuery || searchQuery.trim().length < 2) {
+      throw new Error('Search query must be at least 2 characters')
+    }
+    
+    const params = new URLSearchParams({
+      search: searchQuery.trim(),
+      page: page.toString()
+    })
+    
+    const response = await apiClient.get<SearchUsersResponse>(
+      `${CHAT_BASE}/users/?${params.toString()}`
+    )
     return response.data
+  },
+
+  // Legacy method - DEPRECATED - DO NOT USE
+  // Kept for reference only - will fail with HTTP 400 in backend
+  listUsers: async (): Promise<ChatUserListResponse> => {
+    console.warn('⚠️ listUsers() is DEPRECATED - use searchUsers() instead')
+    throw new Error('listUsers() is deprecated. Please use searchUsers() with a search query (minimum 2 characters)')
   },
 
   // List all threads with optional filters

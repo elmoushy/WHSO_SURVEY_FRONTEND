@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useChat } from '../../composables/useChat'
-import { chatAPI } from '../../services/chatService'
+import { useUserSearch } from '../../composables/useUserSearch'
 import type { CreateThreadRequest } from '../../types/chat.types'
 
 const emit = defineEmits<{
@@ -9,42 +9,53 @@ const emit = defineEmits<{
 }>()
 
 const { createThread } = useChat()
+const {
+  users: availableUsers,
+  loading: isLoadingUsers,
+  error: searchError,
+  hasMore,
+  remainingCount,
+  searchUsers,
+  loadNextPage,
+  clearResults
+} = useUserSearch()
 
 const threadType = ref<'direct' | 'group'>('direct')
 const groupTitle = ref('')
 const selectedUsers = ref<number[]>([])
-const availableUsers = ref<any[]>([])
 const searchQuery = ref('')
 const isLoading = ref(false)
-const isLoadingUsers = ref(false)
 const error = ref<string | null>(null)
+const debounceTimer = ref<number | null>(null)
 
-// Fetch users from API
-onMounted(async () => {
-  isLoadingUsers.value = true
-  try {
-    const response = await chatAPI.listUsers()
-    availableUsers.value = response.users
-  } catch (err: any) {
-    console.error('Failed to load users:', err)
-    error.value = 'فشل في تحميل المستخدمين'
-  } finally {
-    isLoadingUsers.value = false
+// Handle search input with debouncing
+const handleSearchInput = () => {
+  // Clear previous timer
+  if (debounceTimer.value) {
+    clearTimeout(debounceTimer.value)
   }
-})
-
-const filteredUsers = computed(() => {
-  if (!searchQuery.value) return availableUsers.value
   
-  const query = searchQuery.value.toLowerCase()
-  return availableUsers.value.filter(u => {
-    const firstName = u.first_name || ''
-    const lastName = u.last_name || ''
-    const email = u.email || ''
-    const fullName = `${firstName} ${lastName}`.toLowerCase()
-    return fullName.includes(query) || email.toLowerCase().includes(query)
-  })
-})
+  // Validate minimum length
+  if (searchQuery.value.length < 2) {
+    clearResults()
+    return
+  }
+  
+  // Debounce search (wait 300ms after user stops typing)
+  debounceTimer.value = window.setTimeout(() => {
+    performSearch()
+  }, 300)
+}
+
+// Perform the actual search
+const performSearch = async () => {
+  await searchUsers(searchQuery.value)
+}
+
+// Load more users for pagination
+const handleLoadMore = async () => {
+  await loadNextPage(searchQuery.value)
+}
 
 const selectedCountText = computed(() => {
   if (selectedUsers.value.length === 0) return ''
@@ -108,6 +119,17 @@ const handleCreate = async () => {
     isLoading.value = false
   }
 }
+
+// Clean up on unmount
+const cleanup = () => {
+  if (debounceTimer.value) {
+    clearTimeout(debounceTimer.value)
+  }
+  clearResults()
+}
+
+// Register cleanup
+onUnmounted(cleanup)
 </script>
 
 <template>
@@ -160,14 +182,17 @@ const handleCreate = async () => {
         <div :class="$style.formGroup">
           <label :class="$style.label">
             {{ threadType === 'direct' ? 'اختر مستخدماً واحداً' : 'اختر المستخدمين' }}
+            <span :class="$style.labelHint">(اكتب حرفين على الأقل للبحث)</span>
           </label>
           <div :class="$style.searchBox">
             <i class="bi bi-search"></i>
             <input
               v-model="searchQuery"
+              @input="handleSearchInput"
               type="text"
               :class="$style.searchInput"
-              placeholder="البحث عن المستخدمين..."
+              placeholder="البحث عن المستخدمين... (حرفين على الأقل)"
+              minlength="2"
             />
           </div>
         </div>
@@ -177,38 +202,70 @@ const handleCreate = async () => {
           <!-- Loading State -->
           <div v-if="isLoadingUsers" :class="$style.loadingUsers">
             <i class="bi bi-hourglass-split"></i>
-            <span>جاري تحميل المستخدمين...</span>
+            <span>جاري البحث...</span>
+          </div>
+
+          <!-- Search Hint -->
+          <div v-else-if="searchQuery.length === 0" :class="$style.searchHint">
+            <i class="bi bi-search"></i>
+            <span>ابدأ بكتابة اسم المستخدم أو البريد الإلكتروني للبحث</span>
+          </div>
+
+          <!-- Short Query Warning -->
+          <div v-else-if="searchQuery.length < 2" :class="$style.searchHint">
+            <i class="bi bi-info-circle"></i>
+            <span>يجب إدخال حرفين على الأقل للبحث</span>
           </div>
 
           <!-- User Items -->
-          <div
-            v-else
-            v-for="user in filteredUsers"
-            :key="user.id"
-            :class="[
-              $style.userItem,
-              { [$style.selected]: selectedUsers.includes(user.id) }
-            ]"
-            @click="toggleUser(user.id)"
-          >
-            <div :class="$style.userAvatar">
-              {{ (user.first_name || '').charAt(0) }}{{ (user.last_name || '').charAt(0) }}
+          <template v-else-if="availableUsers.length > 0">
+            <div
+              v-for="user in availableUsers"
+              :key="user.id"
+              :class="[
+                $style.userItem,
+                { [$style.selected]: selectedUsers.includes(user.id) }
+              ]"
+              @click="toggleUser(user.id)"
+            >
+              <div :class="$style.userAvatar">
+                {{ (user.first_name || '').charAt(0) }}{{ (user.last_name || '').charAt(0) }}
+              </div>
+              <div :class="$style.userInfo">
+                <span :class="$style.userName">{{ user.first_name || '' }} {{ user.last_name || '' }}</span>
+                <span :class="$style.userEmail">{{ user.email || '' }}</span>
+              </div>
+              <span v-if="user.is_online" :class="$style.onlineIndicator" title="متصل">●</span>
+              <i
+                v-if="selectedUsers.includes(user.id)"
+                class="bi bi-check-circle-fill"
+                :class="$style.checkIcon"
+              ></i>
             </div>
-            <div :class="$style.userInfo">
-              <span :class="$style.userName">{{ user.first_name || '' }} {{ user.last_name || '' }}</span>
-              <span :class="$style.userEmail">{{ user.email || '' }}</span>
-            </div>
-            <i
-              v-if="selectedUsers.includes(user.id)"
-              class="bi bi-check-circle-fill"
-              :class="$style.checkIcon"
-            ></i>
-          </div>
+
+            <!-- Load More Button -->
+            <button
+              v-if="hasMore"
+              :class="$style.loadMoreBtn"
+              :disabled="isLoadingUsers"
+              @click="handleLoadMore"
+            >
+              <i v-if="isLoadingUsers" class="bi bi-hourglass-split"></i>
+              <i v-else class="bi bi-arrow-down-circle"></i>
+              <span>تحميل المزيد ({{ remainingCount }} متبقي)</span>
+            </button>
+          </template>
 
           <!-- No Users Found -->
-          <div v-if="!isLoadingUsers && filteredUsers.length === 0" :class="$style.noUsers">
+          <div v-else-if="!isLoadingUsers && searchQuery.length >= 2" :class="$style.noUsers">
             <i class="bi bi-person-x"></i>
-            <span>لم يتم العثور على مستخدمين</span>
+            <span>لم يتم العثور على مستخدمين يطابقون "{{ searchQuery }}"</span>
+          </div>
+
+          <!-- Search Error -->
+          <div v-if="searchError" :class="$style.searchErrorBox">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span>{{ searchError }}</span>
           </div>
         </div>
 
@@ -316,6 +373,13 @@ const handleCreate = async () => {
   font-weight: 600;
   color: #111827;
   margin-bottom: 0.5rem;
+}
+
+.labelHint {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-left: 0.5rem;
 }
 
 .typeSelector {
@@ -587,5 +651,82 @@ const handleCreate = async () => {
 .createBtn.disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* New styles for search-based user list */
+.searchHint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1.5rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.searchHint i {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+.searchHint span {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.onlineIndicator {
+  color: #10b981;
+  font-size: 0.75rem;
+  margin-left: 0.5rem;
+}
+
+.loadMoreBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  background: #f9fafb;
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.loadMoreBtn:hover:not(:disabled) {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+.loadMoreBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.loadMoreBtn i {
+  font-size: 1rem;
+}
+
+.searchErrorBox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  color: #991b1b;
+  margin: 0.75rem;
+}
+
+.searchErrorBox i {
+  font-size: 1rem;
+  flex-shrink: 0;
 }
 </style>

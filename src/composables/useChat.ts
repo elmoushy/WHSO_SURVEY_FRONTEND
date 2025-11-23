@@ -634,7 +634,13 @@ export const useChat = () => {
     websocketService.on('chat.connection.established', (data: any) => {
       console.log('✅ Connection established, rate limits:', data.rate_limits)
       if (data.rate_limits) {
-        rateLimits.value = data.rate_limits
+        // Merge rate limits instead of replacing to avoid breaking reactivity
+        // and ensure all required properties exist
+        rateLimits.value = {
+          message_send: data.rate_limits.message_send || rateLimits.value.message_send,
+          reaction_add: data.rate_limits.reaction_add || rateLimits.value.reaction_add,
+          typing_start: data.rate_limits.typing_start || rateLimits.value.typing_start
+        }
       }
       isWebSocketConnected.value = true
     })

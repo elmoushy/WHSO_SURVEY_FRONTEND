@@ -7,10 +7,13 @@
 
 export interface ChatUser {
   id: number
+  username?: string // Added for new API format
   email: string
   first_name: string
   last_name: string
   full_name: string
+  is_online?: boolean // Added for new API format
+  last_seen?: string // Added for new API format (ISO 8601 datetime)
   role: 'admin' | 'super_admin' | 'user'
 }
 
