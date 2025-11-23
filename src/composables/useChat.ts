@@ -27,6 +27,15 @@ const error = ref<string | null>(null)
   const isWebSocketConnected = ref(false)
   const typingUsers = ref<Map<number, string>>(new Map())
 
+// Rate limiting state
+const rateLimits = ref({
+  message_send: { limit: 60, window: 60, current: 0, remaining: 60 },
+  reaction_add: { limit: 120, window: 60, current: 0, remaining: 120 },
+  typing_start: { limit: 30, window: 60, current: 0, remaining: 30 }
+})
+const isRateLimited = ref(false)
+const rateLimitCooldown = ref(0)
+
 // Track which thread is actively visible to user
 const activeThreadId = ref<string | null>(null)
 const isChatPageVisible = ref(false)
@@ -622,9 +631,23 @@ export const useChat = () => {
       isWebSocketConnected.value = true
     })
 
+    websocketService.on('chat.connection.established', (data: any) => {
+      console.log('✅ Connection established, rate limits:', data.rate_limits)
+      if (data.rate_limits) {
+        rateLimits.value = data.rate_limits
+      }
+      isWebSocketConnected.value = true
+    })
+
     websocketService.on('chat.disconnected', (data: any) => {
       console.log('🔌 Chat WebSocket disconnected:', data.reason)
       isWebSocketConnected.value = false
+      
+      // Handle payload too large (code 1009)
+      if (data.code === 1009) {
+        error.value = 'الرسالة كبيرة جداً. يرجى تقليل حجم المرفقات.'
+        console.error('❌ Payload too large error (code 1009)')
+      }
     })
 
     // New message received
@@ -975,7 +998,29 @@ export const useChat = () => {
     // Error handling
     websocketService.on('chat.error', (data: any) => {
       console.error('Chat WebSocket error:', data.message)
-      error.value = data.message || 'WebSocket error occurred'
+      
+      // Handle rate limit exceeded
+      if (data.code === 'RATE_LIMIT_EXCEEDED') {
+        isRateLimited.value = true
+        rateLimitCooldown.value = 60 // 60 seconds cooldown
+        
+        // Show user-friendly error message
+        error.value = 'أنت ترسل الرسائل بسرعة كبيرة. يرجى الانتظار قليلاً.'
+        
+        // Start countdown
+        const interval = setInterval(() => {
+          rateLimitCooldown.value--
+          if (rateLimitCooldown.value <= 0) {
+            isRateLimited.value = false
+            error.value = null
+            clearInterval(interval)
+          }
+        }, 1000)
+        
+        console.warn('⚠️ Rate limit exceeded:', data.message)
+      } else {
+        error.value = data.message || 'WebSocket error occurred'
+      }
     })
   }
 
@@ -1364,6 +1409,11 @@ export const useChat = () => {
     replyingTo,
     editingMessage,
     uploadProgress,
+    
+    // Rate limiting state
+    rateLimits,
+    isRateLimited,
+    rateLimitCooldown,
     
     // Computed
     unreadThreadsCount,

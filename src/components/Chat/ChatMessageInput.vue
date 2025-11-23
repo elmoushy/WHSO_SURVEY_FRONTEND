@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useThrottleFn, useDebounceFn } from '@vueuse/core'
 import { useChat } from '../../composables/useChat'
 import { validateFile } from '../../services/chatService'
 
@@ -16,7 +17,10 @@ const {
   setReplyingTo,
   setEditingMessage,
   editMessage,
-  sendTypingIndicator
+  sendTypingIndicator,
+  rateLimits,
+  isRateLimited,
+  rateLimitCooldown
 } = useChat()
 
 const messageText = ref('')
@@ -34,82 +38,14 @@ const isOverLimit = computed(() => charCount.value > MAX_LENGTH)
 
 // Check if can send
 const canSend = computed(() => {
-  if (isSending.value || !canPostMessages.value || isOverLimit.value) return false
+  if (isSending.value || !canPostMessages.value || isOverLimit.value || isRateLimited.value) return false
   const hasText = messageText.value.trim().length > 0
   const hasAttachments = uploadProgress.value.some(u => u.status === 'completed')
   return hasText || hasAttachments
 })
 
-// Watch editing message to populate textarea
-watch(editingMessage, (msg) => {
-  if (msg) {
-    messageText.value = msg.content
-    textareaRef.value?.focus()
-  }
-})
-
-// Auto-resize textarea
-const autoResize = () => {
-  const textarea = textareaRef.value
-  if (textarea) {
-    textarea.style.height = 'auto'
-    textarea.style.height = textarea.scrollHeight + 'px'
-  }
-}
-
-// Handle typing indicator with debounce
-const handleTyping = () => {
-  // Start typing indicator
-  sendTypingIndicator(true)
-  
-  // Clear existing timeout
-  if (typingTimeout.value) {
-    clearTimeout(typingTimeout.value)
-  }
-  
-  // Stop typing after 3 seconds of inactivity
-  typingTimeout.value = setTimeout(() => {
-    sendTypingIndicator(false)
-  }, 3000)
-}
-
-watch(messageText, () => {
-  autoResize()
-  if (messageText.value.length > 0) {
-    handleTyping()
-  }
-})
-
-// Handle file selection
-const handleFileSelect = async (event: Event) => {
-  const target = event.target as HTMLInputElement
-  const files = target.files
-  if (!files || files.length === 0) return
-
-  for (const file of Array.from(files)) {
-    const validation = validateFile(file)
-    if (!validation.valid) {
-      alert(validation.error)
-      continue
-    }
-
-    // Upload file without caption initially (caption can be added after upload)
-    await uploadFile(file)
-  }
-
-  // Reset input
-  if (fileInput.value) {
-    fileInput.value.value = ''
-  }
-}
-
-// Handle caption update for uploaded file
-const handleCaptionChange = (uploadId: string, caption: string) => {
-  updateUploadCaption(uploadId, caption)
-}
-
-// Handle send
-const handleSend = async () => {
+// Throttled message sending (1 per second)
+const sendMessageThrottled = useThrottleFn(async () => {
   if (!canSend.value) return
 
   isSending.value = true
@@ -160,6 +96,82 @@ const handleSend = async () => {
   } finally {
     isSending.value = false
   }
+}, 1000) // 1 second throttle
+
+// Watch editing message to populate textarea
+watch(editingMessage, (msg) => {
+  if (msg) {
+    messageText.value = msg.content
+    textareaRef.value?.focus()
+  }
+})
+
+// Auto-resize textarea
+const autoResize = () => {
+  const textarea = textareaRef.value
+  if (textarea) {
+    textarea.style.height = 'auto'
+    textarea.style.height = textarea.scrollHeight + 'px'
+  }
+}
+
+// Handle typing indicator with debounce (2 seconds as per rate limiting guide)
+const sendTypingDebounced = useDebounceFn(() => {
+  sendTypingIndicator(true)
+}, 2000)
+
+const handleTyping = () => {
+  sendTypingDebounced()
+  
+  // Clear existing timeout
+  if (typingTimeout.value) {
+    clearTimeout(typingTimeout.value)
+  }
+  
+  // Stop typing after 3 seconds of inactivity
+  typingTimeout.value = setTimeout(() => {
+    sendTypingIndicator(false)
+  }, 3000)
+}
+
+watch(messageText, () => {
+  autoResize()
+  if (messageText.value.length > 0) {
+    handleTyping()
+  }
+})
+
+// Handle file selection
+const handleFileSelect = async (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const files = target.files
+  if (!files || files.length === 0) return
+
+  for (const file of Array.from(files)) {
+    const validation = validateFile(file)
+    if (!validation.valid) {
+      alert(validation.error)
+      continue
+    }
+
+    // Upload file without caption initially (caption can be added after upload)
+    await uploadFile(file)
+  }
+
+  // Reset input
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
+}
+
+// Handle caption update for uploaded file
+const handleCaptionChange = (uploadId: string, caption: string) => {
+  updateUploadCaption(uploadId, caption)
+}
+
+// Handle send (uses throttled function)
+const handleSend = () => {
+  sendMessageThrottled()
 }
 
 // Handle keyboard shortcuts
@@ -198,6 +210,31 @@ const getFileIcon = (filename: string): string => {
 
 <template>
   <div :class="$style.messageInput">
+    <!-- Rate Limit Warning -->
+    <div v-if="isRateLimited" :class="$style.rateLimitWarning">
+      <i class="bi bi-exclamation-triangle-fill"></i>
+      <div :class="$style.warningContent">
+        <strong>معدل إرسال مرتفع</strong>
+        <span>يرجى الانتظار {{ rateLimitCooldown }} ثانية قبل الإرسال مرة أخرى</span>
+      </div>
+    </div>
+
+    <!-- Rate Limit Status (optional - show when getting close to limit) -->
+    <div 
+      v-if="!isRateLimited && rateLimits.message_send.remaining < 10" 
+      :class="$style.rateLimitStatus"
+    >
+      <div :class="$style.statusBar">
+        <div 
+          :class="$style.statusFill"
+          :style="{ width: (rateLimits.message_send.remaining / rateLimits.message_send.limit * 100) + '%' }"
+        ></div>
+      </div>
+      <span :class="$style.statusText">
+        {{ rateLimits.message_send.remaining }} رسالة متبقية
+      </span>
+    </div>
+
     <!-- Reply/Edit Banner -->
     <div 
       v-if="replyingTo || editingMessage" 
@@ -325,12 +362,13 @@ const getFileIcon = (filename: string): string => {
 
       <!-- Send Button -->
       <button 
-        :class="[$style.sendBtn, { [$style.canSend]: canSend }]"
+        :class="[$style.sendBtn, { [$style.canSend]: canSend, [$style.rateLimited]: isRateLimited }]"
         :disabled="!canSend"
         @click="handleSend"
-        title="إرسال الرسالة"
+        :title="isRateLimited ? `انتظر ${rateLimitCooldown}s` : 'إرسال الرسالة'"
       >
-        <i v-if="isSending" class="bi bi-hourglass-split"></i>
+        <span v-if="isRateLimited" :class="$style.cooldown">{{ rateLimitCooldown }}s</span>
+        <i v-else-if="isSending" class="bi bi-hourglass-split"></i>
         <i v-else class="bi bi-send-fill"></i>
       </button>
     </div>
@@ -346,6 +384,67 @@ const getFileIcon = (filename: string): string => {
 .messageInput {
   border-top: 1px solid #e5e7eb;
   background: #ffffff;
+}
+
+.rateLimitWarning {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #fef2f2;
+  border-bottom: 1px solid #fecaca;
+}
+
+.rateLimitWarning i {
+  color: #ef4444;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.warningContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.warningContent strong {
+  font-size: 0.875rem;
+  color: #991b1b;
+}
+
+.warningContent span {
+  font-size: 0.8125rem;
+  color: #b91c1c;
+}
+
+.rateLimitStatus {
+  padding: 0.625rem 1rem;
+  background: #fef3c7;
+  border-bottom: 1px solid #fde68a;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.statusBar {
+  flex: 1;
+  height: 0.375rem;
+  background: #fde68a;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.statusFill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b 0%, #d97706 100%);
+  transition: width 0.3s ease;
+}
+
+.statusText {
+  font-size: 0.75rem;
+  color: #92400e;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .actionBanner {
@@ -614,6 +713,17 @@ const getFileIcon = (filename: string): string => {
 .sendBtn.canSend:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+}
+
+.sendBtn.rateLimited {
+  background: #f87171;
+  color: #ffffff;
+  cursor: not-allowed;
+}
+
+.cooldown {
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .hints {
