@@ -58,9 +58,11 @@ watch(totalUnreadCount, (newVal, oldVal) => {
 
 const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
-        { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
+    { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
+    { name: 'news', path: '/news', icon: 'fas fa-newspaper', label: 'الأخبار' },
     { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', badge: chatBadge.value },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
+    { name: 'manage-news', path: '/control/news', icon: 'fas fa-newspaper', label: 'إدارة الأخبار', requiresRole: 'admin' },
     { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'إدارة المستخدمين', requiresRole: 'admin' },
   ]
 

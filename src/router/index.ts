@@ -53,6 +53,10 @@ const Notifications = () => import("../pages/Notifications");
 // Chat
 const InternalChat = () => import("../pages/Chat/InternalChat.vue");
 
+// News
+const News = () => import("../pages/News/News.vue");
+const NewsManagement = () => import("../pages/News/NewsManagement.vue");
+
 /* =========================
    Routes
    ========================= */
@@ -127,6 +131,14 @@ const routes: RouteRecordRaw[] = [
     meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
   },
 
+  // News (All authenticated users)
+  {
+    path: "/news",
+    name: "News",
+    component: News,
+    meta: { title: "News - WPC | WeaponpowerCloud App", requiresAuth: true },
+  },
+
   // WebSocket Test (Development only)
   {
     path: "/websocket-test",
@@ -182,6 +194,16 @@ const routes: RouteRecordRaw[] = [
     component: UserManagement,
     meta: {
       title: "User Management - WPC | WeaponpowerCloud App",
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
+    path: "/control/news",
+    name: "NewsManagement",
+    component: NewsManagement,
+    meta: {
+      title: "News Management - WPC | WeaponpowerCloud App",
       requiresAuth: true,
       requiresAdmin: true,
     },
