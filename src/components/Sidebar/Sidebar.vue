@@ -31,6 +31,7 @@ type NavItem = {
   path?: string
   requiresRole?: 'admin'
   badge?: number | string
+  getBadge?: () => number | string | undefined
 }
 
 type NavGroup = { id: string; items: NavItem[] }
@@ -41,16 +42,6 @@ import { useChat } from '../../composables/useChat'
 // Get unread count from chat composable
 const { totalUnreadCount } = useChat()
 
-// Create a computed badge value that updates reactively
-const chatBadge = computed(() => {
-  const count = totalUnreadCount.value
-  // Only log when count is greater than 0 to reduce console noise
-  if (count > 0) {
-    console.log('🔔 Sidebar chatBadge:', count)
-  }
-  return count || undefined
-})
-
 // Watch for changes in totalUnreadCount for debugging
 watch(totalUnreadCount, (newVal, oldVal) => {
   console.log('🔔 Sidebar totalUnreadCount changed:', { oldVal, newVal })
@@ -60,7 +51,7 @@ const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
     { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
     { name: 'news', path: '/news', icon: 'fas fa-newspaper', label: 'الأخبار' },
-    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', badge: chatBadge.value },
+    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
     { name: 'manage-news', path: '/control/news', icon: 'fas fa-newspaper', label: 'إدارة الأخبار', requiresRole: 'admin' },
     { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'إدارة المستخدمين', requiresRole: 'admin' },
@@ -151,7 +142,9 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
               <i :class="item.icon"></i>
             </span>
             <span :class="$style.itemText">{{ item.label }}</span>
-            <span v-if="item.badge !== undefined" :class="$style.badge">{{ item.badge }}</span>
+            <span v-if="item.getBadge ? item.getBadge() : item.badge" :class="$style.badge">
+              {{ item.getBadge ? item.getBadge() : item.badge }}
+            </span>
           </button>
         </section>
       </template>

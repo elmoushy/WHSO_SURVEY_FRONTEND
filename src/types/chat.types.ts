@@ -35,8 +35,17 @@ export type ThreadType = 'direct' | 'group'
 export type PostingMode = 'all' | 'admins_only'
 
 export interface GroupSettings {
+  thread_id?: string
   posting_mode: PostingMode
   members_can_add_others: boolean
+  mentions_enabled?: boolean
+  reactions_enabled?: boolean
+  updated_at?: string
+  updated_by?: {
+    id: number
+    first_name: string
+    last_name: string
+  } | null
 }
 
 export interface Thread {
@@ -187,8 +196,33 @@ export interface ChangeRoleResponse {
 }
 
 export interface UpdateGroupSettingsResponse {
-  message: string
-  settings: GroupSettings
+  thread_id: string
+  posting_mode: PostingMode
+  members_can_add_others: boolean
+  mentions_enabled: boolean
+  reactions_enabled: boolean
+  updated_at: string
+  updated_by: {
+    id: number
+    first_name: string
+    last_name: string
+  } | null
+}
+
+// WebSocket event for group settings update
+export interface GroupSettingsUpdatedEvent {
+  type: 'group.settings.updated'
+  thread_id: string
+  settings: {
+    posting_mode: PostingMode
+    members_can_add_others: boolean
+  }
+  updated_by: {
+    id: number
+    first_name: string
+    last_name: string
+  }
+  timestamp: string
 }
 
 export interface MarkAsReadResponse {

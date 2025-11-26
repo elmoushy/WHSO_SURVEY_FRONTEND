@@ -121,17 +121,11 @@ export interface ChatUserListResponse {
 // ============================================
 
 export const chatAPI = {
-  // Search users with required search query (minimum 2 characters)
-  // Implements security fix: TASK_05 - User Enumeration Prevention
-  searchUsers: async (searchQuery: string, page: number = 1): Promise<SearchUsersResponse> => {
-    // Validate search query on frontend (critical security requirement)
-    if (!searchQuery || searchQuery.trim().length < 2) {
-      throw new Error('Search query must be at least 2 characters')
-    }
-    
+  // Get all users with pagination (no search required)
+  getUsers: async (page: number = 1, pageSize: number = 20): Promise<SearchUsersResponse> => {
     const params = new URLSearchParams({
-      search: searchQuery.trim(),
-      page: page.toString()
+      page: page.toString(),
+      page_size: pageSize.toString()
     })
     
     const response = await apiClient.get<SearchUsersResponse>(
@@ -140,11 +134,26 @@ export const chatAPI = {
     return response.data
   },
 
-  // Legacy method - DEPRECATED - DO NOT USE
-  // Kept for reference only - will fail with HTTP 400 in backend
-  listUsers: async (): Promise<ChatUserListResponse> => {
-    console.warn('⚠️ listUsers() is DEPRECATED - use searchUsers() instead')
-    throw new Error('listUsers() is deprecated. Please use searchUsers() with a search query (minimum 2 characters)')
+  // Search users with optional search query
+  searchUsers: async (searchQuery: string, page: number = 1): Promise<SearchUsersResponse> => {
+    const params = new URLSearchParams({
+      page: page.toString()
+    })
+    
+    // Add search parameter if provided
+    if (searchQuery && searchQuery.trim().length > 0) {
+      params.append('search', searchQuery.trim())
+    }
+    
+    const response = await apiClient.get<SearchUsersResponse>(
+      `${CHAT_BASE}/users/?${params.toString()}`
+    )
+    return response.data
+  },
+
+  // Legacy method - Now works as alias for getUsers
+  listUsers: async (page: number = 1): Promise<SearchUsersResponse> => {
+    return chatAPI.getUsers(page)
   },
 
   // List all threads with optional filters
@@ -170,7 +179,10 @@ export const chatAPI = {
 
   // Create new thread (direct or group)
   createThread: async (data: CreateThreadRequest): Promise<Thread> => {
+    console.log('🟢 [chatAPI] createThread called with:', data)
+    console.log('🟢 [chatAPI] Posting to:', `${CHAT_BASE}/threads/`)
     const response = await apiClient.post<Thread>(`${CHAT_BASE}/threads/`, data)
+    console.log('🟢 [chatAPI] createThread response:', response.data)
     return response.data
   },
 
@@ -241,13 +253,21 @@ export const chatAPI = {
     return response.data
   },
 
-  // Update group settings (admins only)
+  // Get group settings (any participant)
+  getGroupSettings: async (threadId: string): Promise<UpdateGroupSettingsResponse> => {
+    const response = await apiClient.get<UpdateGroupSettingsResponse>(
+      `${CHAT_BASE}/threads/${threadId}/group-settings/`
+    )
+    return response.data
+  },
+
+  // Update group settings (admins and owners only)
   updateGroupSettings: async (
     threadId: string,
     data: UpdateGroupSettingsRequest
   ): Promise<UpdateGroupSettingsResponse> => {
-    const response = await apiClient.post<UpdateGroupSettingsResponse>(
-      `${CHAT_BASE}/threads/${threadId}/update-settings/`,
+    const response = await apiClient.patch<UpdateGroupSettingsResponse>(
+      `${CHAT_BASE}/threads/${threadId}/group-settings/`,
       data
     )
     return response.data

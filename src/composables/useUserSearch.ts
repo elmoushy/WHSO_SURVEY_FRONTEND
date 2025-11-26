@@ -1,6 +1,6 @@
 // User Search Composable
-// Implements TASK_05 - User Enumeration Prevention
-// Based on FRONTEND_USER_LIST_MIGRATION_GUIDE.md
+// Supports both listing all users and searching
+// Updated to show all users initially with infinite scroll pagination
 
 import { ref, computed } from 'vue'
 import { chatAPI, type SearchUsersResponse } from '../services/chatService'
@@ -14,25 +14,65 @@ export function useUserSearch() {
   const nextPageUrl = ref<string | null>(null)
   const previousPageUrl = ref<string | null>(null)
   const currentPage = ref(1)
+  const currentSearchQuery = ref<string>('')
+  const isInitialized = ref(false)
   
   const hasMore = computed(() => nextPageUrl.value !== null)
   
   /**
-   * Search users with required query parameter
-   * @param searchQuery - REQUIRED, minimum 2 characters
+   * Fetch all users (initial load without search)
+   * @param page - Page number (default 1)
+   * @returns Promise<ChatUser[]> - User results
+   */
+  async function fetchUsers(page: number = 1): Promise<ChatUser[]> {
+    loading.value = true
+    error.value = null
+    currentSearchQuery.value = ''
+    
+    try {
+      const response: SearchUsersResponse = await chatAPI.getUsers(page)
+      
+      // Update state
+      if (page === 1) {
+        // Initial load - replace results
+        users.value = response.results
+      } else {
+        // Pagination - append results (avoid duplicates)
+        const existingIds = new Set(users.value.map(u => u.id))
+        const newUsers = response.results.filter(u => !existingIds.has(u.id))
+        users.value = [...users.value, ...newUsers]
+      }
+      
+      totalCount.value = response.count
+      nextPageUrl.value = response.next
+      previousPageUrl.value = response.previous
+      currentPage.value = page
+      isInitialized.value = true
+      
+      return response.results
+    } catch (err: any) {
+      handleError(err)
+      return []
+    } finally {
+      loading.value = false
+    }
+  }
+  
+  /**
+   * Search users with optional query parameter
+   * @param searchQuery - Search query (empty = fetch all)
    * @param page - Page number (default 1)
    * @returns Promise<ChatUser[]> - User results
    */
   async function searchUsers(searchQuery: string, page: number = 1): Promise<ChatUser[]> {
-    // ✅ CRITICAL: Validate search query BEFORE calling API
-    if (!searchQuery || searchQuery.trim().length < 2) {
-      error.value = 'يجب إدخال حرفين على الأقل للبحث'
-      users.value = []
-      return []
+    // If no search query, fetch all users
+    if (!searchQuery || searchQuery.trim().length === 0) {
+      return fetchUsers(page)
     }
     
     loading.value = true
     error.value = null
+    currentSearchQuery.value = searchQuery.trim()
     
     try {
       const response: SearchUsersResponse = await chatAPI.searchUsers(searchQuery, page)
@@ -42,8 +82,10 @@ export function useUserSearch() {
         // New search - replace results
         users.value = response.results
       } else {
-        // Pagination - append results
-        users.value = [...users.value, ...response.results]
+        // Pagination - append results (avoid duplicates)
+        const existingIds = new Set(users.value.map(u => u.id))
+        const newUsers = response.results.filter(u => !existingIds.has(u.id))
+        users.value = [...users.value, ...newUsers]
       }
       
       totalCount.value = response.count
@@ -53,22 +95,7 @@ export function useUserSearch() {
       
       return response.results
     } catch (err: any) {
-      // Handle specific error cases
-      if (err.response?.status === 400) {
-        const errorData = err.response.data
-        if (errorData.code === 'SEARCH_REQUIRED') {
-          error.value = 'يجب إدخال حرفين على الأقل للبحث'
-        } else {
-          error.value = errorData.error || errorData.detail || 'خطأ في البحث'
-        }
-      } else if (err.message) {
-        error.value = err.message
-      } else {
-        error.value = 'فشل البحث عن المستخدمين. يرجى المحاولة مرة أخرى.'
-      }
-      
-      console.error('User search failed:', err)
-      users.value = []
+      handleError(err)
       return []
     } finally {
       loading.value = false
@@ -76,20 +103,39 @@ export function useUserSearch() {
   }
   
   /**
-   * Load next page of results
+   * Handle API errors
    */
-  async function loadNextPage(searchQuery: string): Promise<void> {
-    if (!nextPageUrl.value) return
+  function handleError(err: any): void {
+    if (err.response?.status === 400) {
+      const errorData = err.response.data
+      error.value = errorData.error || errorData.detail || 'خطأ في البحث'
+    } else if (err.message) {
+      error.value = err.message
+    } else {
+      error.value = 'فشل تحميل المستخدمين. يرجى المحاولة مرة أخرى.'
+    }
+    console.error('User fetch/search failed:', err)
+  }
+  
+  /**
+   * Load next page of results (works for both all users and search)
+   */
+  async function loadNextPage(): Promise<void> {
+    if (!nextPageUrl.value || loading.value) return
     
     // Extract page number from URL
     const match = nextPageUrl.value.match(/page=(\d+)/)
     const nextPage = match ? parseInt(match[1]) : currentPage.value + 1
     
-    await searchUsers(searchQuery, nextPage)
+    if (currentSearchQuery.value) {
+      await searchUsers(currentSearchQuery.value, nextPage)
+    } else {
+      await fetchUsers(nextPage)
+    }
   }
   
   /**
-   * Clear search results
+   * Clear search results and reset to initial state
    */
   function clearResults(): void {
     users.value = []
@@ -97,18 +143,29 @@ export function useUserSearch() {
     nextPageUrl.value = null
     previousPageUrl.value = null
     currentPage.value = 1
+    currentSearchQuery.value = ''
     error.value = null
+    isInitialized.value = false
   }
   
   /**
-   * Get current page number from nextPageUrl
+   * Reset search and fetch all users
+   */
+  async function resetToAllUsers(): Promise<ChatUser[]> {
+    currentSearchQuery.value = ''
+    currentPage.value = 1
+    return fetchUsers(1)
+  }
+  
+  /**
+   * Get current page number
    */
   function getCurrentPage(): number {
     return currentPage.value
   }
   
   /**
-   * Get remaining count (for "Load More" button)
+   * Get remaining count (for "Load More" indicator)
    */
   const remainingCount = computed(() => {
     return Math.max(0, totalCount.value - users.value.length)
@@ -122,9 +179,13 @@ export function useUserSearch() {
     hasMore,
     remainingCount,
     currentPage: computed(() => currentPage.value),
+    currentSearchQuery: computed(() => currentSearchQuery.value),
+    isInitialized: computed(() => isInitialized.value),
+    fetchUsers,
     searchUsers,
     loadNextPage,
     clearResults,
+    resetToAllUsers,
     getCurrentPage
   }
 }

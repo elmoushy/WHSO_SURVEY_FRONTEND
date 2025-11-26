@@ -4,6 +4,9 @@
   border-block-start: 1px solid var(--color-border-light, #e5e7eb);
   background: var(--color-surface, #ffffff);
   direction: inherit;
+  flex-shrink: 0; /* Critical: Don't shrink, stay at bottom */
+  position: relative;
+  z-index: 10; /* Ensure it stays above messages */
 }
 
 .actionBanner {

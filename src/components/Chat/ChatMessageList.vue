@@ -460,6 +460,7 @@ const closeImagePreview = () => {
   overflow-y: auto;
   padding: 1.5rem;
   background: #f9fafb;
+  min-height: 0; /* Critical for flex child to allow shrinking */
 }
 
 .loadingMore {

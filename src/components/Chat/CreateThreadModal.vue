@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useChat } from '../../composables/useChat'
 import { useUserSearch } from '../../composables/useUserSearch'
 import type { CreateThreadRequest } from '../../types/chat.types'
@@ -15,8 +15,10 @@ const {
   error: searchError,
   hasMore,
   remainingCount,
+  fetchUsers,
   searchUsers,
   loadNextPage,
+  resetToAllUsers,
   clearResults
 } = useUserSearch()
 
@@ -27,6 +29,41 @@ const searchQuery = ref('')
 const isLoading = ref(false)
 const error = ref<string | null>(null)
 const debounceTimer = ref<number | null>(null)
+const userListRef = ref<HTMLElement | null>(null)
+
+// Load users on mount
+onMounted(async () => {
+  await fetchUsers(1)
+  
+  // Setup infinite scroll observer
+  setupInfiniteScroll()
+})
+
+// Setup infinite scroll using Intersection Observer
+const setupInfiniteScroll = () => {
+  if (!userListRef.value) return
+  
+  const observer = new IntersectionObserver(
+    (entries) => {
+      const lastEntry = entries[0]
+      if (lastEntry.isIntersecting && hasMore.value && !isLoadingUsers.value) {
+        loadNextPage()
+      }
+    },
+    {
+      root: userListRef.value,
+      rootMargin: '100px',
+      threshold: 0.1
+    }
+  )
+  
+  // Create a sentinel element to observe
+  const sentinel = document.createElement('div')
+  sentinel.id = 'scroll-sentinel'
+  sentinel.style.height = '1px'
+  userListRef.value.appendChild(sentinel)
+  observer.observe(sentinel)
+}
 
 // Handle search input with debouncing
 const handleSearchInput = () => {
@@ -35,9 +72,9 @@ const handleSearchInput = () => {
     clearTimeout(debounceTimer.value)
   }
   
-  // Validate minimum length
-  if (searchQuery.value.length < 2) {
-    clearResults()
+  // If search is cleared, show all users
+  if (searchQuery.value.length === 0) {
+    resetToAllUsers()
     return
   }
   
@@ -52,9 +89,20 @@ const performSearch = async () => {
   await searchUsers(searchQuery.value)
 }
 
-// Load more users for pagination
+// Handle scroll for pagination
+const handleScroll = (event: Event) => {
+  const target = event.target as HTMLElement
+  const { scrollTop, scrollHeight, clientHeight } = target
+  
+  // Load more when user scrolls near bottom (100px threshold)
+  if (scrollHeight - scrollTop - clientHeight < 100 && hasMore.value && !isLoadingUsers.value) {
+    loadNextPage()
+  }
+}
+
+// Load more users (for button click - backup)
 const handleLoadMore = async () => {
-  await loadNextPage(searchQuery.value)
+  await loadNextPage()
 }
 
 const selectedCountText = computed(() => {
@@ -87,7 +135,16 @@ const toggleUser = (userId: number) => {
 }
 
 const handleCreate = async () => {
-  if (!canCreate.value) return
+  console.log('🚀 handleCreate called')
+  console.log('📋 canCreate:', canCreate.value)
+  console.log('📋 threadType:', threadType.value)
+  console.log('📋 selectedUsers:', selectedUsers.value)
+  console.log('📋 groupTitle:', groupTitle.value)
+  
+  if (!canCreate.value) {
+    console.log('❌ canCreate is false, returning early')
+    return
+  }
 
   isLoading.value = true
   error.value = null
@@ -108,12 +165,18 @@ const handleCreate = async () => {
       }
     }
 
+    console.log('📤 Calling createThread with data:', data)
     const thread = await createThread(data)
+    console.log('📥 createThread returned:', thread)
     
     if (thread) {
+      console.log('✅ Thread created successfully, closing modal')
       emit('close')
+    } else {
+      console.log('⚠️ createThread returned null/undefined')
     }
   } catch (err: any) {
+    console.error('❌ Error in handleCreate:', err)
     error.value = err.response?.data?.error || err.message || 'Failed to create thread'
   } finally {
     isLoading.value = false
@@ -182,7 +245,6 @@ onUnmounted(cleanup)
         <div :class="$style.formGroup">
           <label :class="$style.label">
             {{ threadType === 'direct' ? 'اختر مستخدماً واحداً' : 'اختر المستخدمين' }}
-            <span :class="$style.labelHint">(اكتب حرفين على الأقل للبحث)</span>
           </label>
           <div :class="$style.searchBox">
             <i class="bi bi-search"></i>
@@ -191,34 +253,27 @@ onUnmounted(cleanup)
               @input="handleSearchInput"
               type="text"
               :class="$style.searchInput"
-              placeholder="البحث عن المستخدمين... (حرفين على الأقل)"
-              minlength="2"
+              placeholder="البحث عن المستخدمين..."
             />
+            <button
+              v-if="searchQuery.length > 0"
+              :class="$style.clearSearchBtn"
+              @click="searchQuery = ''; resetToAllUsers()"
+              type="button"
+            >
+              <i class="bi bi-x-lg"></i>
+            </button>
           </div>
         </div>
 
         <!-- User List -->
-        <div :class="$style.userList">
-          <!-- Loading State -->
-          <div v-if="isLoadingUsers" :class="$style.loadingUsers">
-            <i class="bi bi-hourglass-split"></i>
-            <span>جاري البحث...</span>
-          </div>
-
-          <!-- Search Hint -->
-          <div v-else-if="searchQuery.length === 0" :class="$style.searchHint">
-            <i class="bi bi-search"></i>
-            <span>ابدأ بكتابة اسم المستخدم أو البريد الإلكتروني للبحث</span>
-          </div>
-
-          <!-- Short Query Warning -->
-          <div v-else-if="searchQuery.length < 2" :class="$style.searchHint">
-            <i class="bi bi-info-circle"></i>
-            <span>يجب إدخال حرفين على الأقل للبحث</span>
-          </div>
-
+        <div 
+          ref="userListRef"
+          :class="$style.userList"
+          @scroll="handleScroll"
+        >
           <!-- User Items -->
-          <template v-else-if="availableUsers.length > 0">
+          <template v-if="availableUsers.length > 0">
             <div
               v-for="user in availableUsers"
               :key="user.id"
@@ -243,23 +298,35 @@ onUnmounted(cleanup)
               ></i>
             </div>
 
-            <!-- Load More Button -->
+            <!-- Loading More Indicator (inline at bottom) -->
+            <div v-if="isLoadingUsers && availableUsers.length > 0" :class="$style.loadingMore">
+              <i class="bi bi-hourglass-split"></i>
+              <span>جاري تحميل المزيد...</span>
+            </div>
+
+            <!-- Load More Button (backup for scroll) -->
             <button
-              v-if="hasMore"
+              v-else-if="hasMore"
               :class="$style.loadMoreBtn"
               :disabled="isLoadingUsers"
               @click="handleLoadMore"
             >
-              <i v-if="isLoadingUsers" class="bi bi-hourglass-split"></i>
-              <i v-else class="bi bi-arrow-down-circle"></i>
+              <i class="bi bi-arrow-down-circle"></i>
               <span>تحميل المزيد ({{ remainingCount }} متبقي)</span>
             </button>
           </template>
 
+          <!-- Initial Loading State -->
+          <div v-else-if="isLoadingUsers" :class="$style.loadingUsers">
+            <i class="bi bi-hourglass-split"></i>
+            <span>جاري تحميل المستخدمين...</span>
+          </div>
+
           <!-- No Users Found -->
-          <div v-else-if="!isLoadingUsers && searchQuery.length >= 2" :class="$style.noUsers">
+          <div v-else-if="!isLoadingUsers && availableUsers.length === 0" :class="$style.noUsers">
             <i class="bi bi-person-x"></i>
-            <span>لم يتم العثور على مستخدمين يطابقون "{{ searchQuery }}"</span>
+            <span v-if="searchQuery.length > 0">لم يتم العثور على مستخدمين يطابقون "{{ searchQuery }}"</span>
+            <span v-else>لا يوجد مستخدمين متاحين</span>
           </div>
 
           <!-- Search Error -->
@@ -441,17 +508,18 @@ onUnmounted(cleanup)
   position: relative;
 }
 
-.searchBox i {
+.searchBox > i:first-child {
   position: absolute;
   left: 0.875rem;
   top: 50%;
   transform: translateY(-50%);
   color: #9ca3af;
+  pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
-  padding: 0.625rem 0.875rem 0.625rem 2.5rem;
+  padding: 0.625rem 2.5rem 0.625rem 2.5rem;
   background: #f9fafb;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
@@ -467,8 +535,34 @@ onUnmounted(cleanup)
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
 }
 
+.clearSearchBtn {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.clearSearchBtn:hover {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.clearSearchBtn i {
+  font-size: 0.75rem;
+}
+
 .userList {
-  max-height: 250px;
+  max-height: 300px;
   overflow-y: auto;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
@@ -710,6 +804,22 @@ onUnmounted(cleanup)
 
 .loadMoreBtn i {
   font-size: 1rem;
+}
+
+.loadingMore {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.loadingMore i {
+  animation: spin 1s linear infinite;
 }
 
 .searchErrorBox {

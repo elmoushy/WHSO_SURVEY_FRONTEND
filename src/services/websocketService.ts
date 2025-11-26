@@ -106,6 +106,14 @@ class NotificationWebSocketService {
   private notificationHeartbeatInterval: NodeJS.Timeout | null = null
   private isNotificationIntentionalClose = false
   private notificationReconnectAttempts = 0
+  
+  // Token-aware reconnection settings
+  private readonly TOKEN_RETRY_DELAY = 10000 // 10 seconds - wait for token refresh
+  private readonly MAX_TOKEN_RETRIES = 6 // Max 6 retries (1 minute total)
+  private notificationTokenRetries = 0
+  private chatTokenRetries = 0
+  private notificationReconnectTimer: NodeJS.Timeout | null = null
+  private chatReconnectTimer: NodeJS.Timeout | null = null
 
   // Reactive state
   private _isConnected: Ref<boolean> = ref(false)
@@ -141,9 +149,7 @@ class NotificationWebSocketService {
    * Add event listener
    */
   on(event: string, callback: (data: any) => void): void {
-    if (envConfig.websocketEnabled) {
-      logger.debug(`🔗 [WebSocket] Adding event listener for: ${event}`)
-    }
+    console.log(`🔗 [WebSocket] Adding event listener for: ${event}`)
     
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, [])
@@ -151,10 +157,8 @@ class NotificationWebSocketService {
     
     this.eventListeners.get(event)!.push(callback)
     
-    if (envConfig.websocketEnabled) {
-      logger.debug(`🔗 [WebSocket] Total listeners for ${event}: ${this.eventListeners.get(event)!.length}`)
-      logger.debug(`🔗 [WebSocket] All registered events:`, Array.from(this.eventListeners.keys()))
-    }
+    console.log(`🔗 [WebSocket] Total listeners for ${event}: ${this.eventListeners.get(event)!.length}`)
+    console.log(`🔗 [WebSocket] All registered events:`, Array.from(this.eventListeners.keys()))
   }
 
   /**
@@ -185,27 +189,25 @@ class NotificationWebSocketService {
    * Trigger event listeners
    */
   private trigger(event: string, data: any): void {
-    logger.debug(`🎯 [WebSocket] Triggering event: ${event}`, { 
-      event, 
-      data, 
+    console.log(`🎯 [WebSocket] Triggering event: ${event}`, { 
       hasListeners: this.eventListeners.has(event),
       listenerCount: this.eventListeners.get(event)?.length || 0
     })
     
     if (this.eventListeners.has(event)) {
       const callbacks = this.eventListeners.get(event)!
-      logger.debug(`🎯 [WebSocket] Found ${callbacks.length} listeners for ${event}`)
+      console.log(`🎯 [WebSocket] Found ${callbacks.length} listeners for ${event}`)
       
       callbacks.forEach((callback, index) => {
         try {
-          logger.debug(`🎯 [WebSocket] Calling listener ${index + 1}/${callbacks.length} for ${event}`)
+          console.log(`🎯 [WebSocket] Calling listener ${index + 1}/${callbacks.length} for ${event}`)
           callback(data)
         } catch (error) {
-          logger.error(`Error in WebSocket event listener for ${event}:`, error)
+          console.error(`Error in WebSocket event listener for ${event}:`, error)
         }
       })
     } else {
-      logger.debug(`⚠️ [WebSocket] No listeners found for event: ${event}`)
+      console.log(`⚠️ [WebSocket] No listeners found for event: ${event}`)
     }
   }
 
@@ -228,12 +230,19 @@ class NotificationWebSocketService {
 
   /**
    * Connect to chat WebSocket for a specific thread
+   * Includes token-aware retry logic for handling token refresh scenarios
    */
   async connectToChat(threadId: string): Promise<void> {
     if (!envConfig.websocketEnabled) {
       const errorMessage = 'WebSocket is disabled in configuration'
       logger.debug('Chat WebSocket connection skipped:', errorMessage)
       return
+    }
+
+    // Clear any pending reconnect timer
+    if (this.chatReconnectTimer) {
+      clearTimeout(this.chatReconnectTimer)
+      this.chatReconnectTimer = null
     }
 
     // Try to get token from jwtAuthService first, fallback to localStorage
@@ -244,10 +253,35 @@ class NotificationWebSocketService {
     }
     
     if (!token) {
-      const errorMessage = 'No authentication token available for chat'
-      logger.warn('Chat WebSocket connection aborted:', errorMessage)
-      throw new Error(errorMessage)
+      // Token not available - likely being refreshed
+      // Schedule retry after TOKEN_RETRY_DELAY
+      if (this.chatTokenRetries < this.MAX_TOKEN_RETRIES) {
+        this.chatTokenRetries++
+        console.log(`⏳ [Chat WebSocket] No token available, retrying in ${this.TOKEN_RETRY_DELAY/1000}s (attempt ${this.chatTokenRetries}/${this.MAX_TOKEN_RETRIES})`)
+        logger.warn(`Chat WebSocket: No token, scheduling retry ${this.chatTokenRetries}/${this.MAX_TOKEN_RETRIES}`)
+        
+        // Store threadId for retry
+        this.currentThreadId = threadId
+        
+        this.chatReconnectTimer = setTimeout(() => {
+          this.connectToChat(threadId).catch(error => {
+            logger.error('Chat WebSocket retry failed:', error)
+          })
+        }, this.TOKEN_RETRY_DELAY)
+        
+        return // Don't throw error, just wait and retry
+      } else {
+        // Max retries exceeded
+        const errorMessage = 'No authentication token available for chat after max retries'
+        console.error(`❌ [Chat WebSocket] ${errorMessage}`)
+        logger.error(errorMessage)
+        this.chatTokenRetries = 0 // Reset for future attempts
+        throw new Error(errorMessage)
+      }
     }
+
+    // Token available - reset token retry counter
+    this.chatTokenRetries = 0
 
     // Disconnect from previous thread if connected
     if (this.chatWs && this.currentThreadId !== threadId) {
@@ -266,6 +300,7 @@ class NotificationWebSocketService {
       // Use VITE_WS_URL for proper environment-based WebSocket URL
       const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000'
       const wsUrl = `${wsBaseUrl}/ws/internal-chat/threads/${threadId}/?token=${token}`
+      console.log('🔌 [Chat WebSocket] Connecting to:', wsUrl.replace(token, '[TOKEN]'))
       logger.debug('Chat WebSocket connecting to:', wsUrl.replace(token, '[TOKEN]'))
       
       this.chatWs = new WebSocket(wsUrl)
@@ -288,6 +323,16 @@ class NotificationWebSocketService {
   disconnectFromChat(): void {
     this.isChatIntentionalClose = true
     this.stopChatHeartbeat()
+    
+    // Clear any pending reconnect timers
+    if (this.chatReconnectTimer) {
+      clearTimeout(this.chatReconnectTimer)
+      this.chatReconnectTimer = null
+    }
+    
+    // Reset retry counters
+    this.reconnectAttempts = 0
+    this.chatTokenRetries = 0
     
     if (this.chatWs) {
       this.chatWs.close(1000, 'Client disconnect')
@@ -380,7 +425,19 @@ class NotificationWebSocketService {
    * Handle chat WebSocket open event
    */
   private handleChatOpen(_event: Event): void {
+    console.log('✅ Chat WebSocket connected successfully')
     logger.debug('✅ Chat WebSocket connected successfully')
+    
+    // Reset ALL retry counters on successful connection
+    this.reconnectAttempts = 0
+    this.chatTokenRetries = 0
+    
+    // Clear any pending reconnect timer
+    if (this.chatReconnectTimer) {
+      clearTimeout(this.chatReconnectTimer)
+      this.chatReconnectTimer = null
+    }
+    
     this.startChatHeartbeat()
     this.trigger('chat.connected', { threadId: this.currentThreadId })
   }
@@ -398,14 +455,15 @@ class NotificationWebSocketService {
         logger.debug('📩 New message data structure:', JSON.stringify(data, null, 2))
       }
       
-      // Handle chat unread count updates
-      if (data.type === 'chat.unread.update') {
-        console.log('📨 Received:', {
+      // Handle chat unread count updates (support both event names from backend)
+      if (data.type === 'chat.unread.update' || data.type === 'chat.unread.count.update') {
+        console.log('📨 Chat unread update received:', {
           type: data.type,
           thread_id: data.thread_id,
           unread_count: data.unread_count,
           total_unread: data.total_unread
         })
+        // Always trigger as 'chat.unread.update' for consistency
         this.trigger('chat.unread.update', data)
         return
       }
@@ -413,69 +471,54 @@ class NotificationWebSocketService {
       // Trigger specific event based on message type
       switch (data.type) {
         case ChatEventType.CONNECTION_ESTABLISHED:
-        case 'connection.established':
           console.log('✅ Connected to notification WebSocket')
           this.trigger('chat.connection.established', data)
           break
         case ChatEventType.MESSAGE_NEW:
-        case 'message.new':
           this.trigger('chat.message.new', data)
           break
         case ChatEventType.MESSAGE_UPDATED:
-        case 'message.updated':
           this.trigger('chat.message.updated', data)
           break
         case ChatEventType.MESSAGE_DELETED:
-        case 'message.deleted':
           this.trigger('chat.message.deleted', data)
           break
         case ChatEventType.TYPING_START:
-        case 'typing.start':
           this.trigger('chat.typing.start', data)
           break
         case ChatEventType.TYPING_STOP:
-        case 'typing.stop':
           this.trigger('chat.typing.stop', data)
           break
         case ChatEventType.RECEIPT_READ:
-        case 'receipt.read':
           this.trigger('chat.receipt.read', data)
           break
         case ChatEventType.REACTION_ADDED:
-        case 'reaction.added':
           this.trigger('chat.reaction.added', data)
           break
         case ChatEventType.REACTION_REMOVED:
-        case 'reaction.removed':
           this.trigger('chat.reaction.removed', data)
           break
         case ChatEventType.MEMBER_ADDED:
-        case 'member.added':
           this.trigger('chat.member.added', data)
           break
         case ChatEventType.MEMBER_REMOVED:
-        case 'member.removed':
           this.trigger('chat.member.removed', data)
           break
         case ChatEventType.THREAD_UPDATED:
-        case 'thread.updated':
           this.trigger('chat.thread.updated', data)
           break
         case ChatEventType.PING:
-        case 'ping':
           // Respond to ping with pong
           logger.debug('📡 Received ping, sending pong')
           this.sendChatPong()
           this.trigger('chat.ping', data)
           break
         case ChatEventType.PONG:
-        case 'pong':
           // Pong received from server
           logger.debug('📡 Received pong from server')
           this.trigger('chat.pong', data)
           break
         case ChatEventType.ERROR:
-        case 'error':
           // Only log as error if it's not about ping/pong
           if (data.message && data.message.toLowerCase().includes('ping')) {
             logger.debug('Ignoring ping-related error message:', data.message)
@@ -498,10 +541,21 @@ class NotificationWebSocketService {
 
   /**
    * Handle chat WebSocket close event
+   * Includes smart reconnection logic for token expiry scenarios
    */
   private handleChatClose(event: CloseEvent): void {
+    console.log(`🔌 Chat WebSocket closed: code=${event.code}, reason=${event.reason || 'none'}`)
     logger.debug('🔌 Chat WebSocket closed:', event.code, event.reason)
     this.stopChatHeartbeat()
+    
+    // Determine if this is a token-related closure
+    const isTokenRelatedClosure = 
+      event.code === 1006 || // Abnormal closure (often auth issues)
+      event.code === 4001 || // Custom: unauthorized
+      event.code === 4003 || // Custom: forbidden
+      event.code === 3000 || // Custom: token expired
+      (event.reason && event.reason.toLowerCase().includes('token')) ||
+      (event.reason && event.reason.toLowerCase().includes('auth'))
     
     this.trigger('chat.disconnected', { 
       code: event.code, 
@@ -509,9 +563,33 @@ class NotificationWebSocketService {
       threadId: this.currentThreadId
     })
     
-    // Only reconnect if not intentionally closed and within retry limits
-    if (!this.isChatIntentionalClose && event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
-      this.scheduleChatReconnect()
+    // Only reconnect if not intentionally closed
+    if (!this.isChatIntentionalClose && this.currentThreadId) {
+      if (isTokenRelatedClosure) {
+        // Token-related closure - use longer delay to allow token refresh
+        console.log(`⚠️ [Chat WebSocket] Token-related disconnection, will retry in ${this.TOKEN_RETRY_DELAY/1000}s`)
+        logger.warn('Token-related chat WebSocket closure, scheduling delayed reconnect')
+        
+        // Clear any existing timer
+        if (this.chatReconnectTimer) {
+          clearTimeout(this.chatReconnectTimer)
+        }
+        
+        // Reset standard reconnect attempts
+        this.reconnectAttempts = 0
+        
+        const threadIdToReconnect = this.currentThreadId
+        this.chatReconnectTimer = setTimeout(() => {
+          console.log('🔄 [Chat WebSocket] Attempting to reconnect after token refresh...')
+          this.connectToChat(threadIdToReconnect).catch((error) => {
+            logger.error('Chat reconnection after token refresh failed:', error)
+          })
+        }, this.TOKEN_RETRY_DELAY)
+        
+      } else if (event.code !== 1000 && this.reconnectAttempts < this.maxReconnectAttempts) {
+        // Standard reconnection with exponential backoff
+        this.scheduleChatReconnect()
+      }
     }
   }
 
@@ -586,6 +664,7 @@ class NotificationWebSocketService {
   /**
    * Connect to global notification WebSocket
    * This connection receives all notifications including chat unread updates
+   * Includes token-aware retry logic for handling token refresh scenarios
    */
   async connectToNotifications(): Promise<void> {
     if (this.notificationWs?.readyState === WebSocket.OPEN) {
@@ -593,19 +672,42 @@ class NotificationWebSocketService {
       return
     }
 
+    // Clear any pending reconnect timer
+    if (this.notificationReconnectTimer) {
+      clearTimeout(this.notificationReconnectTimer)
+      this.notificationReconnectTimer = null
+    }
+
     // Get JWT token from the auth service (in-memory token after initialization)
     let token = getAccessToken()
     
     if (!token) {
-      const errorMessage = 'No authentication token available for notification WebSocket'
-      logger.warn('Notification WebSocket connection aborted:', errorMessage)
-      logger.debug('Token status:', {
-        hasToken: !!token,
-        message: 'Make sure auth is initialized before connecting WebSocket'
-      })
-      throw new Error(errorMessage)
+      // Token not available - likely being refreshed
+      // Schedule retry after TOKEN_RETRY_DELAY
+      if (this.notificationTokenRetries < this.MAX_TOKEN_RETRIES) {
+        this.notificationTokenRetries++
+        console.log(`⏳ [WebSocket] No token available, retrying in ${this.TOKEN_RETRY_DELAY/1000}s (attempt ${this.notificationTokenRetries}/${this.MAX_TOKEN_RETRIES})`)
+        logger.warn(`Notification WebSocket: No token, scheduling retry ${this.notificationTokenRetries}/${this.MAX_TOKEN_RETRIES}`)
+        
+        this.notificationReconnectTimer = setTimeout(() => {
+          this.connectToNotifications().catch(error => {
+            logger.error('Notification WebSocket retry failed:', error)
+          })
+        }, this.TOKEN_RETRY_DELAY)
+        
+        return // Don't throw error, just wait and retry
+      } else {
+        // Max retries exceeded
+        const errorMessage = 'No authentication token available for notification WebSocket after max retries'
+        console.error(`❌ [WebSocket] ${errorMessage}`)
+        logger.error(errorMessage)
+        this.notificationTokenRetries = 0 // Reset for future attempts
+        throw new Error(errorMessage)
+      }
     }
 
+    // Token available - reset token retry counter
+    this.notificationTokenRetries = 0
     this.isNotificationIntentionalClose = false
 
     try {
@@ -636,6 +738,16 @@ class NotificationWebSocketService {
     this.isNotificationIntentionalClose = true
     this.stopNotificationHeartbeat()
     
+    // Clear any pending reconnect timers
+    if (this.notificationReconnectTimer) {
+      clearTimeout(this.notificationReconnectTimer)
+      this.notificationReconnectTimer = null
+    }
+    
+    // Reset retry counters
+    this.notificationReconnectAttempts = 0
+    this.notificationTokenRetries = 0
+    
     if (this.notificationWs) {
       this.notificationWs.close(1000, 'Client disconnect')
       this.notificationWs = null
@@ -650,7 +762,18 @@ class NotificationWebSocketService {
   private handleNotificationOpen(_event: Event): void {
     console.log('✅ Connected to notification WebSocket')
     logger.debug('✅ Notification WebSocket connected successfully')
+    this._isNotificationConnected.value = true
+    
+    // Reset ALL retry counters on successful connection
     this.notificationReconnectAttempts = 0
+    this.notificationTokenRetries = 0
+    
+    // Clear any pending reconnect timer
+    if (this.notificationReconnectTimer) {
+      clearTimeout(this.notificationReconnectTimer)
+      this.notificationReconnectTimer = null
+    }
+    
     this.startNotificationHeartbeat()
     this.trigger('notification.connected', { timestamp: new Date().toISOString() })
   }
@@ -667,13 +790,19 @@ class NotificationWebSocketService {
       logger.debug('📨 Notification message received:', data.type, data)
       
       // Handle specific message types
-      if (data.type === 'chat.unread.update') {
-        console.log('📨 Received:', {
+      if (data.type === 'notification.count') {
+        // New simplified notification count update
+        console.log('🔔 Notification count update:', data.count)
+        this.trigger('notification.count', data)
+      } else if (data.type === 'chat.unread.update' || data.type === 'chat.unread.count.update') {
+        // Handle chat unread count updates (support both event names from backend)
+        console.log('📨 Chat unread update received (notification WS):', {
           type: data.type,
           thread_id: data.thread_id,
           unread_count: data.unread_count,
           total_unread: data.total_unread
         })
+        // Always trigger as 'chat.unread.update' for consistency
         this.trigger('chat.unread.update', data)
       } else if (data.type === 'unread.counts.initial') {
         console.log('📨 Initial unread counts received:', {
@@ -685,6 +814,12 @@ class NotificationWebSocketService {
       } else if (data.type === 'connection.success') {
         console.log('✅ Connection confirmed by server')
         this.trigger('notification.connection.success', data)
+      } else if (data.type === 'ping') {
+        // Respond to server ping with pong
+        logger.debug('📡 Received ping, sending pong')
+        if (this.notificationWs && this.notificationWs.readyState === WebSocket.OPEN) {
+          this.notificationWs.send(JSON.stringify({ type: 'pong' }))
+        }
       } else {
         // Trigger generic event for any other message type
         this.trigger(`notification.${data.type}`, data)
@@ -697,16 +832,54 @@ class NotificationWebSocketService {
 
   /**
    * Handle notification WebSocket close
+   * Includes smart reconnection logic for token expiry scenarios
    */
   private handleNotificationClose(event: CloseEvent): void {
     this._isNotificationConnected.value = false
     this.stopNotificationHeartbeat()
     
+    console.log(`🔌 Notification WebSocket closed: code=${event.code}, reason=${event.reason || 'none'}`)
     logger.debug('Notification WebSocket closed:', event.code, event.reason)
     
-    if (!this.isNotificationIntentionalClose && this.notificationReconnectAttempts < this.maxReconnectAttempts) {
-      logger.debug('Attempting to reconnect notification WebSocket...')
-      this.scheduleNotificationReconnect()
+    // Determine if this is a token-related closure
+    // Common codes: 1006 = abnormal closure, 4001/4003 = auth failure (custom)
+    const isTokenRelatedClosure = 
+      event.code === 1006 || // Abnormal closure (often auth issues)
+      event.code === 4001 || // Custom: unauthorized
+      event.code === 4003 || // Custom: forbidden
+      event.code === 3000 || // Custom: token expired
+      (event.reason && event.reason.toLowerCase().includes('token')) ||
+      (event.reason && event.reason.toLowerCase().includes('auth'))
+    
+    if (!this.isNotificationIntentionalClose) {
+      if (isTokenRelatedClosure) {
+        // Token-related closure - use longer delay to allow token refresh
+        console.log(`⚠️ [WebSocket] Token-related disconnection detected, will retry in ${this.TOKEN_RETRY_DELAY/1000}s`)
+        logger.warn('Token-related WebSocket closure, scheduling delayed reconnect')
+        
+        // Clear any existing timer
+        if (this.notificationReconnectTimer) {
+          clearTimeout(this.notificationReconnectTimer)
+        }
+        
+        // Reset standard reconnect attempts but track token retries
+        this.notificationReconnectAttempts = 0
+        
+        this.notificationReconnectTimer = setTimeout(() => {
+          console.log('🔄 [WebSocket] Attempting to reconnect after token refresh...')
+          this.connectToNotifications().catch((error) => {
+            logger.error('Notification reconnection after token refresh failed:', error)
+          })
+        }, this.TOKEN_RETRY_DELAY)
+        
+      } else if (this.notificationReconnectAttempts < this.maxReconnectAttempts) {
+        // Standard reconnection with exponential backoff
+        logger.debug('Attempting to reconnect notification WebSocket...')
+        this.scheduleNotificationReconnect()
+      } else {
+        console.log('❌ [WebSocket] Max reconnection attempts reached')
+        logger.error('Max notification WebSocket reconnection attempts reached')
+      }
     }
     
     this.trigger('notification.disconnected', { code: event.code, reason: event.reason })
@@ -766,6 +939,88 @@ class NotificationWebSocketService {
    */
   isNotificationWsConnected(): boolean {
     return this.notificationWs?.readyState === WebSocket.OPEN
+  }
+
+  /**
+   * Force reconnection with fresh token
+   * Call this after token refresh to reconnect immediately with new token
+   */
+  async reconnectWithFreshToken(): Promise<void> {
+    console.log('🔄 [WebSocket] Force reconnecting with fresh token...')
+    
+    // Reset all retry counters
+    this.notificationTokenRetries = 0
+    this.chatTokenRetries = 0
+    this.notificationReconnectAttempts = 0
+    this.reconnectAttempts = 0
+    
+    // Clear all pending timers
+    if (this.notificationReconnectTimer) {
+      clearTimeout(this.notificationReconnectTimer)
+      this.notificationReconnectTimer = null
+    }
+    if (this.chatReconnectTimer) {
+      clearTimeout(this.chatReconnectTimer)
+      this.chatReconnectTimer = null
+    }
+    
+    // Reconnect notification WebSocket
+    if (this.notificationWs) {
+      this.isNotificationIntentionalClose = false
+      this.notificationWs.close(1000, 'Token refresh')
+      this.notificationWs = null
+    }
+    
+    try {
+      await this.connectToNotifications()
+      console.log('✅ [WebSocket] Notification WebSocket reconnected with fresh token')
+    } catch (error) {
+      console.error('❌ [WebSocket] Failed to reconnect notification WebSocket:', error)
+    }
+    
+    // Reconnect chat WebSocket if there was an active thread
+    if (this.currentThreadId) {
+      const threadId = this.currentThreadId
+      this.isChatIntentionalClose = false
+      
+      if (this.chatWs) {
+        this.chatWs.close(1000, 'Token refresh')
+        this.chatWs = null
+      }
+      
+      try {
+        await this.connectToChat(threadId)
+        console.log('✅ [WebSocket] Chat WebSocket reconnected with fresh token')
+      } catch (error) {
+        console.error('❌ [WebSocket] Failed to reconnect chat WebSocket:', error)
+      }
+    }
+  }
+
+  /**
+   * Get detailed status information including retry counters
+   */
+  getDetailedStatus() {
+    return {
+      notification: {
+        isConnected: this._isNotificationConnected.value,
+        reconnectAttempts: this.notificationReconnectAttempts,
+        tokenRetries: this.notificationTokenRetries,
+        hasPendingReconnect: !!this.notificationReconnectTimer
+      },
+      chat: {
+        isConnected: this.chatWs?.readyState === WebSocket.OPEN,
+        currentThreadId: this.currentThreadId,
+        reconnectAttempts: this.reconnectAttempts,
+        tokenRetries: this.chatTokenRetries,
+        hasPendingReconnect: !!this.chatReconnectTimer
+      },
+      settings: {
+        tokenRetryDelay: this.TOKEN_RETRY_DELAY,
+        maxTokenRetries: this.MAX_TOKEN_RETRIES,
+        maxReconnectAttempts: this.maxReconnectAttempts
+      }
+    }
   }
 }
 

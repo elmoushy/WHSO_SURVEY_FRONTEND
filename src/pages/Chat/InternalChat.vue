@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useChat } from '../../composables/useChat'
 import ChatThreadList from '../../components/Chat/ChatThreadList.vue'
 import ChatMessageList from '../../components/Chat/ChatMessageList.vue'
@@ -15,12 +15,21 @@ const {
   setReplyingTo,
   setEditingMessage,
   disconnectFromChatWebSocket,
-  setChatPageVisibility
+  setChatPageVisibility,
+  updateGroupSettings,
+  isLoading
 } = useChat()
 
 const showCreateModal = ref(false)
 const showThreadInfo = ref(false)
 const isThreadListCollapsed = ref(false)
+const isUpdatingSettings = ref(false)
+
+// Check if current user is admin or owner
+const isAdmin = computed(() => {
+  if (!currentThread.value) return false
+  return currentThread.value.my_role === 'admin' || currentThread.value.my_role === 'owner'
+})
 
 const handleSelectThread = (threadId: string) => {
   selectThread(threadId)
@@ -53,6 +62,31 @@ const toggleThreadList = () => {
   isThreadListCollapsed.value = !isThreadListCollapsed.value
 }
 
+// Handle posting mode change
+const handlePostingModeChange = async (mode: 'all' | 'admins_only') => {
+  if (!currentThread.value || isUpdatingSettings.value) return
+  
+  isUpdatingSettings.value = true
+  try {
+    await updateGroupSettings(currentThread.value.id, { posting_mode: mode })
+  } finally {
+    isUpdatingSettings.value = false
+  }
+}
+
+// Handle members can add others toggle
+const handleMembersCanAddToggle = async () => {
+  if (!currentThread.value || !currentThread.value.group_settings || isUpdatingSettings.value) return
+  
+  isUpdatingSettings.value = true
+  try {
+    const newValue = !currentThread.value.group_settings.members_can_add_others
+    await updateGroupSettings(currentThread.value.id, { members_can_add_others: newValue })
+  } finally {
+    isUpdatingSettings.value = false
+  }
+}
+
 // Set chat page visibility on mount
 onMounted(() => {
   setChatPageVisibility(true)
@@ -71,10 +105,20 @@ onUnmounted(() => {
 
 <template>
   <div :class="$style.chatPage">
+    <!-- Floating Toggle Button - Outside overflow:hidden containers -->
+    <button 
+      :class="[$style.floatingToggleBtn, { [$style.collapsed]: isThreadListCollapsed }]"
+      @click="toggleThreadList"
+      :title="isThreadListCollapsed ? 'فتح قائمة المحادثات' : 'إغلاق قائمة المحادثات'"
+    >
+      <i :class="['bi', isThreadListCollapsed ? 'bi-chevron-left' : 'bi-chevron-right']"></i>
+    </button>
+
     <!-- Thread List Sidebar -->
     <aside :class="[$style.threadListSidebar, { [$style.collapsed]: isThreadListCollapsed }]">
       <ChatThreadList
         :is-collapsed="isThreadListCollapsed"
+        :hide-toggle-button="true"
         @select-thread="handleSelectThread"
         @create-thread="handleCreateThread"
         @toggle-collapse="toggleThreadList"
@@ -181,13 +225,75 @@ onUnmounted(() => {
 
         <div v-if="currentThread.type === 'group' && currentThread.group_settings" :class="$style.infoSection">
           <h4>إعدادات المجموعة</h4>
-          <div :class="$style.settingItem">
-            <span>من يمكنه النشر:</span>
-            <strong>{{ currentThread.group_settings.posting_mode === 'all' ? 'الجميع' : 'المسؤولون فقط' }}</strong>
+          
+          <!-- Posting Mode Setting -->
+          <div :class="$style.settingGroup">
+            <span :class="$style.settingLabel">من يمكنه إرسال الرسائل:</span>
+            
+            <!-- Admin View: Editable Radio Buttons -->
+            <div v-if="isAdmin" :class="$style.radioGroup">
+              <label :class="[$style.radioOption, { [$style.selected]: currentThread.group_settings.posting_mode === 'all' }]">
+                <input 
+                  type="radio" 
+                  name="postingMode" 
+                  value="all"
+                  :checked="currentThread.group_settings.posting_mode === 'all'"
+                  :disabled="isUpdatingSettings"
+                  @change="handlePostingModeChange('all')"
+                />
+                <span :class="$style.radioLabel">الجميع</span>
+              </label>
+              <label :class="[$style.radioOption, { [$style.selected]: currentThread.group_settings.posting_mode === 'admins_only' }]">
+                <input 
+                  type="radio" 
+                  name="postingMode" 
+                  value="admins_only"
+                  :checked="currentThread.group_settings.posting_mode === 'admins_only'"
+                  :disabled="isUpdatingSettings"
+                  @change="handlePostingModeChange('admins_only')"
+                />
+                <span :class="$style.radioLabel">المسؤولون فقط</span>
+              </label>
+            </div>
+            
+            <!-- Member View: Read-only -->
+            <strong v-else>{{ currentThread.group_settings.posting_mode === 'all' ? 'الجميع' : 'المسؤولون فقط' }}</strong>
           </div>
-          <div :class="$style.settingItem">
-            <span>يمكن للأعضاء إضافة آخرين:</span>
-            <strong>{{ currentThread.group_settings.members_can_add_others ? 'نعم' : 'لا' }}</strong>
+          
+          <!-- Members Can Add Others Setting -->
+          <div :class="$style.settingGroup">
+            <span :class="$style.settingLabel">يمكن للأعضاء إضافة آخرين:</span>
+            
+            <!-- Admin View: Toggle Switch -->
+            <label v-if="isAdmin" :class="$style.toggleSwitch">
+              <input 
+                type="checkbox" 
+                :checked="currentThread.group_settings.members_can_add_others"
+                :disabled="isUpdatingSettings"
+                @change="handleMembersCanAddToggle"
+              />
+              <span :class="$style.toggleSlider"></span>
+              <span :class="$style.toggleText">
+                {{ currentThread.group_settings.members_can_add_others ? 'نعم' : 'لا' }}
+              </span>
+            </label>
+            
+            <!-- Member View: Read-only -->
+            <strong v-else>{{ currentThread.group_settings.members_can_add_others ? 'نعم' : 'لا' }}</strong>
+          </div>
+          
+          <!-- Loading Indicator -->
+          <div v-if="isUpdatingSettings" :class="$style.settingsLoading">
+            <i class="bi bi-hourglass-split"></i>
+            <span>جاري الحفظ...</span>
+          </div>
+          
+          <!-- Last Updated Info -->
+          <div v-if="currentThread.group_settings.updated_by" :class="$style.settingsUpdatedInfo">
+            <i class="bi bi-clock-history"></i>
+            <span>
+              آخر تحديث: {{ currentThread.group_settings.updated_by.first_name }} {{ currentThread.group_settings.updated_by.last_name }}
+            </span>
           </div>
         </div>
       </div>
@@ -204,17 +310,100 @@ onUnmounted(() => {
 <style module>
 .chatPage {
   display: flex;
-  height: 100vh;
+  /* Use 100dvh (dynamic viewport height) for better mobile support */
+  /* Subtract approximate navigation height - adjust if needed */
+  height: calc(100dvh - 80px);
+  min-height: 0; /* Allow flex shrinking */
   background: #ffffff;
+  overflow: hidden; /* Prevent page scroll */
+  position: relative;
+}
+
+/* Fallback for browsers that don't support dvh */
+@supports not (height: 100dvh) {
+  .chatPage {
+    height: calc(100vh - 80px);
+  }
 }
 
 .threadListSidebar {
   flex-shrink: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100%;
+  overflow: hidden;
 }
 
 .threadListSidebar.collapsed {
-  width: auto;
+  width: 0;
+  min-width: 0;
+}
+
+/* Floating Toggle Button - Always visible above everything */
+.floatingToggleBtn {
+  position: absolute;
+  top: 50%;
+  left: 320px; /* Width of thread list */
+  transform: translate(-50%, -50%);
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, #B78A41 0%, #CEA55B 100%);
+  color: #ffffff;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* High z-index to float above everything */
+  box-shadow: 0 4px 12px rgba(183, 138, 65, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-size: 0.875rem;
+}
+
+.floatingToggleBtn:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+  box-shadow: 0 6px 16px rgba(183, 138, 65, 0.5), 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.floatingToggleBtn:active {
+  transform: translate(-50%, -50%) scale(1.05);
+}
+
+.floatingToggleBtn.collapsed {
+  left: 0;
+  transform: translate(50%, -50%);
+}
+
+.floatingToggleBtn.collapsed:hover {
+  transform: translate(50%, -50%) scale(1.15);
+}
+
+.floatingToggleBtn.collapsed:active {
+  transform: translate(50%, -50%) scale(1.05);
+}
+
+/* RTL Support */
+[dir="rtl"] .floatingToggleBtn {
+  left: auto;
+  right: 320px;
+  transform: translate(50%, -50%);
+}
+
+[dir="rtl"] .floatingToggleBtn:hover {
+  transform: translate(50%, -50%) scale(1.15);
+}
+
+[dir="rtl"] .floatingToggleBtn.collapsed {
+  right: 0;
+  transform: translate(-50%, -50%);
+}
+
+[dir="rtl"] .floatingToggleBtn.collapsed:hover {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+[dir="rtl"] .floatingToggleBtn i {
+  transform: scaleX(-1);
 }
 
 .chatMain {
@@ -222,6 +411,9 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0; /* Critical for nested flex containers */
+  height: 100%;
+  overflow: hidden; /* Important: prevent overflow */
 }
 
 .noThread {
@@ -230,6 +422,7 @@ onUnmounted(() => {
   justify-content: center;
   height: 100%;
   background: #f9fafb;
+  overflow: auto;
 }
 
 .noThreadContent {
@@ -342,6 +535,8 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0; /* Critical: allows flex children to shrink */
+  overflow: hidden; /* Critical: contain all children */
 }
 
 .chatHeader {
@@ -351,6 +546,7 @@ onUnmounted(() => {
   padding: 1rem 1.5rem;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0; /* Don't shrink the header */
 }
 
 .headerLeft {
@@ -540,6 +736,151 @@ onUnmounted(() => {
 
 .settingItem strong {
   color: #111827;
+}
+
+/* Group Settings Styles */
+.settingGroup {
+  margin-bottom: 1.25rem;
+}
+
+.settingLabel {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radioOption:hover {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.radioOption.selected {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(244, 208, 63, 0.1) 100%);
+  border-color: #d4af37;
+}
+
+.radioOption input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #d4af37;
+  cursor: pointer;
+}
+
+.radioOption input[type="radio"]:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.radioLabel {
+  font-size: 0.875rem;
+  color: #111827;
+  font-weight: 500;
+}
+
+/* Toggle Switch */
+.toggleSwitch {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+}
+
+.toggleSwitch input[type="checkbox"] {
+  display: none;
+}
+
+.toggleSlider {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.toggleSlider::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggleSwitch input[type="checkbox"]:checked + .toggleSlider {
+  background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
+}
+
+.toggleSwitch input[type="checkbox"]:checked + .toggleSlider::before {
+  transform: translateX(20px);
+}
+
+.toggleSwitch input[type="checkbox"]:disabled + .toggleSlider {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.toggleText {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.settingsLoading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  font-size: 0.75rem;
+  color: #d4af37;
+}
+
+.settingsLoading i {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.settingsUpdatedInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+  font-size: 0.6875rem;
+  color: #9ca3af;
+}
+
+.settingsUpdatedInfo i {
+  font-size: 0.75rem;
 }
 
 /* Responsive */

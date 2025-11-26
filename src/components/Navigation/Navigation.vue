@@ -20,7 +20,7 @@
             >
               <i class="fas fa-bell" :class="{ [$style.wsConnected]: wsConnected, [$style.wsDisconnected]: !wsConnected }"></i>
               <span v-if="notificationCount > 0" :class="$style.badge">{{ notificationCount }}</span>
-              <span v-if="hasNewWebSocketNotification" :class="$style.dotIndicator"></span>
+              <!-- <span v-if="hasNewWebSocketNotification" :class="$style.dotIndicator"></span> -->
             </button>
 
             <div v-if="wsConnecting" :class="$style.wsStatus" title="Connecting to notification service...">
@@ -196,6 +196,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { useAppStore } from '../../stores/useAppStore'
 import { useSimpleAuth } from '../../composables/useSimpleAuth'
 import { notificationService } from '../../services/notificationService'
+import { websocketService } from '../../services/websocketService'
 import { NOTIFICATION_ICONS, PRIORITY_COLORS } from '../../types/notifications.types'
 import type { Notification } from '../../types/notifications.types'
 
@@ -243,31 +244,21 @@ const hasLoadedNotifications = ref(false)
 const hasNewWebSocketNotification = ref(false)
 const newNotificationTimer = ref<NodeJS.Timeout | null>(null)
 
-// WebSocket Notifications - Disabled (using chat WebSocket only)
-// const {
-//   realtimeNotifications,
-//   hasNewNotifications,
-//   isConnected: wsConnected,
-//   isConnecting: wsConnecting,
-//   connectionError: wsConnectionError,
-//   unreadCount: wsUnreadCount,
-//   connect: wsConnect,
-//   disconnect: wsDisconnect,
-//   markAsRead: wsMarkAsRead,
-//   requestNotificationPermission
-// } = useWebSocketNotifications({
-//   autoConnect: false,
-//   showBrowserNotifications: true,
-//   subscribeToTypes: ['survey_assigned', 'admin_message', 'system_alert']
-// })
-
-// Placeholder values since WebSocket notifications are disabled
+// WebSocket connection state
 const wsConnected = ref(false)
 const wsConnecting = ref(false)
 const wsConnectionError = ref<string | null>(null)
 
-// Combined notification count from local state only (WebSocket notifications removed)
+// WebSocket notification count (from real-time updates)
+const wsNotificationCount = ref(0)
+
+// Combined notification count - prefer WebSocket count, fallback to local state
 const notificationCount = computed(() => {
+  // If we have a WebSocket count, use it (it's more accurate)
+  if (wsConnected.value && wsNotificationCount.value >= 0) {
+    return wsNotificationCount.value
+  }
+  // Fallback to counting unread from loaded notifications
   return notifications.value.filter(n => !n.is_read).length
 })
 
@@ -549,24 +540,123 @@ watch([showSettings, showNotifications, showMobileMenu, showUserMenu], () => {
   preventBodyScroll()
 })
 
-// WebSocket notifications disabled - chat WebSocket only
-// watch(
-//   () => realtimeNotifications.value.length,
-//   (newLength, oldLength) => {
-//     if (newLength > (oldLength || 0)) {
-//       showNewNotificationIndicator()
-//     }
-//   }
-// )
+// ============================================
+// WEBSOCKET NOTIFICATION COUNT HANDLING
+// ============================================
 
-// watch(
-//   () => hasNewNotifications.value,
-//   (hasNew) => {
-//     if (hasNew) {
-//       showNewNotificationIndicator()
-//     }
-//   }
-// )
+/**
+ * Handle notification.count event from WebSocket
+ * This is the ONLY event we listen for - just the count update
+ */
+const handleNotificationCount = (data: { type: string; count: number; timestamp: string }) => {
+  const previousCount = wsNotificationCount.value
+  wsNotificationCount.value = data.count
+  
+  console.log('🔔 Notification count updated:', data.count)
+  
+  // Show new notification indicator if count increased
+  if (data.count > previousCount && previousCount >= 0) {
+    showNewNotificationIndicator()
+  }
+}
+
+/**
+ * Handle WebSocket connection success
+ */
+const handleWsConnected = () => {
+  wsConnected.value = true
+  wsConnecting.value = false
+  wsConnectionError.value = null
+  console.log('✅ Notification WebSocket connected')
+}
+
+/**
+ * Handle WebSocket disconnection
+ */
+const handleWsDisconnected = () => {
+  wsConnected.value = false
+  wsConnecting.value = false
+  console.log('🔌 Notification WebSocket disconnected')
+}
+
+/**
+ * Handle WebSocket error
+ */
+const handleWsError = (data: { event?: Event }) => {
+  wsConnectionError.value = 'Connection error'
+  wsConnecting.value = false
+  console.error('❌ Notification WebSocket error:', data)
+}
+
+/**
+ * Show new notification indicator (dot)
+ */
+const showNewNotificationIndicator = () => {
+  hasNewWebSocketNotification.value = true
+  
+  // Auto-hide after 10 seconds if user doesn't click
+  if (newNotificationTimer.value) {
+    clearTimeout(newNotificationTimer.value)
+  }
+  newNotificationTimer.value = setTimeout(() => {
+    // Don't auto-hide, keep it visible until user clicks
+  }, 10000)
+}
+
+/**
+ * Connect to notification WebSocket
+ */
+const connectToNotificationWebSocket = async () => {
+  if (wsConnected.value || wsConnecting.value) return
+  
+  wsConnecting.value = true
+  wsConnectionError.value = null
+  
+  try {
+    // Set up event listeners BEFORE connecting
+    websocketService.on('notification.count', handleNotificationCount)
+    websocketService.on('notification.connected', handleWsConnected)
+    websocketService.on('notification.disconnected', handleWsDisconnected)
+    websocketService.on('notification.error', handleWsError)
+    
+    await websocketService.connectToNotifications()
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    wsConnectionError.value = errorMessage
+    wsConnecting.value = false
+    console.error('Failed to connect to notification WebSocket:', errorMessage)
+  }
+}
+
+/**
+ * Disconnect from notification WebSocket
+ */
+const disconnectFromNotificationWebSocket = () => {
+  // Remove event listeners
+  websocketService.off('notification.count', handleNotificationCount)
+  websocketService.off('notification.connected', handleWsConnected)
+  websocketService.off('notification.disconnected', handleWsDisconnected)
+  websocketService.off('notification.error', handleWsError)
+  
+  websocketService.disconnectFromNotifications()
+  wsConnected.value = false
+  wsConnecting.value = false
+}
+
+// Watch for user authentication changes to connect/disconnect WebSocket
+watch(
+  () => user.value,
+  (currentUser, previousUser) => {
+    if (currentUser && !previousUser) {
+      // User just logged in - connect to WebSocket
+      connectToNotificationWebSocket()
+    } else if (!currentUser && previousUser) {
+      // User just logged out - disconnect from WebSocket
+      disconnectFromNotificationWebSocket()
+    }
+  },
+  { immediate: false }
+)
 
 // Utility functions for notifications
 const getNotificationIcon = (notificationType: string): string => {
@@ -596,29 +686,15 @@ const formatTime = (createdAt: string): string => {
   }
 }
 
-// WebSocket notifications disabled - chat WebSocket only
-// watch(
-//   () => user.value,
-//   (currentUser) => {
-//     if (currentUser && !wsConnected.value) {
-//       wsConnect().catch(error => {
-//         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-//         if (errorMessage !== 'WebSocket feature is disabled') {
-//           console.warn('WebSocket auto-connect on auth failed:', errorMessage)
-//         }
-//       })
-//     } else if (!currentUser && wsConnected.value) {
-//       wsDisconnect()
-//     }
-//   }
-// )
-
 // Lifecycle
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscapeKey)
   
-  // Don't load notifications on mount - only when user clicks
+  // Connect to notification WebSocket if user is already authenticated
+  if (user.value) {
+    connectToNotificationWebSocket()
+  }
 })
 
 onUnmounted(() => {
@@ -632,6 +708,9 @@ onUnmounted(() => {
   if (newNotificationTimer.value) {
     clearTimeout(newNotificationTimer.value)
   }
+  
+  // Disconnect from notification WebSocket
+  disconnectFromNotificationWebSocket()
 })
 </script>
 

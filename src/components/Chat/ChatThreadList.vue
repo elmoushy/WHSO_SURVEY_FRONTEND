@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useChat } from '../../composables/useChat'
 import { formatRelativeTime } from '../../services/chatService'
 import type { Thread } from '../../types/chat.types'
 
 defineProps<{
   isCollapsed?: boolean
+  hideToggleButton?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -25,6 +26,18 @@ const {
 const searchQuery = ref('')
 const filterType = ref<'all' | 'direct' | 'group'>('all')
 const isLoading = ref(false)
+
+// Watch for thread changes to debug reactivity
+watch(threads, (newThreads) => {
+  console.log('🔔 ChatThreadList threads changed:', newThreads.length, 'threads')
+  const unreadCounts = newThreads.map(t => ({ id: t.id.substring(0, 8), unread: t.unread_count }))
+  console.log('🔔 Thread unread counts:', unreadCounts)
+}, { deep: true })
+
+// Watch totalUnreadCount
+watch(totalUnreadCount, (newVal, oldVal) => {
+  console.log('🔔 ChatThreadList totalUnreadCount changed:', { oldVal, newVal })
+}, { immediate: true })
 
 onMounted(async () => {
   isLoading.value = true
@@ -88,8 +101,9 @@ const handleToggleCollapse = () => {
 
 <template>
   <div :class="[$style.threadList, { [$style.collapsed]: isCollapsed }]">
-    <!-- Toggle Button -->
+    <!-- Toggle Button (hidden when parent controls it) -->
     <button 
+      v-if="!hideToggleButton"
       :class="$style.toggleBtn" 
       @click="handleToggleCollapse"
       :title="isCollapsed ? 'فتح قائمة المحادثات' : 'إغلاق قائمة المحادثات'"
