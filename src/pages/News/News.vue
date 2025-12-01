@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useAppStore } from '../../stores/useAppStore'
 import NewsSlider from '../../components/news/NewsSlider.vue'
 import NormalNewsList from '../../components/news/NormalNewsList.vue'
 import AchievementNewsList from '../../components/news/AchievementNewsList.vue'
 import NewsDetailModal from '../../components/news/NewsDetailModal.vue'
 import type { Newsletter } from '../../types/news.types'
 
-// Page title
-const pageTitle = ref('News & Updates')
+// Store
+const store = useAppStore()
+const { currentTheme, currentLanguage } = storeToRefs(store)
+
+// RTL support
+const isRTL = computed(() => currentLanguage.value === 'ar')
 
 // Detail modal state
 const showDetailModal = ref(false)
@@ -27,12 +33,11 @@ const closeDetailModal = () => {
 </script>
 
 <template>
-  <div :class="$style.page">
+  <div :class="$style.page" :data-theme="currentTheme" :dir="isRTL ? 'rtl' : 'ltr'">
     <div :class="$style.container">
       <!-- Page Header -->
       <header :class="$style.pageHeader">
-        <h1 :class="$style.pageTitle">{{ pageTitle }}</h1>
-        <p :class="$style.pageSubtitle">Stay updated with the latest news and announcements</p>
+        <h1 :class="$style.pageTitle">{{ isRTL ? 'الاخبار والإنجازات' : 'News & Achievements' }}</h1>
       </header>
 
       <!-- Slider Section -->
@@ -65,6 +70,12 @@ const closeDetailModal = () => {
   min-height: 100vh;
   background: linear-gradient(to bottom, #f9fafb, #ffffff);
   padding: 32px 20px;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* Dark Mode */
+.page[data-theme="night"] {
+  background: linear-gradient(to bottom, #1a1a1a, #0f0f0f);
 }
 
 .container {
@@ -74,18 +85,24 @@ const closeDetailModal = () => {
 
 /* ==================== PAGE HEADER ==================== */
 .pageHeader {
-  margin-bottom: 48px;
-  text-align: center;
+  margin-bottom: 24px;
+  text-align: right;
+}
+
+.page[dir="ltr"] .pageHeader {
+  text-align: left;
 }
 
 .pageTitle {
-  font-size: 48px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: 40px;
+  font-weight: 600;
+  color: #121011;
   margin: 0 0 12px 0;
+  transition: color 0.3s ease;
+}
+
+.page[data-theme="night"] .pageTitle {
+  color: #f5f5f5;
 }
 
 .pageSubtitle {
@@ -94,27 +111,69 @@ const closeDetailModal = () => {
   margin: 0;
 }
 
+.page[data-theme="night"] .pageSubtitle {
+  color: #9ca3af;
+}
+
 /* ==================== SECTIONS ==================== */
 .sliderSection {
   margin-bottom: 64px;
 }
 
+.newsSection {
+  margin-bottom: 64px;
+}
+
+.achievementsSection {
+  margin-bottom: 64px;
+}
+
 /* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+  .pageTitle {
+    font-size: 36px;
+  }
+
+  .sliderSection,
+  .newsSection,
+  .achievementsSection {
+    margin-bottom: 48px;
+  }
+}
+
 @media (max-width: 768px) {
   .page {
     padding: 24px 16px;
   }
 
   .pageTitle {
-    font-size: 36px;
+    font-size: 28px;
   }
 
   .pageSubtitle {
     font-size: 16px;
   }
 
-  .sliderSection {
-    margin-bottom: 48px;
+  .sliderSection,
+  .newsSection,
+  .achievementsSection {
+    margin-bottom: 40px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 12px;
+  }
+
+  .pageTitle {
+    font-size: 24px;
+  }
+
+  .sliderSection,
+  .newsSection,
+  .achievementsSection {
+    margin-bottom: 32px;
   }
 }
 </style>

@@ -138,6 +138,12 @@ const routes: RouteRecordRaw[] = [
     component: News,
     meta: { title: "News - WPC | WeaponpowerCloud App", requiresAuth: true },
   },
+  {
+    path: "/news/:id",
+    name: "news-details",
+    component: () => import("../pages/News/NewsDetails.vue"),
+    meta: { title: "News Details - WPC | WeaponpowerCloud App", requiresAuth: true },
+  },
 
   // WebSocket Test (Development only)
   {
