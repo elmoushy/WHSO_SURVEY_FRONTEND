@@ -37,21 +37,23 @@ type NavItem = {
 type NavGroup = { id: string; items: NavItem[] }
 
 // Import useChat for real-time unread count
-import { useChat } from '../../composables/useChat'
+// DISABLED: Chat feature not supported in this version
+// import { useChat } from '../../composables/useChat'
 
 // Get unread count from chat composable
-const { totalUnreadCount } = useChat()
+// const { totalUnreadCount } = useChat()
 
 // Watch for changes in totalUnreadCount for debugging
-watch(totalUnreadCount, (newVal, oldVal) => {
-  console.log('🔔 Sidebar totalUnreadCount changed:', { oldVal, newVal })
-}, { immediate: true })
+// watch(totalUnreadCount, (newVal, oldVal) => {
+//   console.log('🔔 Sidebar totalUnreadCount changed:', { oldVal, newVal })
+// }, { immediate: true })
 
 const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
     { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
     { name: 'news', path: '/news', icon: 'fas fa-newspaper', label: 'الأخبار' },
-    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
+    // DISABLED: Chat feature not supported in this version
+    // { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
     { name: 'manage-news', path: '/control/news', icon: 'fas fa-newspaper', label: 'إدارة الأخبار', requiresRole: 'admin' },
     { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'إدارة المستخدمين', requiresRole: 'admin' },

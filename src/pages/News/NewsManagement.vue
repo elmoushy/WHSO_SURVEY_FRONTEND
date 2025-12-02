@@ -6,8 +6,6 @@ import NormalNewsList from '../../components/news/NormalNewsList.vue'
 import AchievementNewsList from '../../components/news/AchievementNewsList.vue'
 import CreateNewsModal from '../../components/news/CreateNewsModal.vue'
 import EditNewsModal from '../../components/news/EditNewsModal.vue'
-import CreateAchievementModal from '../../components/news/CreateAchievementModal.vue'
-import EditAchievementModal from '../../components/news/EditAchievementModal.vue'
 import PositionManager from '../../components/news/PositionManager.vue'
 import { deleteSliderNews, deleteNormalNews, deleteAchievementNews } from '../../services/newsService'
 import type { Newsletter, NewsType } from '../../types/news.types'
@@ -21,10 +19,6 @@ const createModalType = ref<NewsType>('NORMAL')
 
 const showEditModal = ref(false)
 const editingItem = ref<Newsletter | null>(null)
-
-const showCreateAchievementModal = ref(false)
-const showEditAchievementModal = ref(false)
-const editingAchievement = ref<Newsletter | null>(null)
 
 // Position Manager state
 const showPositionManager = ref(false)
@@ -52,21 +46,25 @@ const handleEditSuccess = () => {
   showEditModal.value = false
   editingItem.value = null
   
-  // Refresh both components since we don't know which was edited
+  // Refresh the appropriate component based on news type
+  if (editingItem.value?.news_type === 'SLIDER') {
+    sliderKey.value++
+  } else if (editingItem.value?.news_type === 'ACHIEVEMENT') {
+    achievementsKey.value++
+  } else {
+    newsKey.value++
+  }
+  
+  // Refresh all to be safe
   sliderKey.value++
   newsKey.value++
+  achievementsKey.value++
 }
 
 const handleAchievementEdit = (item: Newsletter) => {
   console.log('Edit achievement:', item)
-  editingAchievement.value = item
-  showEditAchievementModal.value = true
-}
-
-const handleAchievementEditSuccess = () => {
-  showEditAchievementModal.value = false
-  editingAchievement.value = null
-  achievementsKey.value++
+  editingItem.value = item
+  showEditModal.value = true
 }
 
 // Delete handlers
@@ -140,18 +138,11 @@ const handleCreateSuccess = () => {
   // Refresh the appropriate component
   if (createModalType.value === 'SLIDER') {
     sliderKey.value++
+  } else if (createModalType.value === 'ACHIEVEMENT') {
+    achievementsKey.value++
   } else {
     newsKey.value++
   }
-}
-
-const openCreateAchievementModal = () => {
-  showCreateAchievementModal.value = true
-}
-
-const handleCreateAchievementSuccess = () => {
-  showCreateAchievementModal.value = false
-  achievementsKey.value++
 }
 
 // Position Manager handlers
@@ -243,7 +234,7 @@ const handlePositionManagerSuccess = () => {
             <span>📊</span>
             <span>Manage Positions</span>
           </button>
-          <button :class="$style.addButton" @click="openCreateAchievementModal">
+          <button :class="$style.addButton" @click="openCreateModal('ACHIEVEMENT')">
             <span :class="$style.addIcon">+</span>
             Add Achievement
           </button>
@@ -274,21 +265,6 @@ const handlePositionManagerSuccess = () => {
       @success="handleEditSuccess"
     />
 
-    <!-- Create Achievement Modal -->
-    <CreateAchievementModal 
-      :show="showCreateAchievementModal"
-      @close="showCreateAchievementModal = false"
-      @success="handleCreateAchievementSuccess"
-    />
-
-    <!-- Edit Achievement Modal -->
-    <EditAchievementModal 
-      :show="showEditAchievementModal"
-      :achievement-item="editingAchievement"
-      @close="showEditAchievementModal = false"
-      @success="handleAchievementEditSuccess"
-    />
-
     <!-- Position Manager Modal -->
     <PositionManager 
       :show="showPositionManager"
@@ -315,7 +291,7 @@ const handlePositionManagerSuccess = () => {
       </button>
       <button 
         :class="[$style.fab, $style.fabTertiary]" 
-        @click="openCreateAchievementModal"
+        @click="openCreateModal('ACHIEVEMENT')"
         title="Add Achievement"
       >
         <span :class="$style.fabIcon">🏆</span>

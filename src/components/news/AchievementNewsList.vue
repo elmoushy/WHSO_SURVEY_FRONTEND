@@ -110,7 +110,7 @@ const MOCK_ACHIEVEMENTS_DATA: Newsletter[] = [
     main_image: null
   }
 ]
-const USE_MOCK_DATA = true // ← Set to false when server is ready
+const USE_MOCK_DATA = false // Backend is ready
 // ============ END MOCK DATA ============
 
 // State
@@ -193,8 +193,8 @@ const handleCardClick = (item: Newsletter) => {
   if (props.editable) {
     emit('edit', item)
   } else {
-    // Navigate to news details page
-    router.push({ name: 'news-details', params: { id: item.id } })
+    // Navigate to news details page with news_type
+    router.push({ name: 'news-details', params: { id: item.id }, query: { type: item.news_type } })
   }
 }
 
@@ -223,11 +223,57 @@ defineExpose({
 onMounted(() => {
   loadNews(1)
 })
+// Truncate HTML content while preserving tags
+const truncateHtml = (html: string | undefined, maxLength: number = 120): string => {
+  if (!html) return ''
+  
+  // Create a temporary element to parse HTML
+  const temp = document.createElement('div')
+  temp.innerHTML = html
+  
+  // Get plain text to check length
+  const plainText = temp.textContent || temp.innerText || ''
+  if (plainText.length <= maxLength) return html
+  
+  // Truncate the text content while preserving structure
+  let charCount = 0
+  let truncated = false
+  
+  const truncateNode = (node: Node): void => {
+    if (truncated) return
+    
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || ''
+      const remaining = maxLength - charCount
+      
+      if (text.length > remaining) {
+        node.textContent = text.substring(0, remaining).trim() + '...'
+        charCount = maxLength
+        truncated = true
+      } else {
+        charCount += text.length
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const children = Array.from(node.childNodes)
+      for (const child of children) {
+        if (truncated) {
+          node.removeChild(child)
+        } else {
+          truncateNode(child)
+        }
+      }
+    }
+  }
+  
+  truncateNode(temp)
+  return temp.innerHTML
+}
+
 // Format date
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
   if (isRTL.value) {
-    return date.toLocaleDateString('ar-SA', {
+    return date.toLocaleDateString('ar-EG', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
@@ -309,23 +355,33 @@ const formatDate = (dateStr: string) => {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
               </svg>
-              <span>{{ isRTL ? 'تقنية' : 'Technology' }}</span>
+              <span>{{ isRTL ? 'إنجاز' : 'Achievement' }}</span>
             </div>
 
-            <!-- Edit Badge -->
-            <div v-if="editable" :class="$style.editBadge">
-              ✏️
-            </div>
+            <!-- Admin Controls -->
+            <div v-if="editable" :class="$style.adminControls" :style="{ left: '12px', right: 'auto' }">
+              <!-- Edit Badge -->
+              <div :class="$style.editBadge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                </svg>
+              </div>
 
-            <!-- Delete Button -->
-            <button 
-              v-if="editable" 
-              :class="$style.deleteButton"
-              @click="handleDelete(news, $event)"
-              :title="isRTL ? 'حذف' : 'Delete this news'"
-            >
-              <span>🗑️</span>
-            </button>
+              <!-- Delete Button -->
+              <button 
+                :class="$style.deleteButton"
+                @click="handleDelete(news, $event)"
+                :title="isRTL ? 'حذف' : 'Delete this achievement'"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="3 6 5 6 21 6"/>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                  <line x1="10" y1="11" x2="10" y2="17"/>
+                  <line x1="14" y1="11" x2="14" y2="17"/>
+                </svg>
+              </button>
+            </div>
           </div>
 
           <!-- Content -->
@@ -334,7 +390,7 @@ const formatDate = (dateStr: string) => {
             <h3 :class="$style.title">{{ news.title }}</h3>
             
             <!-- Description -->
-            <p :class="$style.details">{{ news.details }}</p>
+            <div :class="$style.details" v-html="truncateHtml(news.details, 120)"></div>
             
             <!-- Meta Info -->
             <div :class="$style.meta">
@@ -391,94 +447,6 @@ const formatDate = (dateStr: string) => {
 <style module>
 .container {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 40px 0;
-}
-
-/* ==================== HEADER ==================== */
-.header {
-  margin-bottom: 32px;
-}
-
-.sectionTitle {
-  font-size: 32px;
-  font-weight: 700;
-  color: #1f2937;
-  margin: 0 0 16px 0;
-}
-
-.divider {
-  width: 80px;
-  height: 4px;
-  background: linear-gradient(90deg, #fbbf24, #f59e0b);
-  border-radius: 2px;
-}
-
-/* ==================== GRID ==================== */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
-}
-
-/* ==================== SKELETON ==================== */
-.skeleton {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.skeletonImage {
-  width: 100%;
-  height: 220px;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-.skeletonContent {
-  padding: 20px;
-}
-
-.skeletonTitle {
-  width: 80%;
-  height: 24px;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-  margin-bottom: 12px;
-}
-
-.skeletonText {
-  width: 100%;
-  height: 14px;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-  margin-bottom: 8px;
-}
-
-.skeletonText:last-of-type {
-  width: 90%;
-}
-
-.skeletonMeta {
-  width: 50%;
-  height: 12px;
-  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 4px;
-  margin-top: 16px;
-}
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
 }
 
 /* ==================== HEADER ==================== */
@@ -649,48 +617,80 @@ const formatDate = (dateStr: string) => {
   font-size: 64px;
 }
 
-/* Edit Badge */
-.editBadge {
+/* Admin Controls */
+.adminControls {
   position: absolute;
   top: 12px;
-  right: 12px;
-  background: rgba(251, 191, 36, 0.95);
-  color: #1f2937;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+  left: 12px !important;
+  right: auto !important;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10;
+}
+
+/* Edit Badge */
+.editBadge {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  color: #A17D23;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(161, 125, 35, 0.2);
+  transition: all 0.3s ease;
+}
+
+.editBadge svg {
+  color: #A17D23;
+}
+
+.card.editable:hover .editBadge {
+  background: #A17D23;
+  color: white;
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(161, 125, 35, 0.3);
+}
+
+.card.editable:hover .editBadge svg {
+  color: white;
 }
 
 /* Delete Button */
 .deleteButton {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(220, 38, 38, 0.95);
-  color: white;
-  border: none;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
-  z-index: 5;
+}
+
+.deleteButton svg {
+  color: #dc2626;
 }
 
 .deleteButton:hover {
   background: #dc2626;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+  color: white;
+  border-color: #dc2626;
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+}
+
+.deleteButton:hover svg {
+  color: white;
 }
 
 .deleteButton:active {
@@ -751,6 +751,27 @@ const formatDate = (dateStr: string) => {
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.details :global(p) {
+  margin: 0;
+}
+
+.details :global(h2),
+.details :global(h3) {
+  margin: 0;
+  font-size: inherit;
+}
+
+.details :global(ul),
+.details :global(ol) {
+  margin: 0;
+  padding-right: 1.2em;
+}
+
+.details :global(a) {
+  color: #A17D23;
+  text-decoration: underline;
 }
 
 .meta {
@@ -971,13 +992,43 @@ const formatDate = (dateStr: string) => {
   direction: rtl;
 }
 
-.container[dir="rtl"] .editBadge {
-  right: auto;
-  left: 12px;
+/* Dark mode admin controls */
+.container[data-theme="night"] .adminControls .editBadge {
+  background: rgba(30, 30, 30, 0.95);
+  color: #c9a84c;
+  border-color: rgba(201, 168, 76, 0.3);
 }
 
-.container[dir="rtl"] .deleteButton {
-  left: auto;
-  right: 12px;
+.container[data-theme="night"] .adminControls .editBadge svg {
+  color: #c9a84c;
+}
+
+.container[data-theme="night"] .card.editable:hover .editBadge {
+  background: #c9a84c;
+  color: #1e1e1e;
+}
+
+.container[data-theme="night"] .card.editable:hover .editBadge svg {
+  color: #1e1e1e;
+}
+
+.container[data-theme="night"] .adminControls .deleteButton {
+  background: rgba(30, 30, 30, 0.95);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.container[data-theme="night"] .adminControls .deleteButton svg {
+  color: #ef4444;
+}
+
+.container[data-theme="night"] .adminControls .deleteButton:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}
+
+.container[data-theme="night"] .adminControls .deleteButton:hover svg {
+  color: white;
 }
 </style>

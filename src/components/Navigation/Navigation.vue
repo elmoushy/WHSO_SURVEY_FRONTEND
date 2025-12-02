@@ -582,8 +582,8 @@ const handleWsDisconnected = () => {
 /**
  * Handle WebSocket error
  */
-const handleWsError = (data: { event?: Event }) => {
-  wsConnectionError.value = 'Connection error'
+const handleWsError = (data: any) => {
+  wsConnectionError.value = data?.message || 'Connection error'
   wsConnecting.value = false
   console.error('❌ Notification WebSocket error:', data)
 }

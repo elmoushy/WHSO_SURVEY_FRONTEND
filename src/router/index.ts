@@ -51,11 +51,11 @@ const SurveyEditorPage = () => import("../pages/Control/SurveyEditorPage.vue");
 const Notifications = () => import("../pages/Notifications");
 
 // Chat
-const InternalChat = () => import("../pages/Chat/InternalChat.vue");
+// DISABLED: Chat feature not supported in this version
+// const InternalChat = () => import("../pages/Chat/InternalChat.vue");
 
 // News
 const News = () => import("../pages/News/News.vue");
-const NewsManagement = () => import("../pages/News/NewsManagement.vue");
 
 /* =========================
    Routes
@@ -124,11 +124,17 @@ const routes: RouteRecordRaw[] = [
   },
 
   // Internal Chat
+  // DISABLED: Chat feature not supported in this version
+  // {
+  //   path: "/chat",
+  //   name: "Chat",
+  //   component: InternalChat,
+  //   meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
+  // },
+  // Redirect /chat to surveys since chat is disabled
   {
     path: "/chat",
-    name: "Chat",
-    component: InternalChat,
-    meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
+    redirect: "/surveys",
   },
 
   // News (All authenticated users)
@@ -207,7 +213,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/control/news",
     name: "NewsManagement",
-    component: NewsManagement,
+    component: News,
     meta: {
       title: "News Management - WPC | WeaponpowerCloud App",
       requiresAuth: true,

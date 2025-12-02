@@ -692,6 +692,8 @@ class NotificationWebSocketService {
         this.notificationReconnectTimer = setTimeout(() => {
           this.connectToNotifications().catch(error => {
             logger.error('Notification WebSocket retry failed:', error)
+            // Trigger error event so UI can update state
+            this.trigger('notification.error', { message: error.message || 'Connection failed' })
           })
         }, this.TOKEN_RETRY_DELAY)
         
@@ -869,6 +871,8 @@ class NotificationWebSocketService {
           console.log('🔄 [WebSocket] Attempting to reconnect after token refresh...')
           this.connectToNotifications().catch((error) => {
             logger.error('Notification reconnection after token refresh failed:', error)
+            // Trigger error event so UI can update state
+            this.trigger('notification.error', { message: error.message || 'Reconnection failed' })
           })
         }, this.TOKEN_RETRY_DELAY)
         

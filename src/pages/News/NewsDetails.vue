@@ -3,8 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { useAppStore } from '../../stores/useAppStore'
-import type { Newsletter } from '../../types/news.types'
-import img1 from '../../../public/Test1.jpg'
+import type { Newsletter, NewsType } from '../../types/news.types'
+import { fetchSliderNewsDetail, fetchNormalNewsDetail } from '../../services/newsService'
+import AuthenticatedImage from '../../components/AuthenticatedImage.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,35 +21,6 @@ const error = ref<string | null>(null)
 // Gallery state
 const selectedImageIndex = ref(0)
 const showLightbox = ref(false)
-
-// Mock data for testing
-const USE_MOCK_DATA = true
-const MOCK_NEWS: Newsletter = {
-  id: 1,
-  title: 'إطلاق مبادرة التحول الرقمي الشامل',
-  details: `أعلنت الشركة اليوم عن إطلاق مبادرة شاملة للتحول الرقمي تهدف إلى إعادة هيكلة جميع العمليات الداخلية وتحسين الخدمات المقدمة. تتضمن المبادرة استثماراً كبيراً في التقنيات الحديثة وتدريب الموظفين على أحدث الأدوات الرقمية.
-
-وتشمل المبادرة عدة محاور رئيسية منها:
-
-- رقمنة جميع العمليات الإدارية
-- تطوير منصات إلكترونية متقدمة
-- تحسين أمن المعلومات
-- تدريب الكوادر البشرية
-
-وقد صرح المدير التنفيذي بأن هذه المبادرة ستضع الشركة في مقدمة الشركات الرائدة في المجال وستساهم في تحقيق رؤية 2030.`,
-  author: 1,
-  author_name: 'محمد أحمد',
-  news_type: 'SLIDER',
-  position: 1,
-  created_at: '2025-11-25T10:00:00Z',
-  updated_at: '2025-11-25T10:00:00Z',
-  images: [
-    { id: 1, original_filename: 'img1.jpg', file_size: 1024, mime_type: 'image/jpeg', is_main: true, display_order: 1, uploaded_at: '2025-11-25T10:00:00Z', download_url: img1, thumbnail_url: img1 },
-    { id: 2, original_filename: 'img2.jpg', file_size: 1024, mime_type: 'image/jpeg', is_main: false, display_order: 2, uploaded_at: '2025-11-25T10:00:00Z', download_url: img1, thumbnail_url: img1 },
-    { id: 3, original_filename: 'img3.jpg', file_size: 1024, mime_type: 'image/jpeg', is_main: false, display_order: 3, uploaded_at: '2025-11-25T10:00:00Z', download_url: img1, thumbnail_url: img1 }
-  ],
-  main_image: { id: 1, original_filename: 'main.jpg', file_size: 1024, mime_type: 'image/jpeg', is_main: true, display_order: 1, uploaded_at: '2025-11-25T10:00:00Z', download_url: img1, thumbnail_url: img1 }
-}
 
 // Computed
 const newsId = computed(() => Number(route.params.id))
@@ -112,26 +84,34 @@ const prevImage = () => {
   selectedImageIndex.value = (selectedImageIndex.value - 1 + allImages.value.length) % allImages.value.length
 }
 
+// Get news type from query params (defaults to SLIDER)
+const newsType = computed(() => (route.query.type as NewsType) || 'SLIDER')
+
 // Load news
 const loadNews = async () => {
   try {
     isLoading.value = true
     error.value = null
 
-    if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500))
-      newsItem.value = MOCK_NEWS
-      return
+    let response: any
+    
+    // Fetch based on news type
+    if (newsType.value === 'SLIDER') {
+      response = await fetchSliderNewsDetail(newsId.value)
+    } else {
+      // NORMAL and ACHIEVEMENT use the normal news endpoint
+      response = await fetchNormalNewsDetail(newsId.value)
     }
 
-    // TODO: Implement fetchNewsById when server is ready
-    // const response = await fetchNewsById(newsId.value)
-    // if (response.status === 'success') {
-    //   newsItem.value = response.data
-    // } else {
-    //   error.value = isRTL.value ? 'فشل في تحميل الخبر' : 'Failed to load news'
-    // }
-    error.value = isRTL.value ? 'فشل في تحميل الخبر' : 'Failed to load news'
+    // Handle both wrapped response { status, data } and direct response formats
+    if (response.status === 'success' && response.data) {
+      newsItem.value = response.data
+    } else if (response.id) {
+      // Backend returns data directly without wrapper
+      newsItem.value = response as Newsletter
+    } else {
+      error.value = isRTL.value ? 'فشل في تحميل الخبر' : 'Failed to load news'
+    }
   } catch (err) {
     console.error('Error loading news:', err)
     error.value = isRTL.value ? 'حدث خطأ أثناء تحميل الخبر' : 'Error loading news'
@@ -184,9 +164,9 @@ onMounted(() => {
         <div :class="$style.articleContent">
         <!-- Main Image -->
         <div :class="$style.mainImageWrapper">
-          <img
+          <AuthenticatedImage
             v-if="newsItem.main_image"
-            :src="USE_MOCK_DATA ? newsItem.main_image.download_url : newsItem.main_image.download_url"
+            :src="newsItem.main_image.download_url"
             :alt="newsItem.title"
             :class="$style.mainImage"
           />
@@ -204,16 +184,6 @@ onMounted(() => {
 
         <!-- Meta Info -->
         <div :class="$style.meta">
-          <div :class="$style.metaItem">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-              <polyline points="22,6 12,13 2,6"/>
-            </svg>
-            <div :class="$style.metaText">
-              <span :class="$style.metaLabel">{{ isRTL ? 'البريد الإلكتروني' : 'Email' }}</span>
-              <span :class="$style.metaValue">mohamed@company.com</span>
-            </div>
-          </div>
 
           <div :class="$style.metaItem">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -245,18 +215,7 @@ onMounted(() => {
         <div :class="$style.articleContent">
 
         <!-- Content -->
-        <div :class="$style.content">
-          <template v-for="(paragraph, index) in newsItem.details.split('\n\n')" :key="index">
-            <p v-if="!paragraph.startsWith('-')" :class="$style.paragraph">
-              {{ paragraph }}
-            </p>
-            <ul v-else :class="$style.bulletList">
-              <li v-for="(line, lineIndex) in paragraph.split('\n').filter(l => l.startsWith('-'))" :key="lineIndex">
-                {{ line.replace('- ', '') }}
-              </li>
-            </ul>
-          </template>
-        </div>
+        <div :class="$style.content" v-html="newsItem.details"></div>
 
         <!-- Image Gallery -->
         <section v-if="allImages.length > 0" :class="$style.gallery">
@@ -272,8 +231,8 @@ onMounted(() => {
               :class="[$style.galleryItem, { [$style.galleryItemLarge]: index === 0 }]"
               @click="openLightbox(index)"
             >
-              <img
-                :src="USE_MOCK_DATA ? image.download_url : image.download_url"
+              <AuthenticatedImage
+                :src="image.download_url"
                 :alt="`Image ${index + 1}`"
                 :class="$style.galleryImage"
               />
@@ -309,9 +268,9 @@ onMounted(() => {
             </svg>
           </button>
 
-          <img
+          <AuthenticatedImage
             v-if="currentLightboxImage"
-            :src="USE_MOCK_DATA ? currentLightboxImage.download_url : currentLightboxImage.download_url"
+            :src="currentLightboxImage.download_url"
             :alt="`Image ${selectedImageIndex + 1}`"
             :class="$style.lightboxImage"
           />
@@ -548,6 +507,58 @@ onMounted(() => {
 .content {
   padding: 40px;
   text-align: right;
+  font-size: 16px;
+  line-height: 2;
+  color: #374151;
+}
+
+.content :global(p) {
+  margin: 0 0 16px;
+}
+
+.content :global(p:last-child) {
+  margin-bottom: 0;
+}
+
+.content :global(h2) {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 24px 0 16px;
+  color: #1f2937;
+}
+
+.content :global(h3) {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 20px 0 12px;
+  color: #1f2937;
+}
+
+.content :global(ul),
+.content :global(ol) {
+  margin: 0 0 16px;
+  padding-right: 1.5em;
+}
+
+.content :global(li) {
+  margin: 4px 0;
+}
+
+.content :global(blockquote) {
+  border-right: 4px solid #A17D23;
+  padding-right: 16px;
+  margin: 16px 0;
+  font-style: italic;
+  color: #4b5563;
+}
+
+.content :global(a) {
+  color: #A17D23;
+  text-decoration: underline;
+}
+
+.content :global(a:hover) {
+  color: #C4A048;
 }
 
 .paragraph {
@@ -795,6 +806,19 @@ onMounted(() => {
   color: #e5e7eb;
 }
 
+.page[data-theme="night"] .content {
+  color: #d1d5db;
+}
+
+.page[data-theme="night"] .content :global(h2),
+.page[data-theme="night"] .content :global(h3) {
+  color: #f5f5f5;
+}
+
+.page[data-theme="night"] .content :global(blockquote) {
+  color: #9ca3af;
+}
+
 .page[data-theme="night"] .paragraph,
 .page[data-theme="night"] .bulletList li {
   color: #d1d5db;
@@ -811,6 +835,19 @@ onMounted(() => {
 /* ==================== RTL ==================== */
 .page[dir="ltr"] .content {
   text-align: left;
+}
+
+.page[dir="ltr"] .content :global(ul),
+.page[dir="ltr"] .content :global(ol) {
+  padding-right: 0;
+  padding-left: 1.5em;
+}
+
+.page[dir="ltr"] .content :global(blockquote) {
+  border-right: none;
+  border-left: 4px solid #A17D23;
+  padding-right: 0;
+  padding-left: 16px;
 }
 
 /* ==================== RESPONSIVE ==================== */

@@ -6,7 +6,6 @@ import { useAppStore } from '../../stores/useAppStore'
 import { fetchSliderNews } from '../../services/newsService'
 import { useAuthenticatedImage } from '../../composables/useAuthenticatedImage'
 import type { Newsletter } from '../../types/news.types'
-import img1 from '../../../public/Test1.jpg'
 
 const router = useRouter()
 
@@ -31,51 +30,6 @@ const store = useAppStore()
 const { currentTheme, currentLanguage } = storeToRefs(store)
 const isRTL = computed(() => currentLanguage.value === 'ar')
 
-// ============ MOCK DATA - DELETE WHEN SERVER IS READY ============
-const MOCK_SLIDER_DATA: Newsletter[] = [
-  {
-    id: 1,
-    title: 'إطلاق منصة الاستبيانات الجديدة',
-    details: 'تم إطلاق منصة الاستبيانات الجديدة التي تتيح للمستخدمين إنشاء وإدارة الاستبيانات بسهولة تامة مع دعم كامل للغة العربية والإنجليزية.',
-    author: 1,
-    author_name: 'أحمد محمد',
-    news_type: 'SLIDER',
-    position: 1,
-    created_at: '2025-11-28T10:00:00Z',
-    updated_at: '2025-11-28T10:00:00Z',
-    images: [],
-    main_image: { id: 1, original_filename: 'Test1.jpg', file_size: 1024, mime_type: 'image/jpeg', is_main: true, display_order: 1, uploaded_at: '2025-11-28T10:00:00Z', download_url: img1, thumbnail_url: img1 }
-  },
-  {
-    id: 2,
-    title: 'تحديث جديد لنظام التقارير',
-    details: 'أصبح بإمكانك الآن تصدير التقارير بصيغة PDF مع دعم كامل للغة العربية والخطوط المخصصة.',
-    author: 2,
-    author_name: 'سارة أحمد',
-    news_type: 'SLIDER',
-    position: 2,
-    created_at: '2025-11-25T14:30:00Z',
-    updated_at: '2025-11-25T14:30:00Z',
-    images: [],
-    main_image: { id: 2, original_filename: 'Test1.jpg', file_size: 1024, mime_type: 'image/jpeg', is_main: true, display_order: 1, uploaded_at: '2025-11-25T14:30:00Z', download_url: img1, thumbnail_url: img1 }
-  },
-  {
-    id: 3,
-    title: 'ميزة المشاركة العامة للاستبيانات',
-    details: 'يمكنك الآن مشاركة استبياناتك مع الجمهور عبر روابط مخصصة مع إمكانية تتبع الردود.',
-    author: 3,
-    author_name: 'محمد علي',
-    news_type: 'SLIDER',
-    position: 3,
-    created_at: '2025-11-20T09:15:00Z',
-    updated_at: '2025-11-20T09:15:00Z',
-    images: [],
-    main_image: { id: 3, original_filename: 'Test1.jpg', file_size: 1024, mime_type: 'image/jpeg', is_main: true, display_order: 1, uploaded_at: '2025-11-20T09:15:00Z', download_url: img1, thumbnail_url: img1 }
-  }
-]
-const USE_MOCK_DATA = true // ← Set to false when server is ready
-// ============ END MOCK DATA ============
-
 // State
 const slides = ref<Newsletter[]>([])
 const currentIndex = ref(0)
@@ -97,16 +51,6 @@ const loadSlides = async (page: number = 1) => {
   try {
     isLoading.value = true
     error.value = null
-
-    // ============ USE MOCK DATA ============
-    if (USE_MOCK_DATA) {
-      await new Promise(resolve => setTimeout(resolve, 500)) // Simulate loading
-      slides.value = MOCK_SLIDER_DATA
-      totalPages.value = 1
-      currentPage.value = 1
-      return
-    }
-    // ============ END MOCK DATA ============
 
     const response = await fetchSliderNews({
       page,
@@ -207,14 +151,14 @@ const handleEdit = (item: Newsletter) => {
   if (props.editable) {
     emit('edit', item)
   } else {
-    // Navigate to news details page
-    router.push({ name: 'news-details', params: { id: item.id } })
+    // Navigate to news details page with news_type
+    router.push({ name: 'news-details', params: { id: item.id }, query: { type: item.news_type } })
   }
 }
 
 // Handle "Read More" button click - always navigate to details
 const handleReadMore = (item: Newsletter) => {
-  router.push({ name: 'news-details', params: { id: item.id } })
+  router.push({ name: 'news-details', params: { id: item.id }, query: { type: item.news_type } })
 }
 
 // Handle delete click
@@ -231,34 +175,70 @@ const currentImageUrl = computed(() => {
   return slide?.main_image?.download_url || null
 })
 
-// For mock data, use the image directly; for real data, use authenticated image
-const { blobUrl: authenticatedImageUrl, isLoading: authImageLoading } = useAuthenticatedImage(
-  computed(() => USE_MOCK_DATA ? null : currentImageUrl.value)
-)
+// Use authenticated image composable for backend images
+const { blobUrl: currentImageBlobUrl, isLoading: imageLoading } = useAuthenticatedImage(currentImageUrl)
 
-// Use mock image directly or authenticated URL
-const currentImageBlobUrl = computed(() => {
-  if (USE_MOCK_DATA) {
-    return currentImageUrl.value
+// Truncate HTML content while preserving tags
+const truncateHtml = (html: string | undefined, maxLength: number = 120): string => {
+  if (!html) return ''
+  
+  // Create a temporary element to parse HTML
+  const temp = document.createElement('div')
+  temp.innerHTML = html
+  
+  // Get plain text to check length
+  const plainText = temp.textContent || temp.innerText || ''
+  if (plainText.length <= maxLength) return html
+  
+  // Truncate the text content while preserving structure
+  let charCount = 0
+  let truncated = false
+  
+  const truncateNode = (node: Node): void => {
+    if (truncated) return
+    
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent || ''
+      const remaining = maxLength - charCount
+      
+      if (text.length > remaining) {
+        node.textContent = text.substring(0, remaining).trim() + '...'
+        charCount = maxLength
+        truncated = true
+      } else {
+        charCount += text.length
+      }
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const children = Array.from(node.childNodes)
+      for (const child of children) {
+        if (truncated) {
+          node.removeChild(child)
+        } else {
+          truncateNode(child)
+        }
+      }
+    }
   }
-  return authenticatedImageUrl.value
-})
+  
+  truncateNode(temp)
+  return temp.innerHTML
+}
 
-const imageLoading = computed(() => {
-  if (USE_MOCK_DATA) {
-    return false
-  }
-  return authImageLoading.value
-})
-
-// Format date in Arabic format
+// Format date in Gregorian format
 const formatDate = (dateStr: string | undefined) => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
-  return date.toLocaleDateString('ar-SA', {
+  if (isRTL.value) {
+    return date.toLocaleDateString('ar-EG', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+  }
+  return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
+    month: 'short',
+    day: 'numeric'
   })
 }
 
@@ -347,7 +327,7 @@ defineExpose({
           ></div>
           <img
             v-if="currentImageBlobUrl"
-            :src="img1"
+            :src="currentImageBlobUrl"
             :alt="currentSlide?.title"
             :class="$style.image"
           />
@@ -359,15 +339,15 @@ defineExpose({
         <!-- Content Overlay -->
         <div :class="$style.content">
           <!-- Badge -->
-          <div :class="$style.badge">
+          <!-- <div :class="$style.badge">
             <span>{{ isRTL ? 'إنجاز' : 'Achievement' }}</span>
-          </div>
+          </div> -->
 
           <!-- Title -->
           <h2 :class="$style.title">{{ currentSlide?.title }}</h2>
           
           <!-- Details -->
-          <p :class="$style.details">{{ currentSlide?.details }}</p>
+          <div :class="$style.details" v-html="truncateHtml(currentSlide?.details, 120)"></div>
           
           <!-- Meta Info -->
           <div :class="$style.meta">
@@ -395,20 +375,31 @@ defineExpose({
           </button>
         </div>
 
-        <!-- Edit Indicator -->
-        <div v-if="editable" :class="$style.editBadge">
-          <span>✏️ {{ isRTL ? 'انقر للتعديل' : 'Click to Edit' }}</span>
-        </div>
+        <!-- Admin Controls Overlay -->
+        <div v-if="editable" :class="$style.adminControls" :style="{ left: '20px', right: 'auto' }">
+          <!-- Edit Indicator -->
+          <div :class="$style.editBadge">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <span>{{ isRTL ? 'انقر للتعديل' : 'Click to Edit' }}</span>
+          </div>
 
-        <!-- Delete Button -->
-        <button 
-          v-if="editable" 
-          :class="$style.deleteButton"
-          @click="handleDelete(currentSlide!, $event)"
-          :title="isRTL ? 'حذف' : 'Delete this slider'"
-        >
-          <span>🗑️</span>
-        </button>
+          <!-- Delete Button -->
+          <button 
+            :class="$style.deleteButton"
+            @click="handleDelete(currentSlide!, $event)"
+            :title="isRTL ? 'حذف' : 'Delete this slider'"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              <line x1="10" y1="11" x2="10" y2="17"/>
+              <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- Navigation Dots -->
@@ -586,6 +577,7 @@ defineExpose({
 
 /* Title */
 .title {
+  margin-top: 100px!important;
   font-size: 42px;
   font-weight: 700;
   margin: 0 0 16px 0;
@@ -601,6 +593,32 @@ defineExpose({
   margin: 0 0 24px 0;
   opacity: 0.9;
   color: white;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.details :global(p) {
+  margin: 0;
+}
+
+.details :global(h2),
+.details :global(h3) {
+  margin: 0;
+  font-size: inherit;
+}
+
+.details :global(ul),
+.details :global(ol) {
+  margin: 0;
+  padding-right: 1.2em;
+}
+
+.details :global(a) {
+  color: #C4A048;
+  text-decoration: underline;
 }
 
 /* Meta */
@@ -644,44 +662,80 @@ defineExpose({
   border-color: white;
 }
 
-/* ==================== EDIT & DELETE ==================== */
-.editBadge {
+/* ==================== ADMIN CONTROLS ==================== */
+.adminControls {
   position: absolute;
   top: 20px;
-  left: 20px;
-  background: rgba(251, 191, 36, 0.95);
-  color: #1f2937;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  left: 20px !important;
+  right: auto !important;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   z-index: 10;
 }
 
-.deleteButton {
-  position: absolute;
-  top: 20px;
-  left: 140px;
-  background: rgba(220, 38, 38, 0.95);
+.editBadge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: #A17D23;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(161, 125, 35, 0.2);
+  transition: all 0.3s ease;
+}
+
+.editBadge svg {
+  color: #A17D23;
+  flex-shrink: 0;
+}
+
+.slide.editable:hover .editBadge {
+  background: #A17D23;
   color: white;
-  border: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  font-size: 18px;
-  cursor: pointer;
+  transform: scale(1.02);
+  box-shadow: 0 6px 24px rgba(161, 125, 35, 0.3);
+}
+
+.slide.editable:hover .editBadge svg {
+  color: white;
+}
+
+.deleteButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  color: #dc2626;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   transition: all 0.3s ease;
-  z-index: 10;
+}
+
+.deleteButton svg {
+  flex-shrink: 0;
 }
 
 .deleteButton:hover {
   background: #dc2626;
-  transform: scale(1.1);
+  color: white;
+  border-color: #dc2626;
+  transform: scale(1.08);
+  box-shadow: 0 6px 24px rgba(220, 38, 38, 0.35);
+}
+
+.deleteButton:active {
+  transform: scale(0.95);
 }
 
 /* ==================== DOTS ==================== */
@@ -782,6 +836,39 @@ defineExpose({
     padding: 12px 28px;
     font-size: 14px;
   }
+
+  .adminControls {
+    top: 16px;
+    left: 16px;
+    gap: 8px;
+  }
+
+  .sliderContainer[dir="rtl"] .adminControls {
+    left: auto;
+    right: 16px;
+  }
+
+  .editBadge {
+    padding: 8px 14px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .editBadge svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .deleteButton {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+  }
+
+  .deleteButton svg {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -812,6 +899,40 @@ defineExpose({
   .dotsContainer {
     bottom: 20px;
   }
+
+  .adminControls {
+    top: 12px;
+    left: 12px;
+    gap: 6px;
+  }
+
+  .sliderContainer[dir="rtl"] .adminControls {
+    left: auto;
+    right: 12px;
+  }
+
+  .editBadge {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    gap: 6px;
+  }
+
+  .editBadge svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .deleteButton {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+  }
+
+  .deleteButton svg {
+    width: 14px;
+    height: 14px;
+  }
 }
 
 /* ==================== DARK MODE ==================== */
@@ -841,6 +962,37 @@ defineExpose({
 
 .sliderContainer[data-theme="night"] .dot.active {
   background: #c9a84c;
+}
+
+.sliderContainer[data-theme="night"] .editBadge {
+  background: rgba(30, 30, 30, 0.95);
+  color: #c9a84c;
+  border-color: rgba(201, 168, 76, 0.3);
+}
+
+.sliderContainer[data-theme="night"] .editBadge svg {
+  color: #c9a84c;
+}
+
+.sliderContainer[data-theme="night"] .slide.editable:hover .editBadge {
+  background: #c9a84c;
+  color: #1e1e1e;
+}
+
+.sliderContainer[data-theme="night"] .slide.editable:hover .editBadge svg {
+  color: #1e1e1e;
+}
+
+.sliderContainer[data-theme="night"] .deleteButton {
+  background: rgba(30, 30, 30, 0.95);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.sliderContainer[data-theme="night"] .deleteButton:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
 }
 
 .sliderContainer[data-theme="night"] .readMoreBtn {
