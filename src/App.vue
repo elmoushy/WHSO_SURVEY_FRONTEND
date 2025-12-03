@@ -3,6 +3,7 @@ import { computed, ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import Navigation from './components/Navigation/Navigation.vue'
 import Sidebar from './components/Sidebar/Sidebar.vue'
+import QuickLinksSidebar from './components/QuickLinks/QuickLinksSidebar.vue'
 import { useSimpleAuth } from './composables/useSimpleAuth'
 import { useAppStore } from './stores/useAppStore'
 import { websocketService } from './services/websocketService'
@@ -178,12 +179,28 @@ const sidebarStyleVars = computed(() => {
   return base
 })
 
+// Quick Links sidebar width (56px)
+const quickLinksWidth = 56
+
 /** Offset the content. On tablets/phones we let the sidebar overlay (no margin). */
 const contentOffsetStyle = computed(() => {
   if (!showNavigation.value) return {}
   if (vw.value <= 1024) return {} // overlay behavior on small screens
-  const px = `${sidebarWidth.value}px`
-  return isRTL.value ? { marginRight: px } : { marginLeft: px }
+  
+  const mainSidebarPx = `${sidebarWidth.value}px`
+  const quickLinksPx = `${quickLinksWidth}px`
+  
+  // RTL: Main sidebar on right, QuickLinks on left
+  // LTR: Main sidebar on left, QuickLinks on left too
+  if (isRTL.value) {
+    return { 
+      marginRight: mainSidebarPx,
+      marginLeft: quickLinksPx
+    }
+  }
+  return { 
+    marginLeft: `calc(${mainSidebarPx} + ${quickLinksPx})`
+  }
 })
 
 const showSidebarToggle = computed(
@@ -234,6 +251,9 @@ watch(
 
 <template>
   <div :data-theme="store.currentTheme">
+    <!-- Quick Links Sidebar (Left) -->
+    <QuickLinksSidebar v-if="showNavigation" />
+
     <Sidebar
       v-if="showNavigation"
       v-model="sidebarCollapsed"
