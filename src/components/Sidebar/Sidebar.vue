@@ -56,6 +56,7 @@ const navGroups = computed<NavGroup[]>(() => {
     // { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
     { name: 'manage-news', path: '/control/news', icon: 'fas fa-newspaper', label: 'إدارة الأخبار', requiresRole: 'admin' },
+    { name: 'manage-quicklinks', path: '/control/quicklinks', icon: 'fas fa-link', label: 'إدارة الروابط السريعة', requiresRole: 'admin' },
     { name: 'manage-users', path: '/control/users', icon: 'fas fa-user-group', label: 'إدارة المستخدمين', requiresRole: 'admin' },
   ]
 
@@ -159,7 +160,9 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
           :class="[$style.controlItem, isCollapsed ? $style.controlActive : '']"
           @click="internalCollapsed = !internalCollapsed"
         >
-          <span :class="$style.controlIcon"><i class="far fa-square"></i></span>
+          <span :class="$style.controlIcon">
+            <i :class="isCollapsed ? 'fas fa-expand' : 'fas fa-compress'"></i>
+          </span>
           <span :class="$style.controlLabel">{{ isCollapsed ? 'موسّع' : 'مصغّر' }}</span>
         </button>
 
@@ -461,6 +464,15 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
   transform:translateY(-1px);
   /* box-shadow:0 12px 24px rgba(15,23,42,.12); */
 }
+.controlItem:hover .controlIcon{
+  color:#0f172a;
+}
+.controlActive:hover{
+  background: linear-gradient(135deg, rgba(183,138,65,.2), rgba(161,125,35,.15));
+}
+.controlActive:hover .controlIcon{
+  color:#A17D23;
+}
 .controlIcon{
   /* inline-size:44px; */
   block-size:40px;
@@ -483,7 +495,7 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
 }
 .controlActive .controlIcon{
   /* background:linear-gradient(135deg,#B78A41,#A17D23); */
-  color:#ffffff;
+  color:#b78a41;
   /* box-shadow:0 18px 32px rgba(183,138,65,.28); */
 }
 .night .controlItem{
@@ -501,11 +513,11 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
 }
 .night .controlActive{
   background:rgba(183,138,65,.28);
-  color:#A17D23;
+  color:#D4A855;
 }
 .night .controlActive .controlIcon{
   /* background:linear-gradient(135deg,#B78A41,#A17D23); */
-  color:#ffffff;
+  color:#D4A855;
 }
 
 .logoutGroup{
@@ -651,8 +663,26 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
 .collapsed .controlItem:hover{
   background: #ffffff;
 }
+.collapsed .controlItem:hover .controlIcon{
+  color: #0f172a;
+}
+.collapsed .controlActive:hover{
+  background: linear-gradient(135deg, #C9A050, #B78A41);
+}
+.collapsed .controlActive:hover .controlIcon{
+  color: #ffffff;
+}
 .night.collapsed .controlItem:hover{
   background: rgba(255,255,255,.12);
+}
+.night.collapsed .controlItem:hover .controlIcon{
+  color: #e2e8f0;
+}
+.night.collapsed .controlActive:hover{
+  background: linear-gradient(135deg, #C9A050, #B78A41);
+}
+.night.collapsed .controlActive:hover .controlIcon{
+  color: #ffffff;
 }
 
 /* The single icon inside */

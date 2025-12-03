@@ -221,6 +221,16 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: "/control/quicklinks",
+    name: "QuickLinksManagement",
+    component: () => import("../pages/Control/QuickLinks/QuickLinksAdmin.vue"),
+    meta: {
+      title: "Quick Links Management - WPC | WeaponpowerCloud App",
+      requiresAuth: true,
+      requiresAdmin: true,
+    },
+  },
+  {
     path: "/control/surveys/:surveyId/responses",
     name: "SurveyResponses",
     component: SurveyResponses,

@@ -179,28 +179,19 @@ const sidebarStyleVars = computed(() => {
   return base
 })
 
-// Quick Links sidebar width (56px)
-const quickLinksWidth = 56
-
 /** Offset the content. On tablets/phones we let the sidebar overlay (no margin). */
 const contentOffsetStyle = computed(() => {
   if (!showNavigation.value) return {}
   if (vw.value <= 1024) return {} // overlay behavior on small screens
   
   const mainSidebarPx = `${sidebarWidth.value}px`
-  const quickLinksPx = `${quickLinksWidth}px`
   
-  // RTL: Main sidebar on right, QuickLinks on left
-  // LTR: Main sidebar on left, QuickLinks on left too
+  // QuickLinks sidebar now floats over content (show/hide toggle)
+  // So we only account for the main sidebar margin
   if (isRTL.value) {
-    return { 
-      marginRight: mainSidebarPx,
-      marginLeft: quickLinksPx
-    }
+    return { marginRight: mainSidebarPx }
   }
-  return { 
-    marginLeft: `calc(${mainSidebarPx} + ${quickLinksPx})`
-  }
+  return { marginLeft: mainSidebarPx }
 })
 
 const showSidebarToggle = computed(

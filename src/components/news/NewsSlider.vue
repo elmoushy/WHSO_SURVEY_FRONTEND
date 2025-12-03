@@ -113,7 +113,7 @@ const startAutoplay = () => {
   
   autoplayInterval.value = window.setInterval(() => {
     nextSlide()
-  }, 30000) // 30 seconds
+  }, 10000) // 10 seconds
 }
 
 const stopAutoplay = () => {
