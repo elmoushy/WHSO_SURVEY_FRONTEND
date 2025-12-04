@@ -7,8 +7,7 @@ import type {
   UpdateQuickLinkRequest,
   QuickLinkIconUploadResponse,
   QuickLinksListParams,
-  UpdatePositionsRequest,
-  QuickLink
+  UpdatePositionsRequest
 } from '../types/quicklinks.types'
 
 /**

@@ -97,16 +97,6 @@ const nextSlide = async () => {
   resetTimer()
 }
 
-const prevSlide = () => {
-  if (currentIndex.value > 0) {
-    currentIndex.value--
-  } else {
-    // Loop to end
-    currentIndex.value = slides.value.length - 1
-  }
-  resetTimer()
-}
-
 // Auto-play timer
 const startAutoplay = () => {
   stopAutoplay() // Clear any existing interval
@@ -823,6 +813,7 @@ defineExpose({
     font-size: 14px;
     display: -webkit-box;
     -webkit-line-clamp: 3;
+    line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
