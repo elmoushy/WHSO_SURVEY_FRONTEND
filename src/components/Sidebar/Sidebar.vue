@@ -52,6 +52,7 @@ const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
     { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
     { name: 'news', path: '/news', icon: 'fas fa-newspaper', label: 'الأخبار' },
+    { name: 'organization-chart', path: '/organization-chart', icon: 'fas fa-sitemap', label: 'هيكل الشركة' },
     // DISABLED: Chat feature not supported in this version
     // { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
