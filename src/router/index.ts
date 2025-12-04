@@ -55,6 +55,8 @@ const InternalChat = () => import("../pages/Chat/InternalChat.vue");
 
 // News
 const News = () => import("../pages/News/News.vue");
+const OrganizationChart = () => import("../pages/OrganizationChart/OrganizationChart.vue");
+const OrganizationDetails = () => import("../pages/OrganizationChart/OrganizationDetails.vue");
 
 /* =========================
    Routes
@@ -142,6 +144,22 @@ const routes: RouteRecordRaw[] = [
     name: "news-details",
     component: () => import("../pages/News/NewsDetails.vue"),
     meta: { title: "News Details - WPC | WeaponpowerCloud App", requiresAuth: true },
+  },
+
+  // Organization Chart (All authenticated users)
+  {
+    path: "/organization-chart",
+    name: "OrganizationChart",
+    component: OrganizationChart,
+    meta: { title: "Organization Chart - WPC | WeaponpowerCloud App", requiresAuth: true },
+  },
+
+  // Organization Details (All authenticated users)
+  {
+    path: "/organizationDetails/:id",
+    name: "OrganizationDetails",
+    component: OrganizationDetails,
+    meta: { title: "Employee Details - WPC | WeaponpowerCloud App", requiresAuth: true },
   },
 
   // WebSocket Test (Development only)
