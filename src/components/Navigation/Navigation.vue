@@ -435,16 +435,6 @@ const resetLoadingState = () => {
 }
 
 /**
- * Force reset notifications - emergency recovery function
- */
-const forceResetNotifications = () => {
-  resetLoadingState()
-  loadRetryCount.value = 0
-  hasLoadedNotifications.value = false
-  notifications.value = []
-}
-
-/**
  * Load notifications with timeout and retry logic
  */
 const loadNotifications = async () => {
@@ -475,8 +465,6 @@ const loadNotifications = async () => {
         : 'Timed out, click to retry'
     }
   }, NOTIFICATION_LOAD_TIMEOUT + 2000) // Extra 2 seconds as safety margin
-  
-  const startTime = Date.now()
   
   try {
     const lang = currentLanguage.value as 'en' | 'ar'
