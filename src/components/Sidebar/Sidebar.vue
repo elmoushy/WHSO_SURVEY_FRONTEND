@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useChat } from '../../composables/useChat'
 
 const props = defineProps<{
   theme?: 'day' | 'night'
@@ -36,24 +37,19 @@ type NavItem = {
 
 type NavGroup = { id: string; items: NavItem[] }
 
-// Import useChat for real-time unread count
-// DISABLED: Chat feature not supported in this version
-// import { useChat } from '../../composables/useChat'
-
 // Get unread count from chat composable
-// const { totalUnreadCount } = useChat()
+const { totalUnreadCount } = useChat()
 
 // Watch for changes in totalUnreadCount for debugging
-// watch(totalUnreadCount, (newVal, oldVal) => {
-//   console.log('🔔 Sidebar totalUnreadCount changed:', { oldVal, newVal })
-// }, { immediate: true })
+watch(totalUnreadCount, (newVal, oldVal) => {
+  console.log('🔔 Sidebar totalUnreadCount changed:', { oldVal, newVal })
+}, { immediate: true })
 
 const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
     { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
     { name: 'news', path: '/news', icon: 'fas fa-newspaper', label: 'الأخبار' },
-    // DISABLED: Chat feature not supported in this version
-    // { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
+    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
     { name: 'manage-news', path: '/control/news', icon: 'fas fa-newspaper', label: 'إدارة الأخبار', requiresRole: 'admin' },
     { name: 'manage-quicklinks', path: '/control/quicklinks', icon: 'fas fa-link', label: 'إدارة الروابط السريعة', requiresRole: 'admin' },
@@ -655,6 +651,7 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
   background: #EFF4FA;
   transition: background .2s ease;
 }
+
 .night.collapsed .controlItem{
     
   background: rgba(248,250,252,.06);

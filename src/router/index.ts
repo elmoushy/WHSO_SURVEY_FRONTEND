@@ -51,8 +51,7 @@ const SurveyEditorPage = () => import("../pages/Control/SurveyEditorPage.vue");
 const Notifications = () => import("../pages/Notifications");
 
 // Chat
-// DISABLED: Chat feature not supported in this version
-// const InternalChat = () => import("../pages/Chat/InternalChat.vue");
+const InternalChat = () => import("../pages/Chat/InternalChat.vue");
 
 // News
 const News = () => import("../pages/News/News.vue");
@@ -124,17 +123,11 @@ const routes: RouteRecordRaw[] = [
   },
 
   // Internal Chat
-  // DISABLED: Chat feature not supported in this version
-  // {
-  //   path: "/chat",
-  //   name: "Chat",
-  //   component: InternalChat,
-  //   meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
-  // },
-  // Redirect /chat to surveys since chat is disabled
   {
     path: "/chat",
-    redirect: "/surveys",
+    name: "Chat",
+    component: InternalChat,
+    meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
   },
 
   // News (All authenticated users)
