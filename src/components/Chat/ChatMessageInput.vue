@@ -737,4 +737,150 @@ const getFileIcon = (filename: string): string => {
   font-size: 0.6875rem;
   color: #9ca3af;
 }
+
+/* Dark theme - Matching Surveys.vue color scheme */
+[data-theme="night"] .messageInput {
+  background: rgba(27, 30, 36, 0.92);
+  border-top-color: rgba(161, 125, 35, 0.18);
+}
+
+[data-theme="night"] .rateLimitWarning {
+  background: rgba(220, 53, 69, 0.15);
+  border-bottom-color: rgba(220, 53, 69, 0.3);
+}
+
+[data-theme="night"] .warningContent strong {
+  color: #fca5a5;
+}
+
+[data-theme="night"] .warningContent span {
+  color: #f87171;
+}
+
+[data-theme="night"] .rateLimitStatus {
+  background: rgba(161, 125, 35, 0.15);
+  border-bottom-color: rgba(161, 125, 35, 0.3);
+}
+
+[data-theme="night"] .statusText {
+  color: #CEA55B;
+}
+
+[data-theme="night"] .actionBanner {
+  background: rgba(161, 125, 35, 0.15);
+  border-bottom-color: rgba(161, 125, 35, 0.3);
+}
+
+[data-theme="night"] .bannerTitle {
+  color: #CEA55B;
+}
+
+[data-theme="night"] .bannerPreview {
+  color: rgba(226, 232, 240, 0.82);
+}
+
+[data-theme="night"] .bannerClose {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .bannerClose:hover {
+  background: rgba(161, 125, 35, 0.2);
+}
+
+[data-theme="night"] .uploads {
+  background: rgba(40, 43, 51, 0.7);
+  border-bottom-color: rgba(161, 125, 35, 0.18);
+}
+
+[data-theme="night"] .uploadItem {
+  background: rgba(24, 28, 36, 0.76);
+  border-color: rgba(226, 232, 240, 0.18);
+}
+
+[data-theme="night"] .uploadName {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .captionInput {
+  background: rgba(24, 28, 36, 0.76);
+  border-color: rgba(226, 232, 240, 0.18);
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .captionInput::placeholder {
+  color: rgba(209, 213, 219, 0.78);
+}
+
+[data-theme="night"] .captionInput:focus {
+  background: rgba(40, 43, 51, 0.9);
+  border-color: rgba(161, 125, 35, 0.4);
+}
+
+[data-theme="night"] .uploadRemove {
+  color: rgba(226, 232, 240, 0.6);
+}
+
+[data-theme="night"] .uploadRemove:hover {
+  background: rgba(220, 53, 69, 0.15);
+  color: #f87171;
+}
+
+[data-theme="night"] .disabled {
+  background: rgba(40, 43, 51, 0.5);
+  color: rgba(226, 232, 240, 0.5);
+}
+
+[data-theme="night"] .inputArea {
+  background: rgba(27, 30, 36, 0.92);
+}
+
+[data-theme="night"] .iconBtn {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .iconBtn:hover:not(:disabled) {
+  background: rgba(161, 125, 35, 0.2);
+  color: #CEA55B;
+}
+
+[data-theme="night"] .textarea {
+  background: rgba(24, 28, 36, 0.76);
+  border-color: rgba(226, 232, 240, 0.18);
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .textarea::placeholder {
+  color: rgba(209, 213, 219, 0.78);
+}
+
+[data-theme="night"] .textarea:focus {
+  background: rgba(40, 43, 51, 0.9);
+  border-color: rgba(161, 125, 35, 0.4);
+}
+
+[data-theme="night"] .charCount {
+  color: rgba(209, 198, 172, 0.7);
+}
+
+[data-theme="night"] .sendBtn {
+  background: rgba(40, 43, 51, 0.7);
+  color: rgba(226, 232, 240, 0.5);
+}
+
+[data-theme="night"] .sendBtn.canSend {
+  box-shadow: 0 2px 4px rgba(161, 125, 35, 0.35);
+}
+
+[data-theme="night"] .sendBtn.canSend:hover {
+  box-shadow: 0 4px 8px rgba(161, 125, 35, 0.45);
+}
+
+[data-theme="night"] .hints {
+  background: rgba(40, 43, 51, 0.7);
+  border-top-color: rgba(161, 125, 35, 0.18);
+}
+
+[data-theme="night"] .hints span {
+  color: rgba(209, 198, 172, 0.6);
+}
 </style>

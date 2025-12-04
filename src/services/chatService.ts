@@ -52,7 +52,7 @@ const transformMessage = (apiMessage: any): Message => {
   // Transform reactions - API returns array of {id, emoji, user, created_at}
   // Frontend expects array of {emoji, users: [...]}
   const reactionsMap = new Map<string, ChatUser[]>()
-  
+
   if (apiMessage.reactions && Array.isArray(apiMessage.reactions)) {
     apiMessage.reactions.forEach((reaction: any) => {
       if (!reactionsMap.has(reaction.emoji)) {
@@ -127,7 +127,7 @@ export const chatAPI = {
       page: page.toString(),
       page_size: pageSize.toString()
     })
-    
+
     const response = await apiClient.get<SearchUsersResponse>(
       `${CHAT_BASE}/users/?${params.toString()}`
     )
@@ -139,12 +139,12 @@ export const chatAPI = {
     const params = new URLSearchParams({
       page: page.toString()
     })
-    
+
     // Add search parameter if provided
     if (searchQuery && searchQuery.trim().length > 0) {
       params.append('search', searchQuery.trim())
     }
-    
+
     const response = await apiClient.get<SearchUsersResponse>(
       `${CHAT_BASE}/users/?${params.toString()}`
     )
@@ -159,12 +159,12 @@ export const chatAPI = {
   // List all threads with optional filters
   listThreads: async (filters?: ThreadFilters): Promise<PaginatedThreadsResponse> => {
     const params = new URLSearchParams()
-    
+
     if (filters?.page) params.append('page', filters.page.toString())
     if (filters?.page_size) params.append('page_size', filters.page_size.toString())
     if (filters?.type) params.append('type', filters.type)
     if (filters?.search) params.append('search', filters.search)
-    
+
     const response = await apiClient.get<PaginatedThreadsResponse>(
       `${CHAT_BASE}/threads/?${params.toString()}`
     )
@@ -281,11 +281,11 @@ export const chatAPI = {
   listMessages: async (threadId: string, filters?: MessageFilters): Promise<CursorPaginatedMessagesResponse> => {
     const params = new URLSearchParams()
     if (filters?.cursor) params.append('cursor', filters.cursor)
-    
+
     const response = await apiClient.get<any>(
       `${CHAT_BASE}/threads/${threadId}/messages/?${params.toString()}`
     )
-    
+
     // Transform API response to match expected structure
     return {
       next: response.data.next,
@@ -357,7 +357,7 @@ export const chatAPI = {
   ): Promise<AttachmentUploadResponse> => {
     const formData = new FormData()
     formData.append('file', file)
-    
+
     // Add caption if provided
     if (caption && caption.trim()) {
       formData.append('caption', caption.trim())
@@ -398,7 +398,7 @@ export const chatAPI = {
   fetchImageAsBlob: async (attachmentId: string): Promise<string> => {
     try {
       console.log(`🖼️ Fetching image preview for attachment: ${attachmentId}`)
-      
+
       const response = await apiClient.get(
         `${CHAT_BASE}/attachments/${attachmentId}/download/`,
         {
@@ -408,7 +408,7 @@ export const chatAPI = {
 
       // Convert blob to base64 data URL (bypasses CSP blob: restrictions)
       const blob = new Blob([response.data])
-      
+
       return new Promise((resolve, reject) => {
         const reader = new FileReader()
         reader.onloadend = () => {
@@ -432,7 +432,7 @@ export const chatAPI = {
   ): Promise<void> => {
     try {
       console.log(`📥 Downloading attachment: ${filename}`)
-      
+
       const response = await apiClient.get(
         `${CHAT_BASE}/attachments/${attachmentId}/download/`,
         {
@@ -451,14 +451,14 @@ export const chatAPI = {
       link.style.display = 'none'
       link.href = url
       link.download = downloadFilename // ✅ Use the provided filename
-      
+
       document.body.appendChild(link)
       link.click()
-      
+
       // Cleanup
       window.URL.revokeObjectURL(url)
       document.body.removeChild(link)
-      
+
       console.log(`✅ Downloaded: ${downloadFilename}`)
     } catch (error) {
       console.error('❌ Download error:', error)
@@ -502,9 +502,9 @@ export const validateFile = (file: File): { valid: boolean; error?: string } => 
   }
 
   if (!ALLOWED_TYPES.includes(file.type)) {
-    return { 
-      valid: false, 
-      error: 'File type not allowed. Allowed types: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF' 
+    return {
+      valid: false,
+      error: 'File type not allowed. Allowed types: PDF, DOC, DOCX, XLS, XLSX, TXT, JPG, PNG, GIF'
     }
   }
 
@@ -518,11 +518,11 @@ export const validateFile = (file: File): { valid: boolean; error?: string } => 
 // Format file size for display
 export const formatFileSize = (bytes: number): string => {
   if (bytes === 0) return '0 Bytes'
-  
+
   const k = 1024
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i]
 }
 
@@ -551,48 +551,49 @@ export const formatRelativeTime = (dateString: string): string => {
   if (diffHours < 24) return `${diffHours}h ago`
   if (diffDays === 1) return 'Yesterday'
   if (diffDays < 7) return `${diffDays}d ago`
-  
+
   return date.toLocaleDateString()
 }
 
 // Format message timestamp
 export const formatMessageTime = (dateString: string): string => {
   const date = new Date(dateString)
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
     minute: '2-digit',
-    hour12: true 
+    hour12: true
   })
 }
 
 // Check if message is from current user
-export const isMyMessage = (message: Message, currentUserId: number): boolean => {
-  return message.sender.id === currentUserId
+export const isMyMessage = (message: Message, currentUserId: number | string): boolean => {
+  if (!currentUserId) return false
+  return String(message.sender.id) === String(currentUserId)
 }
 
 // Get thread display name (for direct threads, show other participant's name)
-export const getThreadDisplayName = (thread: Thread, currentUserId: number): string => {
+export const getThreadDisplayName = (thread: Thread, currentUserId: number | string): string => {
   if (thread.type === 'group') {
     return thread.title || 'Untitled Group'
   }
-  
+
   // For direct threads, find the other participant
-  const otherParticipant = thread.participants.find(p => p.user.id !== currentUserId)
+  const otherParticipant = thread.participants.find(p => String(p.user.id) !== String(currentUserId))
   if (!otherParticipant) return 'Unknown User'
-  
+
   const { first_name, last_name } = otherParticipant.user
   return `${first_name} ${last_name}`.trim() || 'Unknown User'
 }
 
 // Get thread avatar (for direct threads, show other participant's initials)
-export const getThreadAvatar = (thread: Thread, currentUserId: number): string => {
+export const getThreadAvatar = (thread: Thread, currentUserId: number | string): string => {
   if (thread.type === 'group') {
     return thread.title?.charAt(0).toUpperCase() || 'G'
   }
-  
-  const otherParticipant = thread.participants.find(p => p.user.id !== currentUserId)
+
+  const otherParticipant = thread.participants.find(p => String(p.user.id) !== String(currentUserId))
   if (!otherParticipant) return '?'
-  
+
   const firstName = otherParticipant.user.first_name?.charAt(0) || ''
   const lastName = otherParticipant.user.last_name?.charAt(0) || ''
   return (firstName + lastName).toUpperCase() || '?'

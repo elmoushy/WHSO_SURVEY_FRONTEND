@@ -309,6 +309,41 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
   border-radius: 16px;
 }
 
+.emblemWrap{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 16px;
+  transition: background .25s ease, box-shadow .25s ease;
+}
+
+/* Night mode logo enhancement - white background with low opacity */
+.night .emblemWrap{
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(8px);
+  border-radius: 20px;
+  padding: 12px 16px;
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.night .emblemWrap:hover{
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    0 6px 24px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Collapsed night mode */
+.night.collapsed .emblemWrap{
+  padding: 10px;
+  border-radius: 16px;
+}
+
 .emblem{
     padding:0 5px;
   object-fit:contain;

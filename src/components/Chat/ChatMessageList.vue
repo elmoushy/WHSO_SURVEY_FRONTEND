@@ -152,7 +152,7 @@ const handleReaction = async (messageId: string, emoji: string) => {
     if (!message) return
 
     const reaction = message.reactions.find(r => r.emoji === emoji)
-    const hasReacted = reaction?.users.some(u => u.id === currentUserId.value)
+    const hasReacted = reaction?.users.some(u => isCurrentUser(u.id))
 
     if (hasReacted) {
       await removeReaction(messageId, emoji)
@@ -232,6 +232,11 @@ const openImagePreview = async (attachmentId: string, name: string) => {
 // Close image preview (no need to revoke data URLs)
 const closeImagePreview = () => {
   imagePreview.value = null
+}
+
+const isCurrentUser = (userId: number | string) => {
+  if (!currentUserId.value) return false
+  return String(userId) === String(currentUserId.value)
 }
 </script>
 
@@ -372,7 +377,7 @@ const closeImagePreview = () => {
                   :key="reaction.emoji"
                   :class="[
                     $style.reaction,
-                    { [$style.reacted]: reaction.users.some(u => u.id === currentUserId) }
+                    { [$style.reacted]: reaction.users.some(u => isCurrentUser(u.id)) }
                   ]"
                   @click="handleReaction(message.id, reaction.emoji)"
                   :title="reaction.users.map(u => `${u.first_name} ${u.last_name}`).join(', ')"
@@ -1280,5 +1285,158 @@ const closeImagePreview = () => {
   font-size: 0.75rem;
   color: #6b7280;
   font-style: italic;
+}
+
+/* Dark theme - Matching Surveys.vue color scheme */
+[data-theme="night"] .messageList {
+  background: linear-gradient(135deg, #231F20 0%, #4D4D4F 50%, #2A2A2A 100%);
+}
+
+[data-theme="night"] .empty {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .empty i {
+  color: rgba(161, 125, 35, 0.4);
+}
+
+[data-theme="night"] .dateSeparator span {
+  background: rgba(40, 43, 51, 0.9);
+  color: rgba(209, 198, 172, 0.8);
+}
+
+[data-theme="night"] .senderName {
+  color: #CEA55B;
+}
+
+[data-theme="night"] .messageBubble {
+  background: rgba(40, 43, 51, 0.7);
+  color: #E5E8E1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="night"] .messageBubble:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="night"] .myMessage .messageBubble {
+  background: linear-gradient(135deg, rgba(161, 125, 35, 0.4) 0%, rgba(183, 138, 65, 0.3) 100%);
+}
+
+[data-theme="night"] .messageText {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .replyRef {
+  background: rgba(24, 28, 36, 0.6);
+}
+
+[data-theme="night"] .myMessage .replyRef {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="night"] .replySender {
+  color: #CEA55B;
+}
+
+[data-theme="night"] .replyText {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .attachment {
+  background: rgba(24, 28, 36, 0.6);
+}
+
+[data-theme="night"] .attachment:hover {
+  background: rgba(40, 43, 51, 0.8);
+}
+
+[data-theme="night"] .attachmentName {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .attachmentSize {
+  color: rgba(209, 198, 172, 0.7);
+}
+
+[data-theme="night"] .attachmentCaption {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .reaction {
+  background: rgba(40, 43, 51, 0.7);
+}
+
+[data-theme="night"] .reaction:hover {
+  background: rgba(161, 125, 35, 0.15);
+}
+
+[data-theme="night"] .reaction.reacted {
+  background: rgba(161, 125, 35, 0.25);
+  border-color: rgba(161, 125, 35, 0.5);
+}
+
+[data-theme="night"] .timestamp {
+  color: rgba(209, 198, 172, 0.6);
+}
+
+[data-theme="night"] .edited {
+  color: rgba(209, 198, 172, 0.6);
+}
+
+[data-theme="night"] .actionBtn {
+  background: rgba(40, 43, 51, 0.9);
+  border-color: rgba(161, 125, 35, 0.2);
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .actionBtn:hover {
+  background: rgba(161, 125, 35, 0.2);
+  border-color: rgba(161, 125, 35, 0.4);
+  color: #CEA55B;
+}
+
+[data-theme="night"] .emojiPicker {
+  background: rgba(27, 30, 36, 0.95);
+  border-color: rgba(161, 125, 35, 0.2);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="night"] .emojiPicker::after {
+  background: rgba(27, 30, 36, 0.95);
+  border-color: rgba(161, 125, 35, 0.2);
+}
+
+[data-theme="night"] .emojiBtn:hover {
+  background: rgba(161, 125, 35, 0.2);
+}
+
+[data-theme="night"] .loadingMore {
+  color: rgba(209, 198, 172, 0.8);
+}
+
+[data-theme="night"] .typingBubble {
+  background: rgba(40, 43, 51, 0.7);
+}
+
+[data-theme="night"] .typingDots span {
+  background: #CEA55B;
+}
+
+[data-theme="night"] .typingText {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .imageModal {
+  background: rgba(35, 31, 32, 0.95);
+}
+
+[data-theme="night"] .closeModal {
+  background: rgba(40, 43, 51, 0.9);
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .closeModal:hover {
+  background: rgba(161, 125, 35, 0.3);
 }
 </style>

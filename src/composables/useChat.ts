@@ -79,16 +79,27 @@ const hasMoreMessages = ref(true)
 
 export const useChat = () => {
   // Get current user ID (from auth composable)
-  const currentUserId = computed(() => {
+  // Get current user ID (from auth composable)
+  // We use a ref initialized from localStorage to ensure we have the ID immediately
+  const currentUserId = ref<number | string | null>(null)
+
+  const initUserId = () => {
     const userStr = localStorage.getItem('user')
-    if (!userStr) return null
-    try {
-      const user = JSON.parse(userStr)
-      return user.id || null
-    } catch {
-      return null
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr)
+        // Ensure ID is a number if possible, to match ChatUser type
+        const parsedId = parseInt(user.id)
+        currentUserId.value = !isNaN(parsedId) ? parsedId : (user.id || null)
+      } catch (e) {
+        console.error('Failed to parse user from localStorage', e)
+        currentUserId.value = null
+      }
     }
-  })
+  }
+
+  // Initialize on creation
+  initUserId()
 
   // ============================================
   // Thread Management
@@ -402,7 +413,7 @@ export const useChat = () => {
         id: `temp-${Date.now()}`,
         thread: selectedThreadId.value,
         sender: {
-          id: currentUserId.value || 0,
+          id: Number(currentUserId.value) || 0,
           email: '',
           first_name: '',
           last_name: '',
@@ -513,7 +524,7 @@ export const useChat = () => {
           // Add user to existing reaction
           if (!message.reactions[reactionIndex].users.find(u => u.id === currentUserId.value)) {
             message.reactions[reactionIndex].users.push({
-              id: currentUserId.value || 0,
+              id: Number(currentUserId.value) || 0,
               email: '',
               first_name: '',
               last_name: '',
@@ -526,7 +537,7 @@ export const useChat = () => {
           message.reactions.push({
             emoji,
             users: [{
-              id: currentUserId.value || 0,
+              id: Number(currentUserId.value) || 0,
               email: '',
               first_name: '',
               last_name: '',

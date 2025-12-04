@@ -906,4 +906,178 @@ onUnmounted(() => {
     width: auto;
   }
 }
+
+/* Dark theme - Matching Surveys.vue color scheme */
+[data-theme="night"] .chatPage {
+  background: linear-gradient(135deg, #231F20 0%, #4D4D4F 50%, #2A2A2A 100%);
+}
+
+[data-theme="night"] .sidebarContainer {
+  background: rgba(27, 30, 36, 0.92);
+}
+
+[data-theme="night"] .floatingToggleBtn {
+  background: rgba(40, 43, 51, 0.9);
+  border-color: rgba(161, 125, 35, 0.3);
+  color: #CEA55B;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="night"] .floatingToggleBtn:hover {
+  background: rgba(161, 125, 35, 0.2);
+  border-color: rgba(161, 125, 35, 0.5);
+}
+
+[data-theme="night"] .noThread {
+  background: linear-gradient(135deg, #231F20 0%, #4D4D4F 50%, #2A2A2A 100%);
+}
+
+[data-theme="night"] .iconWrapper {
+  background: linear-gradient(135deg, rgba(161, 125, 35, 0.3) 0%, rgba(183, 138, 65, 0.2) 100%);
+  box-shadow: 0 4px 12px rgba(161, 125, 35, 0.25);
+}
+
+[data-theme="night"] .iconWrapper i {
+  color: #CEA55B;
+}
+
+[data-theme="night"] .noThreadContent h2 {
+  background: linear-gradient(135deg, #E5E8E1 0%, #D1C6AC 50%, #B78A41 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="night"] .noThreadContent p {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .startBtn {
+  box-shadow: 0 2px 8px rgba(161, 125, 35, 0.35);
+}
+
+[data-theme="night"] .startBtn:hover {
+  box-shadow: 0 6px 16px rgba(161, 125, 35, 0.45);
+}
+
+[data-theme="night"] .chatContainer {
+  background: rgba(27, 30, 36, 0.92);
+}
+
+[data-theme="night"] .chatHeader {
+  background: rgba(40, 43, 51, 0.7);
+  border-bottom-color: rgba(161, 125, 35, 0.18);
+}
+
+[data-theme="night"] .threadAvatar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="night"] .threadTitle {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .threadStatus {
+  color: rgba(209, 198, 172, 0.7);
+}
+
+[data-theme="night"] .headerBtn {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .headerBtn:hover {
+  background: rgba(161, 125, 35, 0.2);
+  color: #CEA55B;
+}
+
+[data-theme="night"] .threadInfoSidebar {
+  background: rgba(27, 30, 36, 0.95);
+  border-left-color: rgba(161, 125, 35, 0.18);
+}
+
+[data-theme="night"] .infoHeader {
+  background: rgba(40, 43, 51, 0.7);
+  border-bottom-color: rgba(161, 125, 35, 0.18);
+}
+
+[data-theme="night"] .infoHeader h3 {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .closeBtn {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .closeBtn:hover {
+  background: rgba(161, 125, 35, 0.2);
+  color: #CEA55B;
+}
+
+[data-theme="night"] .infoSection h4 {
+  color: #CEA55B;
+}
+
+[data-theme="night"] .infoSection p {
+  color: rgba(226, 232, 240, 0.82);
+}
+
+[data-theme="night"] .participantAvatar {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="night"] .participantName {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .participantRole {
+  color: rgba(209, 198, 172, 0.7);
+}
+
+[data-theme="night"] .settingLabel {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .radioOption {
+  background: rgba(40, 43, 51, 0.7);
+  border-color: rgba(226, 232, 240, 0.18);
+}
+
+[data-theme="night"] .radioOption:hover {
+  background: rgba(161, 125, 35, 0.15);
+  border-color: rgba(161, 125, 35, 0.3);
+}
+
+[data-theme="night"] .radioOption.selected {
+  background: rgba(161, 125, 35, 0.2);
+  border-color: #CEA55B;
+}
+
+[data-theme="night"] .radioLabel {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .toggleSlider {
+  background: rgba(40, 43, 51, 0.7);
+}
+
+[data-theme="night"] .toggleText {
+  color: #E5E8E1;
+}
+
+[data-theme="night"] .settingsLoading {
+  color: #CEA55B;
+}
+
+[data-theme="night"] .settingsUpdatedInfo {
+  border-top-color: rgba(161, 125, 35, 0.18);
+  color: rgba(209, 198, 172, 0.6);
+}
+
+[data-theme="night"] .settingItem span {
+  color: rgba(226, 232, 240, 0.75);
+}
+
+[data-theme="night"] .settingItem strong {
+  color: #E5E8E1;
+}
 </style>
