@@ -17,7 +17,6 @@ const {
   disconnectFromChatWebSocket,
   setChatPageVisibility,
   updateGroupSettings,
-  isLoading
 } = useChat()
 
 const showCreateModal = ref(false)
@@ -105,25 +104,28 @@ onUnmounted(() => {
 
 <template>
   <div :class="$style.chatPage">
-    <!-- Floating Toggle Button - Outside overflow:hidden containers -->
-    <button 
-      :class="[$style.floatingToggleBtn, { [$style.collapsed]: isThreadListCollapsed }]"
-      @click="toggleThreadList"
-      :title="isThreadListCollapsed ? 'فتح قائمة المحادثات' : 'إغلاق قائمة المحادثات'"
-    >
-      <i :class="['bi', isThreadListCollapsed ? 'bi-chevron-left' : 'bi-chevron-right']"></i>
-    </button>
+    <!-- Sidebar Container -->
+    <div :class="$style.sidebarContainer">
+      <!-- Thread List Sidebar -->
+      <aside :class="[$style.threadListSidebar, { [$style.collapsed]: isThreadListCollapsed }]">
+        <ChatThreadList
+          :is-collapsed="isThreadListCollapsed"
+          :hide-toggle-button="true"
+          @select-thread="handleSelectThread"
+          @create-thread="handleCreateThread"
+          @toggle-collapse="toggleThreadList"
+        />
+      </aside>
 
-    <!-- Thread List Sidebar -->
-    <aside :class="[$style.threadListSidebar, { [$style.collapsed]: isThreadListCollapsed }]">
-      <ChatThreadList
-        :is-collapsed="isThreadListCollapsed"
-        :hide-toggle-button="true"
-        @select-thread="handleSelectThread"
-        @create-thread="handleCreateThread"
-        @toggle-collapse="toggleThreadList"
-      />
-    </aside>
+      <!-- Floating Toggle Button -->
+      <button 
+        :class="[$style.floatingToggleBtn, { [$style.collapsed]: isThreadListCollapsed }]"
+        @click="toggleThreadList"
+        :title="isThreadListCollapsed ? 'فتح قائمة المحادثات' : 'إغلاق قائمة المحادثات'"
+      >
+        <i :class="['bi', isThreadListCollapsed ? 'bi-chevron-left' : 'bi-chevron-right']"></i>
+      </button>
+    </div>
 
     <!-- Main Chat Area -->
     <main :class="$style.chatMain">
@@ -326,6 +328,15 @@ onUnmounted(() => {
   }
 }
 
+.sidebarContainer {
+  position: relative;
+  height: 100%;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+}
+
 .threadListSidebar {
   flex-shrink: 0;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -338,72 +349,66 @@ onUnmounted(() => {
   min-width: 0;
 }
 
-/* Floating Toggle Button - Always visible above everything */
+/* Floating Toggle Button */
 .floatingToggleBtn {
   position: absolute;
   top: 50%;
-  left: 320px; /* Width of thread list */
-  transform: translate(-50%, -50%);
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, #B78A41 0%, #CEA55B 100%);
-  color: #ffffff;
-  border: 3px solid #ffffff;
-  border-radius: 50%;
+  left: 100%; /* Always attached to the right edge of the sidebar */
+  transform: translateY(-50%);
+  width: 32px;
+  height: 64px;
+  background: #ffffff;
+  color: #d4af37;
+  border: 1px solid #e5e7eb;
+  border-left: none; /* Remove border adjacent to sidebar */
+  border-radius: 0 12px 12px 0;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000; /* High z-index to float above everything */
-  box-shadow: 0 4px 12px rgba(183, 138, 65, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.875rem;
+  font-size: 1rem;
 }
 
 .floatingToggleBtn:hover {
-  transform: translate(-50%, -50%) scale(1.15);
-  box-shadow: 0 6px 16px rgba(183, 138, 65, 0.5), 0 3px 6px rgba(0, 0, 0, 0.15);
-}
-
-.floatingToggleBtn:active {
-  transform: translate(-50%, -50%) scale(1.05);
+  background: #f9fafb;
+  color: #b78a41;
+  width: 36px;
 }
 
 .floatingToggleBtn.collapsed {
-  left: 0;
-  transform: translate(50%, -50%);
-}
-
-.floatingToggleBtn.collapsed:hover {
-  transform: translate(50%, -50%) scale(1.15);
-}
-
-.floatingToggleBtn.collapsed:active {
-  transform: translate(50%, -50%) scale(1.05);
+  left: 100%; /* Stays at 100% of 0 width = 0 */
+  border-radius: 0 12px 12px 0;
+  transform: translateY(-50%);
 }
 
 /* RTL Support */
 [dir="rtl"] .floatingToggleBtn {
   left: auto;
-  right: 320px;
-  transform: translate(50%, -50%);
-}
-
-[dir="rtl"] .floatingToggleBtn:hover {
-  transform: translate(50%, -50%) scale(1.15);
+  right: 100%; /* Attached to left edge */
+  border-right: none;
+  border-left: 1px solid #e5e7eb;
+  border-radius: 12px 0 0 12px;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.05);
 }
 
 [dir="rtl"] .floatingToggleBtn.collapsed {
-  right: 0;
-  transform: translate(-50%, -50%);
-}
-
-[dir="rtl"] .floatingToggleBtn.collapsed:hover {
-  transform: translate(-50%, -50%) scale(1.15);
+  right: 100%;
+  border-radius: 12px 0 0 12px;
+  transform: translateY(-50%);
 }
 
 [dir="rtl"] .floatingToggleBtn i {
   transform: scaleX(-1);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .floatingToggleBtn {
+    display: none; /* Hide on mobile, use hamburger menu or similar if needed */
+  }
 }
 
 .chatMain {

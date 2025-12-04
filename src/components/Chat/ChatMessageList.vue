@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, nextTick, watch, onMounted } from 'vue'
+import { ref, computed, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { useChat } from '../../composables/useChat'
 import { formatMessageTime, isMyMessage, chatAPI } from '../../services/chatService'
 import type { Message } from '../../types/chat.types'
@@ -32,7 +32,42 @@ const imagePreview = ref<{
   error: boolean;
 } | null>(null)
 
+const highlightedMessageId = ref<string | null>(null)
+
+const scrollToMessage = (messageId: string) => {
+  const element = document.getElementById(`message-${messageId}`)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    highlightedMessageId.value = messageId
+    setTimeout(() => {
+      highlightedMessageId.value = null
+    }, 2000)
+  } else {
+    console.warn('Message not found in current view')
+  }
+}
+
+// Emoji picker refs for positioning
+
 const commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '🙏']
+
+// Close emoji picker when clicking outside
+const handleClickOutside = (event: MouseEvent) => {
+  if (showEmojiPicker.value) {
+    const target = event.target as HTMLElement
+    if (!target.closest('[data-emoji-picker]') && !target.closest('[data-emoji-toggle]')) {
+      showEmojiPicker.value = null
+    }
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Typing indicator text
 const typingText = computed(() => {
@@ -230,9 +265,13 @@ const closeImagePreview = () => {
       <div
         v-for="message in group.messages"
         :key="message.id"
+        :id="`message-${message.id}`"
         :class="[
           $style.messageWrapper,
-          { [$style.myMessage]: isMyMessage(message, currentUserId || 0) }
+          { 
+            [$style.myMessage]: isMyMessage(message, currentUserId || 0),
+            [$style.highlighted]: highlightedMessageId === message.id
+          }
         ]"
       >
         <div :class="$style.message">
@@ -264,9 +303,20 @@ const closeImagePreview = () => {
               ]"
             >
               <!-- Reply reference -->
-              <div v-if="message.reply_to" :class="$style.replyRef">
-                <i class="bi bi-reply-fill"></i>
-                <span>Replying to a message</span>
+              <div 
+                v-if="message.reply_to" 
+                :class="$style.replyRef"
+                @click="scrollToMessage(message.reply_to.id)"
+              >
+                <div :class="$style.replyBar"></div>
+                <div :class="$style.replyInfo">
+                  <span :class="$style.replySender">
+                    {{ message.reply_to.sender.first_name }} {{ message.reply_to.sender.last_name }}
+                  </span>
+                  <span :class="$style.replyText">
+                    {{ message.reply_to.content || 'مرفق 📎' }}
+                  </span>
+                </div>
               </div>
 
               <!-- Message text -->
@@ -346,19 +396,31 @@ const closeImagePreview = () => {
             <!-- Message actions -->
             <div 
               v-if="!message.is_deleted" 
-              :class="$style.messageActions"
+              :class="[
+                $style.messageActions,
+                { [$style.myMessageActions]: isMyMessage(message, currentUserId ?? 0) }
+              ]"
             >
               <!-- Emoji picker toggle -->
               <button 
                 :class="$style.actionBtn"
-                @click="showEmojiPicker = showEmojiPicker === message.id ? null : message.id"
+                @click.stop="showEmojiPicker = showEmojiPicker === message.id ? null : message.id"
                 title="تفاعل"
+                data-emoji-toggle
               >
                 <i class="bi bi-emoji-smile"></i>
               </button>
 
               <!-- Emoji picker -->
-              <div v-if="showEmojiPicker === message.id" :class="$style.emojiPicker">
+              <div 
+                v-if="showEmojiPicker === message.id" 
+                :class="[
+                  $style.emojiPicker,
+                  { [$style.emojiPickerRight]: isMyMessage(message, currentUserId ?? 0) }
+                ]"
+                data-emoji-picker
+                @click.stop
+              >
                 <button
                   v-for="emoji in commonEmojis"
                   :key="emoji"
@@ -517,6 +579,20 @@ const closeImagePreview = () => {
 
 .messageWrapper {
   margin-bottom: 1rem;
+  transition: background-color 0.5s ease;
+  border-radius: 0.5rem;
+}
+
+.highlighted {
+  background-color: rgba(212, 175, 55, 0.15);
+  padding: 0.5rem;
+  margin: 0.5rem -0.5rem;
+  animation: pulse 2s ease-out;
+}
+
+@keyframes pulse {
+  0% { background-color: rgba(212, 175, 55, 0.3); }
+  100% { background-color: transparent; }
 }
 
 .messageWrapper.myMessage {
@@ -561,16 +637,26 @@ const closeImagePreview = () => {
 }
 
 .messageBubble {
-  padding: 0.75rem 1rem;
+  padding: 0.75rem 1.25rem;
   background: #ffffff;
-  border-radius: 1rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border-radius: 1.25rem;
+  border-bottom-right-radius: 0.25rem; /* Tail on right for other messages */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
+  transition: all 0.2s ease;
+}
+
+.messageBubble:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .myMessage .messageBubble {
   background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
   color: #ffffff;
+  border-radius: 1.25rem;
+  border-bottom-left-radius: 0.25rem; /* Tail on left for my messages */
+  border-bottom-right-radius: 1.25rem;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);
 }
 
 .messageBubble.deleted {
@@ -580,17 +666,67 @@ const closeImagePreview = () => {
 
 .replyRef {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.05);
+  background: rgba(0, 0, 0, 0.03);
   border-radius: 0.5rem;
   margin-bottom: 0.5rem;
   font-size: 0.75rem;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.replyRef:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.myMessage .replyRef:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .myMessage .replyRef {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.replyBar {
+  width: 3px;
+  background: #d4af37;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.myMessage .replyBar {
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.replyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.replySender {
+  font-weight: 700;
+  color: #d4af37;
+}
+
+.myMessage .replySender {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.replyText {
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.myMessage .replyText {
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .messageText {
@@ -915,58 +1051,178 @@ const closeImagePreview = () => {
   display: flex;
   gap: 0.25rem;
   margin-top: 0.25rem;
+  margin-top: 0.25rem;
   opacity: 0;
-  transition: opacity 0.2s;
+  transform: translateY(5px);
+  transition: all 0.2s ease;
   position: relative;
+}
+
+.myMessageActions {
+  flex-direction: row-reverse;
 }
 
 .messageWrapper:hover .messageActions {
   opacity: 1;
+  transform: translateY(0);
+}
+
+/* Show actions on touch devices */
+@media (hover: none) {
+  .messageActions {
+    opacity: 1;
+  }
 }
 
 .actionBtn {
-  padding: 0.25rem 0.5rem;
-  background: transparent;
-  border: none;
-  border-radius: 0.375rem;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
   color: #6b7280;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
   font-size: 0.875rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .actionBtn:hover {
   background: #f3f4f6;
-  color: #111827;
+  color: #d4af37;
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: #d4af37;
 }
 
 .emojiPicker {
   position: absolute;
-  top: 100%;
+  bottom: calc(100% + 0.75rem);
   left: 0;
-  z-index: 10;
+  z-index: 100;
   display: flex;
-  gap: 0.25rem;
-  padding: 0.5rem;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  min-width: max-content;
+  animation: emojiPickerPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom left;
+}
+
+/* Position on right side for own messages */
+.emojiPickerRight {
+  left: auto;
+  right: 0;
+  transform-origin: bottom right;
+}
+
+/* Add a small arrow/tail to the emoji picker */
+.emojiPicker::after {
+  content: '';
+  position: absolute;
+  bottom: -6px;
+  left: 1rem;
+  width: 12px;
+  height: 12px;
+  background: inherit;
+  transform: rotate(45deg);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 4px 4px 4px rgba(0, 0, 0, 0.05);
+}
+
+.emojiPickerRight::after {
+  left: auto;
+  right: 1rem;
+}
+
+@keyframes emojiPickerPop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Mobile responsive emoji picker */
+@media (max-width: 480px) {
+  .emojiPicker {
+    position: fixed;
+    bottom: auto;
+    top: 50%;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, -50%);
+    padding: 1rem;
+    gap: 0.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    animation: emojiPickerMobileFadeIn 0.2s ease-out;
+  }
+  
+  .emojiPickerRight {
+    left: 50% !important;
+    right: auto !important;
+  }
+  
+  @keyframes emojiPickerMobileFadeIn {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  }
+  
+  .emojiBtn {
+    padding: 0.75rem;
+    font-size: 1.75rem;
+  }
+}
+
+/* Tablet responsive */
+@media (min-width: 481px) and (max-width: 768px) {
+  .emojiPicker {
+    padding: 0.625rem;
+  }
+  
+  .emojiBtn {
+    padding: 0.5rem;
+    font-size: 1.5rem;
+  }
 }
 
 .emojiBtn {
   padding: 0.375rem;
   background: transparent;
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.5rem;
   font-size: 1.25rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  line-height: 1;
 }
 
 .emojiBtn:hover {
   background: #f3f4f6;
-  transform: scale(1.1);
+  transform: scale(1.2);
+}
+
+.emojiBtn:active {
+  transform: scale(0.95);
 }
 
 .typingIndicator {
@@ -982,8 +1238,10 @@ const closeImagePreview = () => {
   gap: 0.5rem;
   padding: 0.75rem 1rem;
   background: #f1f1f1;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
+  border-bottom-right-radius: 0.25rem;
   max-width: 70%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .typingDots {

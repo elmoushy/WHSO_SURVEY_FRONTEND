@@ -24,10 +24,10 @@ const isLoading = ref(false)
 const error = ref<string | null>(null)
 
 // WebSocket state
-  const isWebSocketConnected = ref(false)
-  const typingUsers = ref<Map<number, string>>(new Map())
-  // Typing timeout map - auto-clear typing indicators after timeout
-  const typingTimeouts = new Map<number, NodeJS.Timeout>()
+const isWebSocketConnected = ref(false)
+const typingUsers = ref<Map<number, string>>(new Map())
+// Typing timeout map - auto-clear typing indicators after timeout
+const typingTimeouts = new Map<number, NodeJS.Timeout>()
 
 // Rate limiting state
 const rateLimits = ref({
@@ -98,45 +98,45 @@ export const useChat = () => {
     try {
       if (!silent) isLoading.value = true
       error.value = null
-      
+
       const response = await chatAPI.listThreads(filters)
       const now = Date.now()
-      
+
       // Apply API results but PRESERVE WebSocket unread counts within priority window
       // This prevents race conditions where stale API data overwrites fresh WebSocket data
       threads.value = response.results.map(apiThread => {
         const wsData = websocketUnreadCounts.value.get(apiThread.id)
-        
+
         // If we have a recent WebSocket update for this thread, use that count instead
         if (wsData && (now - wsData.timestamp) < WEBSOCKET_PRIORITY_WINDOW_MS) {
           return { ...apiThread, unread_count: wsData.count }
         }
-        
+
         // Check pending counts as well
         if (pendingUnreadCounts.value.has(apiThread.id)) {
           const count = pendingUnreadCounts.value.get(apiThread.id)!
           return { ...apiThread, unread_count: count }
         }
-        
+
         return apiThread
       })
-      
+
       threadsTotalCount.value = response.count
-      
+
       if (filters?.page) {
         threadsCurrentPage.value = filters.page
       }
-      
+
       // Clear pending counts that were applied
       pendingUnreadCounts.value.clear()
-      
+
       // Clean up old WebSocket entries (older than priority window)
       websocketUnreadCounts.value.forEach((data, threadId) => {
         if ((now - data.timestamp) >= WEBSOCKET_PRIORITY_WINDOW_MS) {
           websocketUnreadCounts.value.delete(threadId)
         }
       })
-      
+
       hasInitializedThreads.value = true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to fetch threads'
@@ -151,15 +151,15 @@ export const useChat = () => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       const newThread = await chatAPI.createThread(data)
-      
+
       // Add to threads list
       threads.value.unshift(newThread)
-      
+
       // Select the new thread
       await selectThread(newThread.id)
-      
+
       return newThread
     } catch (err: any) {
       // Handle duplicate direct thread
@@ -167,7 +167,7 @@ export const useChat = () => {
         await selectThread(err.response.data.existing_thread_id)
         return null
       }
-      
+
       error.value = err.response?.data?.error || err.message || 'Failed to create thread'
       console.error('Error creating thread:', err)
       return null
@@ -182,16 +182,16 @@ export const useChat = () => {
       activeThreadId.value = threadId
       isLoading.value = true
       error.value = null
-      
+
       // Fetch thread details
       currentThread.value = await chatAPI.getThread(threadId)
-      
+
       // Fetch messages
       await fetchMessages(threadId)
-      
+
       // Mark as read on server
       await chatAPI.markThreadAsRead(threadId)
-      
+
       // Update unread count in threads list with proper reactivity (array replacement)
       threads.value = threads.value.map(t => {
         if (t.id === threadId) {
@@ -199,7 +199,7 @@ export const useChat = () => {
         }
         return t
       })
-      
+
       // Connect to WebSocket for real-time updates
       await connectToChatWebSocket(threadId)
     } catch (err: any) {
@@ -214,12 +214,12 @@ export const useChat = () => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       await chatAPI.leaveThread(threadId)
-      
+
       // Remove from threads list
       threads.value = threads.value.filter(t => t.id !== threadId)
-      
+
       // Clear selection if current thread
       if (selectedThreadId.value === threadId) {
         selectedThreadId.value = null
@@ -227,7 +227,7 @@ export const useChat = () => {
         messages.value = []
         disconnectFromChatWebSocket()
       }
-      
+
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to leave thread'
@@ -242,14 +242,14 @@ export const useChat = () => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       await chatAPI.addMembers(threadId, { user_ids: userIds, role })
-      
+
       // Refresh thread details
       if (currentThread.value?.id === threadId) {
         currentThread.value = await chatAPI.getThread(threadId)
       }
-      
+
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to add members'
@@ -264,14 +264,14 @@ export const useChat = () => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       await chatAPI.removeMember(threadId, { user_id: userId })
-      
+
       // Refresh thread details
       if (currentThread.value?.id === threadId) {
         currentThread.value = await chatAPI.getThread(threadId)
       }
-      
+
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to remove member'
@@ -286,14 +286,14 @@ export const useChat = () => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       await chatAPI.changeRole(threadId, { user_id: userId, role })
-      
+
       // Refresh thread details
       if (currentThread.value?.id === threadId) {
         currentThread.value = await chatAPI.getThread(threadId)
       }
-      
+
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to change role'
@@ -306,15 +306,15 @@ export const useChat = () => {
 
   // Update group settings (admin/owner only)
   const updateGroupSettings = async (
-    threadId: string, 
+    threadId: string,
     settings: { posting_mode?: 'all' | 'admins_only'; members_can_add_others?: boolean }
   ): Promise<boolean> => {
     try {
       isLoading.value = true
       error.value = null
-      
+
       const response = await chatAPI.updateGroupSettings(threadId, settings)
-      
+
       // Update the currentThread with new settings
       if (currentThread.value?.id === threadId) {
         currentThread.value = {
@@ -328,7 +328,7 @@ export const useChat = () => {
           }
         }
       }
-      
+
       // Also update in threads list with proper array replacement
       threads.value = threads.value.map(t => {
         if (t.id === threadId) {
@@ -345,7 +345,7 @@ export const useChat = () => {
         }
         return t
       })
-      
+
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to update group settings'
@@ -363,7 +363,7 @@ export const useChat = () => {
   const fetchMessages = async (threadId: string, cursor?: string): Promise<void> => {
     try {
       const response = await chatAPI.listMessages(threadId, { cursor })
-      
+
       if (cursor) {
         // Load more (append to existing)
         messages.value = [...messages.value, ...response.results]
@@ -371,7 +371,7 @@ export const useChat = () => {
         // Initial load
         messages.value = response.results.reverse() // Reverse to show oldest first
       }
-      
+
       messagesNextCursor.value = response.next
       messagesPrevCursor.value = response.previous
       hasMoreMessages.value = !!response.next
@@ -383,20 +383,20 @@ export const useChat = () => {
 
   const loadMoreMessages = async (): Promise<void> => {
     if (!selectedThreadId.value || !hasMoreMessages.value || !messagesNextCursor.value) return
-    
+
     await fetchMessages(selectedThreadId.value, messagesNextCursor.value)
   }
 
   const sendMessage = async (content: string, attachmentIds?: string[]): Promise<boolean> => {
     if (!selectedThreadId.value) return false
-    
+
     try {
       const data: SendMessageRequest = {
         content,
         reply_to: replyingTo.value?.id,
         attachment_ids: attachmentIds
       }
-      
+
       // Optimistic update
       const tempMessage: Message = {
         id: `temp-${Date.now()}`,
@@ -410,28 +410,33 @@ export const useChat = () => {
           role: 'user'
         },
         content,
-        reply_to: replyingTo.value?.id || null,
+        reply_to: replyingTo.value ? {
+          id: replyingTo.value.id,
+          content: replyingTo.value.content,
+          sender: replyingTo.value.sender,
+          attachments: replyingTo.value.attachments
+        } : null,
         has_attachments: !!attachmentIds?.length,
         created_at: new Date().toISOString(),
         edited_at: null,
         reactions: [],
         attachments: []
       }
-      
+
       messages.value.push(tempMessage)
-      
+
       // Clear reply state
       replyingTo.value = null
-      
+
       // Send to server
       const newMessage = await chatAPI.sendMessage(selectedThreadId.value, data)
-      
+
       // Replace temp message with real one
       const tempIndex = messages.value.findIndex(m => m.id === tempMessage.id)
       if (tempIndex !== -1) {
         messages.value[tempIndex] = newMessage
       }
-      
+
       // Update thread's last message in list
       const threadIndex = threads.value.findIndex(t => t.id === selectedThreadId.value)
       if (threadIndex !== -1 && threads.value[threadIndex].last_message) {
@@ -444,12 +449,12 @@ export const useChat = () => {
         }
         threads.value[threadIndex].updated_at = newMessage.created_at
       }
-      
+
       return true
     } catch (err: any) {
       // Remove optimistic message on error
       messages.value = messages.value.filter(m => !m.id.startsWith('temp-'))
-      
+
       error.value = err.response?.data?.error || err.message || 'Failed to send message'
       console.error('Error sending message:', err)
       return false
@@ -459,16 +464,16 @@ export const useChat = () => {
   const editMessage = async (messageId: string, content: string): Promise<boolean> => {
     try {
       const updatedMessage = await chatAPI.editMessage(messageId, { content })
-      
+
       // Update message in list
       const messageIndex = messages.value.findIndex(m => m.id === messageId)
       if (messageIndex !== -1) {
         messages.value[messageIndex] = updatedMessage
       }
-      
+
       // Clear editing state
       editingMessage.value = null
-      
+
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to edit message'
@@ -480,14 +485,14 @@ export const useChat = () => {
   const deleteMessage = async (messageId: string): Promise<boolean> => {
     try {
       await chatAPI.deleteMessage(messageId)
-      
+
       // Update message to show as deleted
       const messageIndex = messages.value.findIndex(m => m.id === messageId)
       if (messageIndex !== -1) {
         messages.value[messageIndex].content = '[Message deleted]'
         messages.value[messageIndex].is_deleted = true
       }
-      
+
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to delete message'
@@ -503,7 +508,7 @@ export const useChat = () => {
       if (messageIndex !== -1) {
         const message = messages.value[messageIndex]
         const reactionIndex = message.reactions.findIndex(r => r.emoji === emoji)
-        
+
         if (reactionIndex !== -1) {
           // Add user to existing reaction
           if (!message.reactions[reactionIndex].users.find(u => u.id === currentUserId.value)) {
@@ -530,11 +535,11 @@ export const useChat = () => {
             }]
           })
         }
-        
+
         // Trigger Vue reactivity for immediate UI update
         triggerRef(messages)
       }
-      
+
       // Send via WebSocket for real-time broadcast to other users
       if (isWebSocketConnected.value) {
         websocketService.addChatReaction(messageId, emoji)
@@ -543,13 +548,13 @@ export const useChat = () => {
         // Fallback to REST API if WebSocket is not connected
         console.warn('⚠️ [useChat] WebSocket not connected, using REST API fallback')
         const updatedMessage = await chatAPI.addReaction(messageId, { emoji })
-        
+
         // Update with server response
         if (messageIndex !== -1) {
           messages.value[messageIndex] = updatedMessage
           triggerRef(messages)
         }
-        
+
         return true
       }
     } catch (err: any) {
@@ -566,21 +571,21 @@ export const useChat = () => {
       if (messageIndex !== -1) {
         const message = messages.value[messageIndex]
         const reaction = message.reactions.find(r => r.emoji === emoji)
-        
+
         if (reaction) {
           // Remove current user from reaction
           reaction.users = reaction.users.filter(u => u.id !== currentUserId.value)
-          
+
           // Remove reaction if no users left
           if (reaction.users.length === 0) {
             message.reactions = message.reactions.filter(r => r.emoji !== emoji)
           }
-          
+
           // Trigger Vue reactivity for immediate UI update
           triggerRef(messages)
         }
       }
-      
+
       // Send via WebSocket for real-time broadcast to other users
       if (isWebSocketConnected.value) {
         websocketService.removeChatReaction(messageId, emoji)
@@ -588,13 +593,13 @@ export const useChat = () => {
       } else {
         // Fallback to REST API if WebSocket is not connected
         const updatedMessage = await chatAPI.removeReaction(messageId, emoji)
-        
+
         // Update with server response
         if (messageIndex !== -1) {
           messages.value[messageIndex] = updatedMessage
           triggerRef(messages)
         }
-        
+
         return true
       }
     } catch (err: any) {
@@ -610,7 +615,7 @@ export const useChat = () => {
 
   const uploadFile = async (file: File, caption?: string): Promise<string | null> => {
     const uploadId = `upload-${Date.now()}-${Math.random()}`
-    
+
     try {
       // Add to upload progress
       uploadProgress.value.push({
@@ -620,21 +625,21 @@ export const useChat = () => {
         status: 'uploading',
         caption: caption
       })
-      
+
       const response = await chatAPI.uploadAttachment(file, caption, (progress) => {
         const uploadIndex = uploadProgress.value.findIndex(u => u.id === uploadId)
         if (uploadIndex !== -1) {
           uploadProgress.value[uploadIndex].progress = progress
         }
       })
-      
+
       // Update to completed
       const uploadIndex = uploadProgress.value.findIndex(u => u.id === uploadId)
       if (uploadIndex !== -1) {
         uploadProgress.value[uploadIndex].status = 'completed'
         uploadProgress.value[uploadIndex].attachmentId = response.id
       }
-      
+
       return response.id
     } catch (err: any) {
       // Update to error
@@ -642,7 +647,7 @@ export const useChat = () => {
       if (uploadIndex !== -1) {
         uploadProgress.value[uploadIndex].status = 'error'
       }
-      
+
       error.value = err.response?.data?.error || err.message || 'Failed to upload file'
       console.error('❌ [useChat] Error uploading file:', err)
       return null
@@ -677,32 +682,32 @@ export const useChat = () => {
     if (notificationListenersSetup) {
       return
     }
-    
+
     notificationListenersSetup = true
-    
+
     // Unread count updates from backend - CRITICAL for sidebar badge
     websocketService.on('chat.unread.update', (data: any) => {
       const now = Date.now()
-      
+
       // ALWAYS store in WebSocket counts map with timestamp - this is authoritative
       // This ensures the value persists even if fetchThreads races with this update
       websocketUnreadCounts.value.set(data.thread_id, {
         count: data.unread_count,
         timestamp: now
       })
-      
+
       // Update specific thread unread count with proper reactivity
       const threadIndex = threads.value.findIndex(t => t.id === data.thread_id)
-      
+
       if (threadIndex !== -1) {
         // Create a new array to trigger Vue reactivity (full replacement)
-        threads.value = threads.value.map((t, i) => 
+        threads.value = threads.value.map((t, i) =>
           i === threadIndex ? { ...t, unread_count: data.unread_count } : t
         )
       } else {
         // Store in pending map
         pendingUnreadCounts.value.set(data.thread_id, data.unread_count)
-        
+
         // Auto-fetch threads if not yet initialized and not already fetching
         if (!hasInitializedThreads.value && !isAutoFetchingThreads.value) {
           isAutoFetchingThreads.value = true
@@ -718,12 +723,12 @@ export const useChat = () => {
       // Support legacy format from backend with proper reactivity
       const threadIndex = threads.value.findIndex(t => t.id === data.thread_id)
       if (threadIndex !== -1) {
-        threads.value = threads.value.map((t, i) => 
+        threads.value = threads.value.map((t, i) =>
           i === threadIndex ? { ...t, unread_count: data.unread_count } : t
         )
       } else {
         pendingUnreadCounts.value.set(data.thread_id, data.unread_count)
-        
+
         if (!hasInitializedThreads.value && !isAutoFetchingThreads.value) {
           isAutoFetchingThreads.value = true
           fetchThreads(undefined, true).catch(() => {
@@ -738,11 +743,11 @@ export const useChat = () => {
       // Update all thread unread counts from initial data with proper reactivity
       if (data.threads && Array.isArray(data.threads)) {
         // Create a map of thread_id -> unread_count for efficient lookup
-        const unreadMap = new Map<number, number>()
+        const unreadMap = new Map<string, number>()
         data.threads.forEach((threadData: any) => {
           unreadMap.set(threadData.thread_id, threadData.unread_count)
         })
-        
+
         // Replace entire array to ensure Vue reactivity
         threads.value = threads.value.map(t => {
           if (unreadMap.has(t.id)) {
@@ -757,15 +762,15 @@ export const useChat = () => {
     // Error handling (keep global for debugging)
     websocketService.on('chat.error', (data: any) => {
       console.error('Chat WebSocket error:', data.message)
-      
+
       // Handle rate limit exceeded
       if (data.code === 'RATE_LIMIT_EXCEEDED') {
         isRateLimited.value = true
         rateLimitCooldown.value = 60 // 60 seconds cooldown
-        
+
         // Show user-friendly error message
         error.value = 'أنت ترسل الرسائل بسرعة كبيرة. يرجى الانتظار قليلاً.'
-        
+
         // Start countdown
         const interval = setInterval(() => {
           rateLimitCooldown.value--
@@ -775,13 +780,13 @@ export const useChat = () => {
             clearInterval(interval)
           }
         }, 1000)
-        
+
         console.warn('⚠️ Rate limit exceeded:', data.message)
       } else {
         error.value = data.message || 'WebSocket error occurred'
       }
     })
-    
+
     // WORKAROUND: Listen for notification.count and refresh threads
     // This is needed because backend sends notification.count for ALL notifications
     // Debounced to prevent race conditions with chat.unread.update events
@@ -790,13 +795,13 @@ export const useChat = () => {
       // Only refresh if count actually changed
       if (data.count !== lastNotificationCount) {
         lastNotificationCount = data.count
-        
+
         // Cancel any pending fetchThreads call
         if (fetchThreadsDebounceTimer) {
           clearTimeout(fetchThreadsDebounceTimer)
           fetchThreadsDebounceTimer = null
         }
-        
+
         // Debounce fetchThreads to allow chat.unread.update to process first
         // This prevents the API call from overwriting fresh WebSocket data
         fetchThreadsDebounceTimer = setTimeout(() => {
@@ -805,7 +810,7 @@ export const useChat = () => {
           fetchThreads(undefined, true).catch(() => {
             // Failed to refresh threads
           })
-          
+
           fetchThreadsDebounceTimer = null
         }, 500) // 500ms debounce to let WebSocket events process first
       }
@@ -820,9 +825,9 @@ export const useChat = () => {
     if (chatListenersSetup) {
       return
     }
-    
+
     chatListenersSetup = true
-    
+
     // Connection events
     websocketService.on('chat.connected', (_data: any) => {
       isWebSocketConnected.value = true
@@ -843,7 +848,7 @@ export const useChat = () => {
 
     websocketService.on('chat.disconnected', (data: any) => {
       isWebSocketConnected.value = false
-      
+
       // Handle payload too large (code 1009)
       if (data.code === 1009) {
         error.value = 'الرسالة كبيرة جداً. يرجى تقليل حجم المرفقات.'
@@ -853,31 +858,31 @@ export const useChat = () => {
     // New message received
     websocketService.on('chat.message.new', (data: any) => {
       const rawMessage = data.message
-      
+
       // Normalize thread field (backend sends thread_id, frontend uses thread)
       const newMessage: Message = {
         ...rawMessage,
         thread: rawMessage.thread_id || rawMessage.thread
       }
-      
+
       // Clear typing indicator for this user when they send a message
       if (newMessage.sender.id !== currentUserId.value) {
         typingUsers.value.delete(newMessage.sender.id)
       }
-      
+
       // Check if this message is for a thread that's not currently active
       const isThreadActive = activeThreadId.value === newMessage.thread && isChatPageVisible.value
       const isOwnMessage = newMessage.sender.id === currentUserId.value
-      
+
       // Show notification if message is not from current user and thread is not active
       if (!isOwnMessage && !isThreadActive) {
         showChatMessageNotification(newMessage)
       }
-      
+
       // ✅ CRITICAL FIX: Only add message to messages array if it belongs to the CURRENTLY SELECTED thread
       // This fixes group chat real-time updates - messages were being added regardless of thread
       const isForCurrentThread = selectedThreadId.value === newMessage.thread
-      
+
       if (isForCurrentThread && !messages.value.find(m => m.id === newMessage.id)) {
         messages.value.push(newMessage)
       }
@@ -887,7 +892,7 @@ export const useChat = () => {
       if (threadIndex !== -1) {
         threads.value[threadIndex].last_message = newMessage
         threads.value[threadIndex].updated_at = newMessage.created_at
-        
+
         // Increment unread count if message is from another user and thread is not active
         if (!isOwnMessage && !isThreadActive) {
           threads.value[threadIndex].unread_count++
@@ -898,12 +903,12 @@ export const useChat = () => {
     // Message updated
     websocketService.on('chat.message.updated', (data: any) => {
       const updatedMessage = data.message as Message
-      
+
       // ✅ Only update message if it belongs to the currently selected thread
       if (selectedThreadId.value !== updatedMessage.thread) {
         return
       }
-      
+
       const index = messages.value.findIndex(m => m.id === updatedMessage.id)
       if (index !== -1) {
         messages.value[index] = updatedMessage
@@ -917,11 +922,11 @@ export const useChat = () => {
       if (!messageToDelete) {
         return
       }
-      
+
       if (selectedThreadId.value !== messageToDelete.thread) {
         return
       }
-      
+
       const index = messages.value.findIndex(m => m.id === data.message_id)
       if (index !== -1) {
         messages.value.splice(index, 1)
@@ -936,24 +941,24 @@ export const useChat = () => {
         // Create display name from first_name and last_name
         const firstName = data.user?.first_name || ''
         const lastName = data.user?.last_name || ''
-        const displayName = firstName && lastName ? `${firstName} ${lastName}` : 
-                          firstName || lastName || data.user?.username || 'User'
-        
+        const displayName = firstName && lastName ? `${firstName} ${lastName}` :
+          firstName || lastName || data.user?.username || 'User'
+
         // Clear any existing timeout for this user
         const existingTimeout = typingTimeouts.get(userId)
         if (existingTimeout) {
           clearTimeout(existingTimeout)
         }
-        
+
         // Store with user ID as key and display name as value
         typingUsers.value.set(userId, displayName)
-        
+
         // Auto-clear typing indicator after 5 seconds (fallback if stop event is lost)
         const timeout = setTimeout(() => {
           typingUsers.value.delete(userId)
           typingTimeouts.delete(userId)
         }, 5000)
-        
+
         typingTimeouts.set(userId, timeout)
       }
     })
@@ -967,7 +972,7 @@ export const useChat = () => {
           clearTimeout(existingTimeout)
           typingTimeouts.delete(userId)
         }
-        
+
         typingUsers.value.delete(userId)
       }
     })
@@ -984,12 +989,12 @@ export const useChat = () => {
       if (data.user_id == currentUserId.value) {
         return
       }
-      
+
       const messageIndex = messages.value.findIndex(m => m.id === data.message_id)
       if (messageIndex !== -1) {
         const message = messages.value[messageIndex]
         const reaction = message.reactions.find(r => r.emoji === data.emoji)
-        
+
         if (reaction) {
           // Add user to existing reaction if not already present
           if (!reaction.users.find(u => u.id === data.user_id)) {
@@ -1016,7 +1021,7 @@ export const useChat = () => {
             }]
           })
         }
-        
+
         // Trigger Vue reactivity
         triggerRef(messages)
       }
@@ -1028,20 +1033,20 @@ export const useChat = () => {
       if (data.user_id == currentUserId.value) {
         return
       }
-      
+
       const messageIndex = messages.value.findIndex(m => m.id === data.message_id)
       if (messageIndex !== -1) {
         const message = messages.value[messageIndex]
         const reaction = message.reactions.find(r => r.emoji === data.emoji)
-        
+
         if (reaction) {
           reaction.users = reaction.users.filter(u => u.id !== data.user_id)
-          
+
           // Remove reaction if no users left
           if (reaction.users.length === 0) {
             message.reactions = message.reactions.filter(r => r.emoji !== data.emoji)
           }
-          
+
           // Trigger Vue reactivity
           triggerRef(messages)
         }
@@ -1053,7 +1058,7 @@ export const useChat = () => {
       if (currentThread.value && data.thread.id === currentThread.value.id) {
         currentThread.value = data.thread
       }
-      
+
       // Update in threads list with proper array replacement
       threads.value = threads.value.map(t => t.id === data.thread.id ? data.thread : t)
     })
@@ -1078,7 +1083,7 @@ export const useChat = () => {
       const threadId = data.thread_id
       const newSettings = data.settings
       const updatedBy = data.updated_by
-      
+
       // Update currentThread if it's the affected thread
       if (currentThread.value && currentThread.value.id === threadId) {
         currentThread.value = {
@@ -1092,7 +1097,7 @@ export const useChat = () => {
           }
         }
       }
-      
+
       // Update in threads list with proper array replacement
       threads.value = threads.value.map(t => {
         if (t.id === threadId) {
@@ -1149,12 +1154,12 @@ export const useChat = () => {
   const disconnectFromChatWebSocket = (): void => {
     websocketService.disconnectFromChat()
     isWebSocketConnected.value = false
-    
+
     // Clear all typing indicators and their timeouts
     typingUsers.value.clear()
     typingTimeouts.forEach(timeout => clearTimeout(timeout))
     typingTimeouts.clear()
-    
+
     activeThreadId.value = null
   }
 
@@ -1167,11 +1172,11 @@ export const useChat = () => {
 
     const senderName = message.sender.full_name || `${message.sender.first_name} ${message.sender.last_name}`.trim()
     const threadName = thread.chat_name || thread.title || 'محادثة'
-    
+
     // Create notification title and body
     const title = thread.type === 'direct' ? senderName : `${senderName} في ${threadName}`
     const body = message.content.length > 100 ? message.content.substring(0, 100) + '...' : message.content
-    
+
     // Show browser notification if permission granted
     if ('Notification' in window && Notification.permission === 'granted') {
       const notification = new Notification(title, {
@@ -1182,17 +1187,17 @@ export const useChat = () => {
         requireInteraction: false,
         silent: false
       })
-      
+
       notification.onclick = () => {
         window.focus()
         selectThread(message.thread)
         notification.close()
       }
     }
-    
+
     // Show in-app toast notification
     showInAppChatNotification(title, body, message.thread)
-    
+
     // Play notification sound
     playChatNotificationSound()
   }
@@ -1203,7 +1208,7 @@ export const useChat = () => {
   const showInAppChatNotification = (title: string, body: string, threadId: string): void => {
     // Create toast notification element
     const toastContainer = document.getElementById('chat-toast-container') || createToastContainer()
-    
+
     const toast = document.createElement('div')
     toast.className = 'chat-notification-toast'
     toast.innerHTML = `
@@ -1216,17 +1221,17 @@ export const useChat = () => {
       </div>
       <div class="toast-body">${escapeHtml(body)}</div>
     `
-    
+
     toast.onclick = (e) => {
-      if (!(e.target as HTMLElement).classList.contains('toast-close') && 
-          !(e.target as HTMLElement).closest('.toast-close')) {
+      if (!(e.target as HTMLElement).classList.contains('toast-close') &&
+        !(e.target as HTMLElement).closest('.toast-close')) {
         selectThread(threadId)
         toast.remove()
       }
     }
-    
+
     toastContainer.appendChild(toast)
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
       toast.style.animation = 'slideOut 0.3s ease-out'
@@ -1251,7 +1256,7 @@ export const useChat = () => {
       max-width: 400px;
     `
     document.body.appendChild(container)
-    
+
     // Add styles
     if (!document.getElementById('chat-toast-styles')) {
       const style = document.createElement('style')
@@ -1334,7 +1339,7 @@ export const useChat = () => {
       `
       document.head.appendChild(style)
     }
-    
+
     return container
   }
 
@@ -1355,29 +1360,29 @@ export const useChat = () => {
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
       const oscillator = audioContext.createOscillator()
       const gainNode = audioContext.createGain()
-      
+
       oscillator.connect(gainNode)
       gainNode.connect(audioContext.destination)
-      
+
       oscillator.frequency.value = 600
       oscillator.type = 'sine'
       gainNode.gain.value = 0.15
-      
+
       oscillator.start()
       oscillator.stop(audioContext.currentTime + 0.15)
-      
+
       // Second beep
       setTimeout(() => {
         const oscillator2 = audioContext.createOscillator()
         const gainNode2 = audioContext.createGain()
-        
+
         oscillator2.connect(gainNode2)
         gainNode2.connect(audioContext.destination)
-        
+
         oscillator2.frequency.value = 800
         oscillator2.type = 'sine'
         gainNode2.gain.value = 0.15
-        
+
         oscillator2.start()
         oscillator2.stop(audioContext.currentTime + 0.15)
       }, 100)
@@ -1419,7 +1424,7 @@ export const useChat = () => {
     // This prevents breaking the connection when other components using useChat unmount
     if (isChatPageVisible.value) {
       disconnectFromChatWebSocket()
-      
+
       // Only remove CHAT-SPECIFIC listeners when leaving chat page
       // These are for active thread communication, not global badge updates
       websocketService.removeAllListeners('chat.connected')
@@ -1439,11 +1444,11 @@ export const useChat = () => {
       websocketService.removeAllListeners('group.settings.updated')
       websocketService.removeAllListeners('chat.ping')
       websocketService.removeAllListeners('chat.pong')
-      
+
       // Reset only the CHAT listeners flag - notification listeners persist
       chatListenersSetup = false
     }
-    
+
     // NEVER remove these global notification listeners - they persist across all pages:
     // - chat.unread.update (critical for sidebar badge)
     // - unread.count.update (legacy format)
@@ -1469,7 +1474,7 @@ export const useChat = () => {
   const totalUnreadCount = computed(() => {
     const now = Date.now()
     let threadsTotal = 0
-    
+
     // Calculate total from threads, but use WebSocket values if they're fresher
     threads.value.forEach(thread => {
       const wsData = websocketUnreadCounts.value.get(thread.id)
@@ -1481,10 +1486,10 @@ export const useChat = () => {
         threadsTotal += thread.unread_count
       }
     })
-    
+
     // Add pending counts for threads not yet loaded
     const pendingTotal = Array.from(pendingUnreadCounts.value.values()).reduce((sum, count) => sum + count, 0)
-    
+
     // Add WebSocket counts for threads not in our list yet
     let wsOnlyTotal = 0
     websocketUnreadCounts.value.forEach((data, threadId) => {
@@ -1496,9 +1501,9 @@ export const useChat = () => {
         }
       }
     })
-    
+
     const total = threadsTotal + pendingTotal + wsOnlyTotal
-    
+
     return total
   })
 
@@ -1515,14 +1520,14 @@ export const useChat = () => {
   const canPostMessages = computed(() => {
     if (!currentThread.value) return false
     if (currentThread.value.type === 'direct') return true
-    
+
     const settings = currentThread.value.group_settings
     if (!settings) return true
-    
+
     if (settings.posting_mode === 'admins_only') {
       return currentThread.value.my_role === 'admin' || currentThread.value.my_role === 'owner'
     }
-    
+
     return true
   })
 
@@ -1546,12 +1551,12 @@ export const useChat = () => {
     replyingTo,
     editingMessage,
     uploadProgress,
-    
+
     // Rate limiting state
     rateLimits,
     isRateLimited,
     rateLimitCooldown,
-    
+
     // Computed
     unreadThreadsCount,
     totalUnreadCount,
@@ -1561,7 +1566,7 @@ export const useChat = () => {
     canManageMembers,
     hasMoreMessages,
     currentUserId,
-    
+
     // Thread actions
     fetchThreads,
     createThread,
@@ -1571,7 +1576,7 @@ export const useChat = () => {
     removeMember,
     changeRole,
     updateGroupSettings,
-    
+
     // Message actions
     fetchMessages,
     loadMoreMessages,
@@ -1580,20 +1585,20 @@ export const useChat = () => {
     deleteMessage,
     addReaction,
     removeReaction,
-    
+
     // File upload
     uploadFile,
     removeUpload,
     clearUploads,
     updateUploadCaption,
-    
+
     // WebSocket
     connectToChatWebSocket,
     disconnectFromChatWebSocket,
     sendTypingIndicator,
     isWebSocketConnected,
     typingUsers,
-    
+
     // UI state
     setReplyingTo: (message: Message | null) => { replyingTo.value = message },
     setEditingMessage: (message: Message | null) => { editingMessage.value = message },

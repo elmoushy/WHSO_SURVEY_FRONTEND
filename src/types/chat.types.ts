@@ -90,12 +90,19 @@ export interface MessageAttachment {
   caption?: string  // Optional caption/comment for the attachment
 }
 
+export interface ReplyToMessage {
+  id: string
+  content: string
+  sender: ChatUser
+  attachments?: MessageAttachment[]
+}
+
 export interface Message {
   id: string
   thread: string
   sender: ChatUser
   content: string
-  reply_to: string | null
+  reply_to: ReplyToMessage | null
   has_attachments: boolean
   created_at: string
   edited_at: string | null
