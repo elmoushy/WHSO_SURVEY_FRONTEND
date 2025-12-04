@@ -20,7 +20,6 @@
             >
               <i class="fas fa-bell" :class="{ [$style.wsConnected]: wsConnected, [$style.wsDisconnected]: !wsConnected }"></i>
               <span v-if="notificationCount > 0" :class="$style.badge">{{ notificationCount }}</span>
-              <!-- <span v-if="hasNewWebSocketNotification" :class="$style.dotIndicator"></span> -->
             </button>
 
             <div v-if="wsConnecting" :class="$style.wsStatus" title="Connecting to notification service...">
@@ -33,25 +32,50 @@
             <div v-if="showNotifications" :class="$style.dropdown" data-dropdown @click.stop>
               <div :class="$style.dropdownHeader">
                 <h3>{{ t('notifications.title') }}</h3>
-                <button @click="markAllAsRead" :class="$style.markAllRead" :disabled="isMarkingAllRead">
-                  <i v-if="isMarkingAllRead" class="fas fa-spinner fa-spin"></i>
-                  {{ t('notifications.markAllRead') }}
-                </button>
+                <div :class="$style.headerActions">
+                  <!-- Refresh button -->
+                  <button 
+                    @click="retryLoadNotifications" 
+                    :class="$style.refreshBtn" 
+                    :disabled="isLoadingNotifications"
+                    :title="currentLanguage === 'ar' ? 'تحديث' : 'Refresh'"
+                  >
+                    <i :class="isLoadingNotifications ? 'fas fa-spinner fa-spin' : 'fas fa-sync-alt'"></i>
+                  </button>
+                  <button @click="markAllAsRead" :class="$style.markAllRead" :disabled="isMarkingAllRead || notifications.length === 0">
+                    <i v-if="isMarkingAllRead" class="fas fa-spinner fa-spin"></i>
+                    {{ t('notifications.markAllRead') }}
+                  </button>
+                </div>
               </div>
               <div :class="$style.notificationsList">
-                <div v-if="!hasLoadedNotifications && !isLoadingNotifications" :class="$style.noNotifications">
+                <!-- Error state with retry option -->
+                <div v-if="loadNotificationError && !isLoadingNotifications" :class="$style.errorNotifications" @click="retryLoadNotifications">
+                  <i class="fas fa-exclamation-circle"></i>
+                  <p>{{ loadNotificationError }}</p>
+                  <button :class="$style.retryBtn">
+                    <i class="fas fa-redo"></i>
+                    {{ currentLanguage === 'ar' ? 'إعادة المحاولة' : 'Retry' }}
+                  </button>
+                </div>
+                <!-- Initial state - not loaded yet -->
+                <div v-else-if="!hasLoadedNotifications && !isLoadingNotifications && !loadNotificationError" :class="$style.noNotifications">
                   <i class="fas fa-bell"></i>
                   <p>{{ currentLanguage === 'ar' ? 'انقر لتحميل الإشعارات' : 'Click to load notifications' }}</p>
                 </div>
-                <div v-else-if="notifications.length === 0 && !isLoadingNotifications" :class="$style.noNotifications">
+                <!-- Empty state - loaded but no notifications -->
+                <div v-else-if="notifications.length === 0 && !isLoadingNotifications && hasLoadedNotifications" :class="$style.noNotifications">
                   <i class="fas fa-bell-slash"></i>
                   <p>{{ t('notifications.noNotifications') }}</p>
                   <span>{{ t('notifications.noNotificationsDesc') }}</span>
                 </div>
+                <!-- Loading state -->
                 <div v-if="isLoadingNotifications" :class="$style.loadingNotifications">
                   <i class="fas fa-spinner fa-spin"></i>
                   <p>{{ currentLanguage === 'ar' ? 'جاري التحميل...' : 'Loading...' }}</p>
+                  <span :class="$style.loadingHint">{{ currentLanguage === 'ar' ? 'قد يستغرق بضع ثوان...' : 'This may take a few seconds...' }}</span>
                 </div>
+                <!-- Notification items -->
                 <div
                   v-for="notification in notifications"
                   :key="notification.id"
@@ -239,10 +263,17 @@ const notifications = ref<Notification[]>([])
 const isLoadingNotifications = ref(false)
 const isMarkingAllRead = ref(false)
 const hasLoadedNotifications = ref(false)
+const loadNotificationError = ref<string | null>(null)
 
 // New notification indicator state
 const hasNewWebSocketNotification = ref(false)
 const newNotificationTimer = ref<NodeJS.Timeout | null>(null)
+
+// Loading timeout and retry configuration
+const NOTIFICATION_LOAD_TIMEOUT = 20000 // Increased to 20 seconds for slow connections
+const MAX_LOAD_RETRIES = 3 // Increased retries
+const loadRetryCount = ref(0)
+const loadTimeoutTimer = ref<NodeJS.Timeout | null>(null)
 
 // WebSocket connection state
 const wsConnected = ref(false)
@@ -250,12 +281,16 @@ const wsConnecting = ref(false)
 const wsConnectionError = ref<string | null>(null)
 
 // WebSocket notification count (from real-time updates)
-const wsNotificationCount = ref(0)
+const wsNotificationCount = ref(-1)
+
+// Auto-recovery timer for stuck loading states
+const stuckLoadingRecoveryTimer = ref<NodeJS.Timeout | null>(null)
 
 // Combined notification count - prefer WebSocket count, fallback to local state
 const notificationCount = computed(() => {
-  // If we have a WebSocket count, use it (it's more accurate)
-  if (wsConnected.value && wsNotificationCount.value >= 0) {
+  // If we have a WebSocket count (not -1), use it (it's more accurate)
+  // -1 means we haven't received a count from WebSocket yet
+  if (wsConnected.value && wsNotificationCount.value > -1) {
     return wsNotificationCount.value
   }
   // Fallback to counting unread from loaded notifications
@@ -376,22 +411,139 @@ const navigationLinks = computed(() => {
 
 // Notification methods
 
+/**
+ * Clear all loading timers to prevent memory leaks
+ */
+const clearLoadingTimers = () => {
+  if (loadTimeoutTimer.value) {
+    clearTimeout(loadTimeoutTimer.value)
+    loadTimeoutTimer.value = null
+  }
+  if (stuckLoadingRecoveryTimer.value) {
+    clearTimeout(stuckLoadingRecoveryTimer.value)
+    stuckLoadingRecoveryTimer.value = null
+  }
+}
+
+/**
+ * Reset loading state - called when loading gets stuck or fails
+ */
+const resetLoadingState = () => {
+  clearLoadingTimers()
+  isLoadingNotifications.value = false
+  loadNotificationError.value = null
+}
+
+/**
+ * Force reset notifications - emergency recovery function
+ */
+const forceResetNotifications = () => {
+  resetLoadingState()
+  loadRetryCount.value = 0
+  hasLoadedNotifications.value = false
+  notifications.value = []
+}
+
+/**
+ * Load notifications with timeout and retry logic
+ */
 const loadNotifications = async () => {
+  // Prevent multiple simultaneous loads
+  if (isLoadingNotifications.value) {
+    return
+  }
+  
+  // Clear any existing timers
+  clearLoadingTimers()
+  
   isLoadingNotifications.value = true
+  loadNotificationError.value = null
+  
+  // Set up timeout to prevent infinite loading
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    loadTimeoutTimer.value = setTimeout(() => {
+      reject(new Error('TIMEOUT'))
+    }, NOTIFICATION_LOAD_TIMEOUT)
+  })
+  
+  // Set up stuck loading recovery (additional safety net)
+  stuckLoadingRecoveryTimer.value = setTimeout(() => {
+    if (isLoadingNotifications.value) {
+      resetLoadingState()
+      loadNotificationError.value = currentLanguage.value === 'ar' 
+        ? 'انتهت المهلة، انقر للمحاولة مرة أخرى' 
+        : 'Timed out, click to retry'
+    }
+  }, NOTIFICATION_LOAD_TIMEOUT + 2000) // Extra 2 seconds as safety margin
+  
+  const startTime = Date.now()
+  
   try {
     const lang = currentLanguage.value as 'en' | 'ar'
-    const recentNotifications = await notificationService.getRecentNotifications(lang)
+    
+    // Race between API call and timeout
+    const recentNotifications = await Promise.race([
+      notificationService.getRecentNotifications(lang),
+      timeoutPromise
+    ])
+    
+    // Clear timeout on success
+    clearLoadingTimers()
     
     // Sort by created_at
-    notifications.value = recentNotifications.sort((a, b) => 
+    notifications.value = recentNotifications.sort((a: Notification, b: Notification) => 
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
     hasLoadedNotifications.value = true
-  } catch (error) {
-    console.error('Failed to load notifications:', error)
+    loadRetryCount.value = 0 // Reset retry count on success
+    loadNotificationError.value = null
+    
+  } catch (error: any) {
+    
+    clearLoadingTimers()
+    
+    // Handle different error types
+    if (error.message === 'TIMEOUT') {
+      loadNotificationError.value = currentLanguage.value === 'ar' 
+        ? 'انتهت المهلة، انقر للمحاولة مرة أخرى' 
+        : 'Loading timed out, click to retry'
+    } else if (error.response?.status === 401 || error.response?.status === 403) {
+      // Token expired or unauthorized
+      loadNotificationError.value = currentLanguage.value === 'ar' 
+        ? 'انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى' 
+        : 'Session expired, please login again'
+      // Don't retry on auth errors
+      loadRetryCount.value = MAX_LOAD_RETRIES
+    } else {
+      loadNotificationError.value = currentLanguage.value === 'ar' 
+        ? 'فشل التحميل، انقر للمحاولة مرة أخرى' 
+        : 'Failed to load, click to retry'
+    }
+    
+    // Auto-retry if under retry limit (except for auth errors)
+    // Now includes TIMEOUT in retry logic
+    if (loadRetryCount.value < MAX_LOAD_RETRIES && error.response?.status !== 401 && error.response?.status !== 403) {
+      loadRetryCount.value++
+      
+      // Wait before retrying
+      setTimeout(() => {
+        if (showNotifications.value) { // Only retry if dropdown still open
+          loadNotifications()
+        }
+      }, 2000)
+    }
   } finally {
     isLoadingNotifications.value = false
   }
+}
+
+/**
+ * Manual retry function for when user clicks on error message
+ */
+const retryLoadNotifications = () => {
+  loadRetryCount.value = 0 // Reset retry count for manual retry
+  loadNotificationError.value = null
+  loadNotifications()
 }
 
 const handleNotificationClick = async (notification: Notification) => {
@@ -540,6 +692,26 @@ watch([showSettings, showNotifications, showMobileMenu, showUserMenu], () => {
   preventBodyScroll()
 })
 
+// Store the computed reference once to ensure proper reactivity tracking
+const wsServiceConnected = computed(() => websocketService.isNotificationConnected.value)
+
+// Watch websocketService connection state and sync local state
+// This handles cases where App.vue connects/disconnects the WebSocket
+watch(
+  wsServiceConnected,
+  (isConnected) => {
+    if (isConnected) {
+      wsConnected.value = true
+      wsConnecting.value = false
+      wsConnectionError.value = null
+    } else {
+      wsConnected.value = false
+      // Don't set wsConnecting to true here, let the connect function handle it
+    }
+  },
+  { immediate: true }
+)
+
 // ============================================
 // WEBSOCKET NOTIFICATION COUNT HANDLING
 // ============================================
@@ -551,8 +723,6 @@ watch([showSettings, showNotifications, showMobileMenu, showUserMenu], () => {
 const handleNotificationCount = (data: { type: string; count: number; timestamp: string }) => {
   const previousCount = wsNotificationCount.value
   wsNotificationCount.value = data.count
-  
-  console.log('🔔 Notification count updated:', data.count)
   
   // Show new notification indicator if count increased
   if (data.count > previousCount && previousCount >= 0) {
@@ -567,7 +737,11 @@ const handleWsConnected = () => {
   wsConnected.value = true
   wsConnecting.value = false
   wsConnectionError.value = null
-  console.log('✅ Notification WebSocket connected')
+  
+  // If dropdown is open, refresh notifications on reconnect
+  if (showNotifications.value && hasLoadedNotifications.value) {
+    loadNotifications()
+  }
 }
 
 /**
@@ -576,7 +750,13 @@ const handleWsConnected = () => {
 const handleWsDisconnected = () => {
   wsConnected.value = false
   wsConnecting.value = false
-  console.log('🔌 Notification WebSocket disconnected')
+  
+  // If loading was in progress and WS disconnected, it might be due to token issues
+  // Reset loading state to prevent stuck loading
+  if (isLoadingNotifications.value) {
+    console.warn('⚠️ WebSocket disconnected during notification load, resetting state')
+    resetLoadingState()
+  }
 }
 
 /**
@@ -607,24 +787,44 @@ const showNewNotificationIndicator = () => {
  * Connect to notification WebSocket
  */
 const connectToNotificationWebSocket = async () => {
-  if (wsConnected.value || wsConnecting.value) return
+  // Check if websocketService is already connected (e.g., from App.vue)
+  // This handles HMR/dev server restart scenarios
+  if (wsServiceConnected.value) {
+    wsConnected.value = true
+    wsConnecting.value = false
+    wsConnectionError.value = null
+    
+    // Register listeners (only once)
+    registerWebSocketListeners()
+    return
+  }
+  
+  if (wsConnected.value || wsConnecting.value) {
+    return
+  }
   
   wsConnecting.value = true
   wsConnectionError.value = null
   
+  // Set a timeout to prevent stuck "connecting" state
+  const connectTimeout = setTimeout(() => {
+    if (wsConnecting.value && !wsConnected.value) {
+      wsConnecting.value = false
+      wsConnectionError.value = 'Connection timeout'
+    }
+  }, 15000) // 15 second timeout
+  
   try {
-    // Set up event listeners BEFORE connecting
-    websocketService.on('notification.count', handleNotificationCount)
-    websocketService.on('notification.connected', handleWsConnected)
-    websocketService.on('notification.disconnected', handleWsDisconnected)
-    websocketService.on('notification.error', handleWsError)
+    // Set up event listeners BEFORE connecting (only once)
+    registerWebSocketListeners()
     
     await websocketService.connectToNotifications()
+    clearTimeout(connectTimeout)
   } catch (error) {
+    clearTimeout(connectTimeout)
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
     wsConnectionError.value = errorMessage
     wsConnecting.value = false
-    console.error('Failed to connect to notification WebSocket:', errorMessage)
   }
 }
 
@@ -637,10 +837,12 @@ const disconnectFromNotificationWebSocket = () => {
   websocketService.off('notification.connected', handleWsConnected)
   websocketService.off('notification.disconnected', handleWsDisconnected)
   websocketService.off('notification.error', handleWsError)
+  listenersRegistered.value = false
   
   websocketService.disconnectFromNotifications()
   wsConnected.value = false
   wsConnecting.value = false
+  wsNotificationCount.value = -1 // Reset to "not received" state
 }
 
 // Watch for user authentication changes to connect/disconnect WebSocket
@@ -686,13 +888,40 @@ const formatTime = (createdAt: string): string => {
   }
 }
 
+// Track if listeners have been registered to prevent duplicates
+const listenersRegistered = ref(false)
+
+/**
+ * Register WebSocket event listeners (only once)
+ */
+const registerWebSocketListeners = () => {
+  if (listenersRegistered.value) {
+    return
+  }
+  
+  websocketService.on('notification.count', handleNotificationCount)
+  websocketService.on('notification.connected', handleWsConnected)
+  websocketService.on('notification.disconnected', handleWsDisconnected)
+  websocketService.on('notification.error', handleWsError)
+  listenersRegistered.value = true
+}
+
 // Lifecycle
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
   document.addEventListener('keydown', handleEscapeKey)
   
-  // Connect to notification WebSocket if user is already authenticated
-  if (user.value) {
+  // Sync WebSocket state with service on mount (handles HMR/dev server restart scenarios)
+  // This is crucial: the service might already be connected from App.vue
+  if (wsServiceConnected.value) {
+    wsConnected.value = true
+    wsConnecting.value = false
+    wsConnectionError.value = null
+    
+    // Register event listeners for future events (only once)
+    registerWebSocketListeners()
+  } else if (user.value) {
+    // Connect to notification WebSocket if user is authenticated but not connected
     connectToNotificationWebSocket()
   }
 })
@@ -708,6 +937,9 @@ onUnmounted(() => {
   if (newNotificationTimer.value) {
     clearTimeout(newNotificationTimer.value)
   }
+  
+  // Clear loading timers to prevent memory leaks
+  clearLoadingTimers()
   
   // Disconnect from notification WebSocket
   disconnectFromNotificationWebSocket()

@@ -109,14 +109,12 @@ export const useChat = () => {
         
         // If we have a recent WebSocket update for this thread, use that count instead
         if (wsData && (now - wsData.timestamp) < WEBSOCKET_PRIORITY_WINDOW_MS) {
-          console.log(`🔒 [fetchThreads] Preserving WebSocket unread_count for ${apiThread.id}: ${wsData.count} (API had: ${apiThread.unread_count})`)
           return { ...apiThread, unread_count: wsData.count }
         }
         
         // Check pending counts as well
         if (pendingUnreadCounts.value.has(apiThread.id)) {
           const count = pendingUnreadCounts.value.get(apiThread.id)!
-          console.log(`📦 Applied pending count ${count} to thread ${apiThread.id}`)
           return { ...apiThread, unread_count: count }
         }
         
@@ -140,7 +138,6 @@ export const useChat = () => {
       })
       
       hasInitializedThreads.value = true
-      console.log('✅ Threads fetched:', threads.value.length)
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to fetch threads'
       console.error('Error fetching threads:', err)
@@ -151,14 +148,11 @@ export const useChat = () => {
   }
 
   const createThread = async (data: CreateThreadRequest): Promise<Thread | null> => {
-    console.log('🔵 [useChat] createThread called with:', data)
     try {
       isLoading.value = true
       error.value = null
       
-      console.log('🔵 [useChat] Calling chatAPI.createThread...')
       const newThread = await chatAPI.createThread(data)
-      console.log('🔵 [useChat] chatAPI.createThread returned:', newThread)
       
       // Add to threads list
       threads.value.unshift(newThread)
@@ -168,10 +162,8 @@ export const useChat = () => {
       
       return newThread
     } catch (err: any) {
-      console.error('🔴 [useChat] createThread error:', err)
       // Handle duplicate direct thread
       if (err.response?.data?.existing_thread_id) {
-        console.log('🔵 [useChat] Existing thread found, selecting it:', err.response.data.existing_thread_id)
         await selectThread(err.response.data.existing_thread_id)
         return null
       }
@@ -203,7 +195,6 @@ export const useChat = () => {
       // Update unread count in threads list with proper reactivity (array replacement)
       threads.value = threads.value.map(t => {
         if (t.id === threadId) {
-          console.log(`✅ Cleared unread count for thread ${threadId}`)
           return { ...t, unread_count: 0 }
         }
         return t
@@ -355,7 +346,6 @@ export const useChat = () => {
         return t
       })
       
-      console.log('✅ Group settings updated:', response)
       return true
     } catch (err: any) {
       error.value = err.response?.data?.error || err.message || 'Failed to update group settings'
@@ -508,8 +498,6 @@ export const useChat = () => {
 
   const addReaction = async (messageId: string, emoji: string): Promise<boolean> => {
     try {
-      console.log(`🚀 [useChat] Adding reaction ${emoji} to message ${messageId}`)
-      
       // Optimistic update - immediately update UI
       const messageIndex = messages.value.findIndex(m => m.id === messageId)
       if (messageIndex !== -1) {
@@ -527,7 +515,6 @@ export const useChat = () => {
               full_name: 'You',
               role: 'user'
             })
-            console.log(`📝 [useChat] Optimistic: Added to existing reaction ${emoji}`)
           }
         } else {
           // Create new reaction
@@ -542,18 +529,15 @@ export const useChat = () => {
               role: 'user'
             }]
           })
-          console.log(`📝 [useChat] Optimistic: Created new reaction ${emoji}`)
         }
         
         // Trigger Vue reactivity for immediate UI update
         triggerRef(messages)
-        console.log('🔄 [useChat] Triggered messages ref for optimistic reaction update')
       }
       
       // Send via WebSocket for real-time broadcast to other users
       if (isWebSocketConnected.value) {
         websocketService.addChatReaction(messageId, emoji)
-        console.log(`✨ [useChat] Sent reaction.add via WebSocket`)
         return true
       } else {
         // Fallback to REST API if WebSocket is not connected
@@ -577,8 +561,6 @@ export const useChat = () => {
 
   const removeReaction = async (messageId: string, emoji: string): Promise<boolean> => {
     try {
-      console.log(`🗑️ [useChat] Removing reaction ${emoji} from message ${messageId}`)
-      
       // Optimistic update - immediately update UI
       const messageIndex = messages.value.findIndex(m => m.id === messageId)
       if (messageIndex !== -1) {
@@ -588,28 +570,23 @@ export const useChat = () => {
         if (reaction) {
           // Remove current user from reaction
           reaction.users = reaction.users.filter(u => u.id !== currentUserId.value)
-          console.log(`📝 [useChat] Optimistic: Removed user from reaction ${emoji}`)
           
           // Remove reaction if no users left
           if (reaction.users.length === 0) {
             message.reactions = message.reactions.filter(r => r.emoji !== emoji)
-            console.log(`📝 [useChat] Optimistic: Removed empty reaction ${emoji}`)
           }
           
           // Trigger Vue reactivity for immediate UI update
           triggerRef(messages)
-          console.log('🔄 [useChat] Triggered messages ref for optimistic reaction removal')
         }
       }
       
       // Send via WebSocket for real-time broadcast to other users
       if (isWebSocketConnected.value) {
         websocketService.removeChatReaction(messageId, emoji)
-        console.log(`✨ [useChat] Sent reaction.remove via WebSocket`)
         return true
       } else {
         // Fallback to REST API if WebSocket is not connected
-        console.warn('⚠️ [useChat] WebSocket not connected, using REST API fallback')
         const updatedMessage = await chatAPI.removeReaction(messageId, emoji)
         
         // Update with server response
@@ -635,8 +612,6 @@ export const useChat = () => {
     const uploadId = `upload-${Date.now()}-${Math.random()}`
     
     try {
-      console.log(`📤 [useChat] Uploading file: ${file.name}`, caption ? `with caption: "${caption}"` : '')
-      
       // Add to upload progress
       uploadProgress.value.push({
         id: uploadId,
@@ -652,8 +627,6 @@ export const useChat = () => {
           uploadProgress.value[uploadIndex].progress = progress
         }
       })
-      
-      console.log(`✅ [useChat] File uploaded successfully: ${response.id}`)
       
       // Update to completed
       const uploadIndex = uploadProgress.value.findIndex(u => u.id === uploadId)
@@ -688,7 +661,6 @@ export const useChat = () => {
     const uploadIndex = uploadProgress.value.findIndex(u => u.id === uploadId)
     if (uploadIndex !== -1) {
       uploadProgress.value[uploadIndex].caption = caption
-      console.log(`📝 [useChat] Updated caption for upload ${uploadId}`)
     }
   }
 
@@ -703,20 +675,13 @@ export const useChat = () => {
    */
   const setupNotificationListeners = (): void => {
     if (notificationListenersSetup) {
-      console.log('⏭️ Notification listeners already set up, skipping')
       return
     }
     
-    console.log('🔔 Setting up GLOBAL notification listeners (persist across all pages)...')
     notificationListenersSetup = true
     
     // Unread count updates from backend - CRITICAL for sidebar badge
-    console.log('👂 Registering listener for: chat.unread.update')
     websocketService.on('chat.unread.update', (data: any) => {
-      console.log('📊 [useChat] Unread count update received:', data)
-      console.log('📊 [useChat] Current threads:', threads.value.length)
-      console.log('📊 [useChat] Looking for thread:', data.thread_id)
-      
       const now = Date.now()
       
       // ALWAYS store in WebSocket counts map with timestamp - this is authoritative
@@ -725,34 +690,23 @@ export const useChat = () => {
         count: data.unread_count,
         timestamp: now
       })
-      console.log(`🔒 [useChat] Stored WebSocket unread_count for ${data.thread_id}: ${data.unread_count}`)
       
       // Update specific thread unread count with proper reactivity
       const threadIndex = threads.value.findIndex(t => t.id === data.thread_id)
-      console.log('🔍 [useChat] Thread index found:', threadIndex)
       
       if (threadIndex !== -1) {
         // Create a new array to trigger Vue reactivity (full replacement)
-        const oldCount = threads.value[threadIndex].unread_count
         threads.value = threads.value.map((t, i) => 
           i === threadIndex ? { ...t, unread_count: data.unread_count } : t
         )
-        
-        console.log(`✅ [useChat] Updated thread ${data.thread_id} unread_count: ${oldCount} → ${data.unread_count}`)
-        console.log(`✅ [useChat] Total unread count is now: ${totalUnreadCount.value}`)
       } else {
-        console.warn(`⚠️ [useChat] Thread ${data.thread_id} not found in ${threads.value.length} threads`)
-        console.log('📊 [useChat] Storing as pending and will auto-fetch')
         // Store in pending map
         pendingUnreadCounts.value.set(data.thread_id, data.unread_count)
-        console.log(`📊 [useChat] Pending counts now:`, Array.from(pendingUnreadCounts.value.entries()))
         
         // Auto-fetch threads if not yet initialized and not already fetching
         if (!hasInitializedThreads.value && !isAutoFetchingThreads.value) {
-          console.log('🔄 [useChat] Auto-fetching threads to apply unread counts...')
           isAutoFetchingThreads.value = true
-          fetchThreads(undefined, true).catch(err => {
-            console.error('❌ [useChat] Auto-fetch threads failed:', err)
+          fetchThreads(undefined, true).catch(() => {
             isAutoFetchingThreads.value = false
           })
         }
@@ -761,25 +715,18 @@ export const useChat = () => {
 
     // Legacy format unread count updates
     websocketService.on('unread.count.update', (data: any) => {
-      console.log('📊 Unread count update (legacy format):', data)
-      
       // Support legacy format from backend with proper reactivity
       const threadIndex = threads.value.findIndex(t => t.id === data.thread_id)
       if (threadIndex !== -1) {
         threads.value = threads.value.map((t, i) => 
           i === threadIndex ? { ...t, unread_count: data.unread_count } : t
         )
-        console.log(`✅ Updated thread ${data.thread_id} unread_count to ${data.unread_count} (legacy)`)
-        console.log(`✅ Total unread count is now: ${totalUnreadCount.value}`)
       } else {
-        console.warn(`⚠️ Thread ${data.thread_id} not found (legacy), storing as pending`)
         pendingUnreadCounts.value.set(data.thread_id, data.unread_count)
         
         if (!hasInitializedThreads.value && !isAutoFetchingThreads.value) {
-          console.log('🔄 Auto-fetching threads to apply unread counts (legacy)...')
           isAutoFetchingThreads.value = true
-          fetchThreads(undefined, true).catch(err => {
-            console.error('Auto-fetch threads failed:', err)
+          fetchThreads(undefined, true).catch(() => {
             isAutoFetchingThreads.value = false
           })
         }
@@ -788,8 +735,6 @@ export const useChat = () => {
 
     // Initial unread counts from notification WebSocket
     websocketService.on('unread.counts.initial', (data: any) => {
-      console.log('📊 Initial unread counts received:', data)
-      
       // Update all thread unread counts from initial data with proper reactivity
       if (data.threads && Array.isArray(data.threads)) {
         // Create a map of thread_id -> unread_count for efficient lookup
@@ -802,14 +747,11 @@ export const useChat = () => {
         threads.value = threads.value.map(t => {
           if (unreadMap.has(t.id)) {
             const newCount = unreadMap.get(t.id)!
-            console.log(`✅ Updated thread ${t.id} unread_count to ${newCount}`)
             return { ...t, unread_count: newCount }
           }
           return t
         })
       }
-      
-      console.log('✅ Total unread count after initial:', totalUnreadCount.value)
     })
 
     // Error handling (keep global for debugging)
@@ -845,8 +787,6 @@ export const useChat = () => {
     // Debounced to prevent race conditions with chat.unread.update events
     let lastNotificationCount = -1
     websocketService.on('notification.count', (data: any) => {
-      console.log('🔔 [useChat] notification.count received:', data.count)
-      
       // Only refresh if count actually changed
       if (data.count !== lastNotificationCount) {
         lastNotificationCount = data.count
@@ -860,22 +800,16 @@ export const useChat = () => {
         // Debounce fetchThreads to allow chat.unread.update to process first
         // This prevents the API call from overwriting fresh WebSocket data
         fetchThreadsDebounceTimer = setTimeout(() => {
-          console.log('🔄 [useChat] Debounced refresh: checking if fetchThreads is needed...')
-          
           // If we have recent WebSocket updates, they'll be preserved by fetchThreads
           // The WEBSOCKET_PRIORITY_WINDOW ensures fresh WS values aren't overwritten
-          fetchThreads(undefined, true).then(() => {
-            console.log('✅ [useChat] Threads refreshed, totalUnreadCount:', totalUnreadCount.value)
-          }).catch(err => {
-            console.error('❌ [useChat] Failed to refresh threads:', err)
+          fetchThreads(undefined, true).catch(() => {
+            // Failed to refresh threads
           })
           
           fetchThreadsDebounceTimer = null
         }, 500) // 500ms debounce to let WebSocket events process first
       }
     })
-    
-    console.log('✅ Global notification listeners set up (will persist)')
   }
 
   /**
@@ -884,21 +818,17 @@ export const useChat = () => {
    */
   const setupChatListeners = (): void => {
     if (chatListenersSetup) {
-      console.log('⏭️ Chat listeners already set up, skipping')
       return
     }
     
-    console.log('🎧 Setting up chat-specific listeners...')
     chatListenersSetup = true
     
     // Connection events
-    websocketService.on('chat.connected', (data: any) => {
-      console.log('✅ Chat WebSocket connected to thread:', data.threadId)
+    websocketService.on('chat.connected', (_data: any) => {
       isWebSocketConnected.value = true
     })
 
     websocketService.on('chat.connection.established', (data: any) => {
-      console.log('✅ Connection established, rate limits:', data.rate_limits)
       if (data.rate_limits) {
         // Merge rate limits instead of replacing to avoid breaking reactivity
         // and ensure all required properties exist
@@ -912,19 +842,16 @@ export const useChat = () => {
     })
 
     websocketService.on('chat.disconnected', (data: any) => {
-      console.log('🔌 Chat WebSocket disconnected:', data.reason)
       isWebSocketConnected.value = false
       
       // Handle payload too large (code 1009)
       if (data.code === 1009) {
         error.value = 'الرسالة كبيرة جداً. يرجى تقليل حجم المرفقات.'
-        console.error('❌ Payload too large error (code 1009)')
       }
     })
 
     // New message received
     websocketService.on('chat.message.new', (data: any) => {
-      console.log('📩 New message received via WebSocket:', data.message)
       const rawMessage = data.message
       
       // Normalize thread field (backend sends thread_id, frontend uses thread)
@@ -953,9 +880,6 @@ export const useChat = () => {
       
       if (isForCurrentThread && !messages.value.find(m => m.id === newMessage.id)) {
         messages.value.push(newMessage)
-        console.log(`✅ Added new message to current thread ${newMessage.thread}`)
-      } else if (!isForCurrentThread) {
-        console.log(`⏭️ Message is for thread ${newMessage.thread}, but current thread is ${selectedThreadId.value}`)
       }
 
       // Update thread's last message and unread count
@@ -973,42 +897,34 @@ export const useChat = () => {
 
     // Message updated
     websocketService.on('chat.message.updated', (data: any) => {
-      console.log('✏️ Message updated via WebSocket:', data.message)
       const updatedMessage = data.message as Message
       
       // ✅ Only update message if it belongs to the currently selected thread
       if (selectedThreadId.value !== updatedMessage.thread) {
-        console.log(`⏭️ Updated message is for thread ${updatedMessage.thread}, but current thread is ${selectedThreadId.value}`)
         return
       }
       
       const index = messages.value.findIndex(m => m.id === updatedMessage.id)
       if (index !== -1) {
         messages.value[index] = updatedMessage
-        console.log(`✅ Updated message ${updatedMessage.id} in current thread`)
       }
     })
 
     // Message deleted
     websocketService.on('chat.message.deleted', (data: any) => {
-      console.log('🗑️ Message deleted via WebSocket:', data.message_id)
-      
       // ✅ Check if the deleted message belongs to current thread before removing
       const messageToDelete = messages.value.find(m => m.id === data.message_id)
       if (!messageToDelete) {
-        console.log(`⏭️ Message ${data.message_id} not found in current messages`)
         return
       }
       
       if (selectedThreadId.value !== messageToDelete.thread) {
-        console.log(`⏭️ Deleted message is for thread ${messageToDelete.thread}, but current thread is ${selectedThreadId.value}`)
         return
       }
       
       const index = messages.value.findIndex(m => m.id === data.message_id)
       if (index !== -1) {
         messages.value.splice(index, 1)
-        console.log(`✅ Removed deleted message ${data.message_id} from current thread`)
       }
     })
 
@@ -1023,8 +939,6 @@ export const useChat = () => {
         const displayName = firstName && lastName ? `${firstName} ${lastName}` : 
                           firstName || lastName || data.user?.username || 'User'
         
-        console.log('⌨️ User started typing:', displayName)
-        
         // Clear any existing timeout for this user
         const existingTimeout = typingTimeouts.get(userId)
         if (existingTimeout) {
@@ -1036,7 +950,6 @@ export const useChat = () => {
         
         // Auto-clear typing indicator after 5 seconds (fallback if stop event is lost)
         const timeout = setTimeout(() => {
-          console.log('⏱️ Auto-clearing typing indicator for user:', userId)
           typingUsers.value.delete(userId)
           typingTimeouts.delete(userId)
         }, 5000)
@@ -1048,8 +961,6 @@ export const useChat = () => {
     websocketService.on('chat.typing.stop', (data: any) => {
       const userId = data.user?.id || data.user_id
       if (userId !== currentUserId.value) {
-        console.log('⌨️ User stopped typing:', userId)
-        
         // Clear the auto-timeout since we received explicit stop
         const existingTimeout = typingTimeouts.get(userId)
         if (existingTimeout) {
@@ -1062,20 +973,15 @@ export const useChat = () => {
     })
 
     // Read receipts
-    websocketService.on('chat.receipt.read', (data: any) => {
-      console.log('👁️ Message read:', data.message_id, 'by user:', data.user_id)
-      // Update read status in UI if needed
+    websocketService.on('chat.receipt.read', (_data: any) => {
+      // Message read - update read status in UI if needed
     })
 
     // Reactions
     websocketService.on('chat.reaction.added', (data: any) => {
-      console.log('👍 [useChat] Reaction added via WebSocket:', { emoji: data.emoji, messageId: data.message_id, userId: data.user_id })
-      console.log('🔍 [useChat] Type check - data.user_id:', data.user_id, typeof data.user_id, 'currentUserId:', currentUserId.value, typeof currentUserId.value)
-      
       // Skip if this is from the current user (already handled by optimistic update)
       // Use == instead of === to handle type coercion (number vs string)
       if (data.user_id == currentUserId.value) {
-        console.log('🚫 [useChat] Ignoring own reaction event (optimistic update already applied)')
         return
       }
       
@@ -1095,9 +1001,6 @@ export const useChat = () => {
               full_name: data.full_name || data.username || 'User',
               role: 'user'
             })
-            console.log(`✅ [useChat] Added user ${data.user_id} to existing reaction ${data.emoji}`)
-          } else {
-            console.log(`⏭️ [useChat] User ${data.user_id} already has reaction ${data.emoji}`)
           }
         } else {
           // Create new reaction
@@ -1112,25 +1015,17 @@ export const useChat = () => {
               role: 'user'
             }]
           })
-          console.log(`✅ [useChat] Created new reaction ${data.emoji} for message ${data.message_id}`)
         }
         
         // Trigger Vue reactivity
         triggerRef(messages)
-        console.log('🔄 [useChat] Triggered messages ref update for reaction added')
-      } else {
-        console.warn(`⚠️ [useChat] Message ${data.message_id} not found for reaction.added event`)
       }
     })
 
     websocketService.on('chat.reaction.removed', (data: any) => {
-      console.log('❌ [useChat] Reaction removed via WebSocket:', { emoji: data.emoji, messageId: data.message_id, userId: data.user_id })
-      console.log('🔍 [useChat] Type check - data.user_id:', data.user_id, typeof data.user_id, 'currentUserId:', currentUserId.value, typeof currentUserId.value)
-      
       // Skip if this is from the current user (already handled by optimistic update)
       // Use == instead of === to handle type coercion (number vs string)
       if (data.user_id == currentUserId.value) {
-        console.log('🚫 [useChat] Ignoring own reaction removal event (optimistic update already applied)')
         return
       }
       
@@ -1140,31 +1035,21 @@ export const useChat = () => {
         const reaction = message.reactions.find(r => r.emoji === data.emoji)
         
         if (reaction) {
-          const originalUserCount = reaction.users.length
           reaction.users = reaction.users.filter(u => u.id !== data.user_id)
-          
-          console.log(`🗑️ [useChat] Removed user ${data.user_id} from reaction ${data.emoji} (${originalUserCount} → ${reaction.users.length} users)`)
           
           // Remove reaction if no users left
           if (reaction.users.length === 0) {
             message.reactions = message.reactions.filter(r => r.emoji !== data.emoji)
-            console.log(`🧹 [useChat] Removed empty reaction ${data.emoji} from message`)
           }
           
           // Trigger Vue reactivity
           triggerRef(messages)
-          console.log('🔄 [useChat] Triggered messages ref update for reaction removed')
-        } else {
-          console.warn(`⚠️ [useChat] Reaction ${data.emoji} not found on message ${data.message_id}`)
         }
-      } else {
-        console.warn(`⚠️ [useChat] Message ${data.message_id} not found for reaction.removed event`)
       }
     })
 
     // Thread updates
     websocketService.on('chat.thread.updated', (data: any) => {
-      console.log('⚙️ Thread updated via WebSocket')
       if (currentThread.value && data.thread.id === currentThread.value.id) {
         currentThread.value = data.thread
       }
@@ -1174,16 +1059,14 @@ export const useChat = () => {
     })
 
     // Member events
-    websocketService.on('chat.member.added', (data: any) => {
-      console.log('👥 Member added:', data.username)
+    websocketService.on('chat.member.added', (_data: any) => {
       // Refresh thread participants if needed
       if (currentThread.value) {
         selectThread(currentThread.value.id)
       }
     })
 
-    websocketService.on('chat.member.removed', (data: any) => {
-      console.log('👥 Member removed:', data.user_id)
+    websocketService.on('chat.member.removed', (_data: any) => {
       // Refresh thread participants if needed
       if (currentThread.value) {
         selectThread(currentThread.value.id)
@@ -1192,8 +1075,6 @@ export const useChat = () => {
 
     // Group settings updated event
     websocketService.on('group.settings.updated', (data: any) => {
-      console.log('⚙️ Group settings updated via WebSocket:', data)
-      
       const threadId = data.thread_id
       const newSettings = data.settings
       const updatedBy = data.updated_by
@@ -1210,13 +1091,11 @@ export const useChat = () => {
             updated_by: updatedBy
           }
         }
-        console.log(`✅ Updated currentThread settings: posting_mode=${newSettings.posting_mode}, members_can_add_others=${newSettings.members_can_add_others}`)
       }
       
       // Update in threads list with proper array replacement
       threads.value = threads.value.map(t => {
         if (t.id === threadId) {
-          console.log(`✅ Updated thread in list: ${threadId}`)
           return {
             ...t,
             group_settings: {
@@ -1234,16 +1113,12 @@ export const useChat = () => {
 
     // Ping/Pong handlers (for WebSocket keepalive)
     websocketService.on('chat.ping', (_data: any) => {
-      console.log('📡 Ping received from server')
       // WebSocket service automatically handles sending pong response
     })
 
     websocketService.on('chat.pong', (_data: any) => {
-      console.log('📡 Pong received from server')
       // Connection is alive
     })
-    
-    console.log('✅ Chat-specific listeners set up')
   }
 
   /**
@@ -1533,22 +1408,16 @@ export const useChat = () => {
   }
 
   // Setup WebSocket listeners on composable initialization
-  console.log('🚀 useChat() called, about to setup WebSocket listeners...')
-  console.log('🔍 notificationListenersSetup:', notificationListenersSetup, ', chatListenersSetup:', chatListenersSetup)
   setupWebSocketListeners()
-  console.log('✅ setupWebSocketListeners() completed')
 
   // Cleanup on unmount - only disconnect chat WebSocket when leaving the ACTIVE CHAT page
   // CRITICAL: DO NOT remove global notification listeners here!
   // The notificationListenersSetup flag ensures notification listeners are only set up once globally,
   // and they should NEVER be removed. Chat listeners can be removed and re-added.
   onUnmounted(() => {
-    console.log('🧹 Component unmounting...')
-    
     // Only disconnect from chat WebSocket if we're on the chat page
     // This prevents breaking the connection when other components using useChat unmount
     if (isChatPageVisible.value) {
-      console.log('📱 Was on chat page, disconnecting chat WebSocket...')
       disconnectFromChatWebSocket()
       
       // Only remove CHAT-SPECIFIC listeners when leaving chat page
@@ -1573,9 +1442,6 @@ export const useChat = () => {
       
       // Reset only the CHAT listeners flag - notification listeners persist
       chatListenersSetup = false
-      console.log('✅ Chat-specific listeners removed, chatListenersSetup reset')
-    } else {
-      console.log('⏭️ Not on chat page, keeping all listeners intact')
     }
     
     // NEVER remove these global notification listeners - they persist across all pages:
@@ -1633,18 +1499,6 @@ export const useChat = () => {
     
     const total = threadsTotal + pendingTotal + wsOnlyTotal
     
-    // Only log when count changes or when there are pending items
-    if (total > 0 || pendingUnreadCounts.value.size > 0 || websocketUnreadCounts.value.size > 0) {
-      console.log('🔢 totalUnreadCount computed:', {
-        total,
-        threadsTotal,
-        pendingTotal,
-        wsOnlyTotal,
-        threadsCount: threads.value.length,
-        pendingCount: pendingUnreadCounts.value.size,
-        wsCount: websocketUnreadCounts.value.size
-      })
-    }
     return total
   })
 

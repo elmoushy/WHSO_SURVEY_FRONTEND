@@ -40,9 +40,9 @@ type NavGroup = { id: string; items: NavItem[] }
 // Get unread count from chat composable
 const { totalUnreadCount } = useChat()
 
-// Watch for changes in totalUnreadCount for debugging
-watch(totalUnreadCount, (newVal, oldVal) => {
-  console.log('🔔 Sidebar totalUnreadCount changed:', { oldVal, newVal })
+// Watch for changes in totalUnreadCount
+watch(totalUnreadCount, () => {
+  // totalUnreadCount changed - reactivity will update the UI
 }, { immediate: true })
 
 const navGroups = computed<NavGroup[]>(() => {

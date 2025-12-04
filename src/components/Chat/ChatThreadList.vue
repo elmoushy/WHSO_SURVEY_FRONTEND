@@ -27,16 +27,14 @@ const searchQuery = ref('')
 const filterType = ref<'all' | 'direct' | 'group'>('all')
 const isLoading = ref(false)
 
-// Watch for thread changes to debug reactivity
-watch(threads, (newThreads) => {
-  console.log('🔔 ChatThreadList threads changed:', newThreads.length, 'threads')
-  const unreadCounts = newThreads.map(t => ({ id: t.id.substring(0, 8), unread: t.unread_count }))
-  console.log('🔔 Thread unread counts:', unreadCounts)
+// Watch for thread changes for reactivity
+watch(threads, () => {
+  // Threads updated - UI will react automatically
 }, { deep: true })
 
 // Watch totalUnreadCount
-watch(totalUnreadCount, (newVal, oldVal) => {
-  console.log('🔔 ChatThreadList totalUnreadCount changed:', { oldVal, newVal })
+watch(totalUnreadCount, () => {
+  // Total unread count changed - UI will react automatically
 }, { immediate: true })
 
 onMounted(async () => {

@@ -70,6 +70,24 @@
   color: rgba(248, 250, 252, 0.7);
 }
 
+.header[data-theme="night"] .errorNotifications p {
+  color: rgba(248, 250, 252, 0.85);
+}
+
+.header[data-theme="night"] .refreshBtn {
+  color: rgba(248, 250, 252, 0.7);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.header[data-theme="night"] .refreshBtn:hover:not(:disabled) {
+  color: var(--gold-500);
+  background: rgba(183, 138, 65, 0.15);
+}
+
+.header[data-theme="night"] .loadingHint {
+  color: rgba(248, 250, 252, 0.5);
+}
+
 .nav {
   display: flex;
   align-items: center;
@@ -332,6 +350,99 @@
 .loadingNotifications i {
   font-size: 1.6rem;
   color: var(--gold-500);
+}
+
+.loadingHint {
+  font-size: 0.75rem;
+  color: var(--charcoal-300);
+  margin-top: 0.25rem;
+}
+
+/* Error state for notifications */
+.errorNotifications {
+  padding: 2rem 1.2rem;
+  text-align: center;
+  color: var(--danger-500);
+  display: grid;
+  place-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: background 0.2s ease;
+}
+
+.errorNotifications:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.errorNotifications i {
+  font-size: 1.8rem;
+  color: var(--danger-500);
+}
+
+.errorNotifications p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--charcoal-700);
+}
+
+.retryBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--gold-600);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.retryBtn:hover {
+  background: var(--gold-500);
+  transform: translateY(-1px);
+}
+
+.retryBtn i {
+  font-size: 0.8rem;
+  color: #fff;
+}
+
+/* Header actions container */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Refresh button in header */
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 0.85rem;
+  color: var(--charcoal-500);
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.refreshBtn:hover:not(:disabled) {
+  color: var(--gold-600);
+  background: rgba(183, 138, 65, 0.1);
+  border-color: var(--gold-500);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .notificationItem {
