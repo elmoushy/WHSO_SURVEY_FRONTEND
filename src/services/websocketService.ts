@@ -283,7 +283,10 @@ class NotificationWebSocketService {
 
     try {
       // Use VITE_WS_URL for proper environment-based WebSocket URL
-      const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000'
+      let wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000'
+      if (wsBaseUrl.endsWith('/')) {
+        wsBaseUrl = wsBaseUrl.slice(0, -1)
+      }
       const wsUrl = `${wsBaseUrl}/ws/internal-chat/threads/${threadId}/?token=${token}`
       logger.debug('Chat WebSocket connecting to:', wsUrl.replace(token, '[TOKEN]'))
       
@@ -685,7 +688,10 @@ class NotificationWebSocketService {
     this.isNotificationIntentionalClose = false
 
     try {
-      const wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000'
+      let wsBaseUrl = import.meta.env.VITE_WS_URL || 'ws://127.0.0.1:8000'
+      if (wsBaseUrl.endsWith('/')) {
+        wsBaseUrl = wsBaseUrl.slice(0, -1)
+      }
       const wsUrl = `${wsBaseUrl}/ws/notifications/?token=${token}`
       
       logger.debug('Notification WebSocket connecting to:', wsUrl.replace(token, '[TOKEN]'))
