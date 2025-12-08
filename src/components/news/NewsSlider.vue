@@ -165,8 +165,17 @@ const currentImageUrl = computed(() => {
   return slide?.main_image?.download_url || null
 })
 
-// Use authenticated image composable for backend images
-const { blobUrl: currentImageBlobUrl, isLoading: imageLoading } = useAuthenticatedImage(currentImageUrl)
+// Image version for cache invalidation (use updated_at timestamp)
+const currentImageVersion = computed(() => {
+  const slide = currentSlide.value
+  return slide?.updated_at || slide?.main_image?.uploaded_at || undefined
+})
+
+// Use authenticated image composable for backend images with caching
+const { blobUrl: currentImageBlobUrl, isLoading: imageLoading } = useAuthenticatedImage(
+  currentImageUrl,
+  computed(() => ({ version: currentImageVersion.value }))
+)
 
 // Truncate HTML content while preserving tags
 const truncateHtml = (html: string | undefined, maxLength: number = 120): string => {
@@ -175,6 +184,12 @@ const truncateHtml = (html: string | undefined, maxLength: number = 120): string
   // Create a temporary element to parse HTML
   const temp = document.createElement('div')
   temp.innerHTML = html
+  
+  // Remove all images to prevent 401 errors and layout issues in slider
+  const images = temp.getElementsByTagName('img')
+  while(images.length > 0){
+    images[0].parentNode?.removeChild(images[0])
+  }
   
   // Get plain text to check length
   const plainText = temp.textContent || temp.innerText || ''
@@ -337,7 +352,9 @@ defineExpose({
           <h2 :class="$style.title">{{ currentSlide?.title }}</h2>
           
           <!-- Details -->
-          <div :class="$style.details" v-html="truncateHtml(currentSlide?.details, 120)"></div>
+          <div :class="$style.detailsWrapper">
+            <div :class="$style.details" v-html="truncateHtml(currentSlide?.details, 120)"></div>
+          </div>
           
           <!-- Meta Info -->
           <div :class="$style.meta">
@@ -509,7 +526,8 @@ defineExpose({
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+  /* Modern gradient: Darker on the side where text lives (Right for RTL) */
+  background: linear-gradient(270deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.2) 70%, transparent 100%);
   pointer-events: none;
 }
 
@@ -544,7 +562,7 @@ defineExpose({
   top: 50%;
   right: 60px;
   transform: translateY(-50%);
-  max-width: 600px;
+  max-width: 700px;
   color: white;
   text-align: right;
 }
@@ -574,20 +592,39 @@ defineExpose({
   line-height: 1.3;
   color: white;
   text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* Details */
+.detailsWrapper {
+  /* Removed boxy background for modern look */
+  background: transparent;
+  padding: 0;
+  margin-bottom: 24px;
+  border: none;
+}
+
 .details {
-  font-size: 16px;
-  line-height: 1.7;
-  margin: 0 0 24px 0;
-  opacity: 0.9;
-  color: white;
+  font-size: 18px;
+  line-height: 1.6;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.95);
+  text-shadow: 0 2px 4px rgba(0,0,0,0.6);
   display: -webkit-box;
   -webkit-line-clamp: 3;
   line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Force all children to inherit white color to override rich text styles */
+.details :global(*) {
+  color: inherit !important;
+  background: transparent !important; /* Ensure no background colors from rich text */
 }
 
 .details :global(p) {
@@ -939,9 +976,7 @@ defineExpose({
   background: linear-gradient(135deg, #2d4a42 0%, #1a3d34 50%, #0f2a24 100%);
 }
 
-.sliderContainer[data-theme="night"] .imageWrapper::after {
-  background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 50%, transparent 100%);
-}
+
 
 .sliderContainer[data-theme="night"] .dot {
   background: #4a4a4a;
@@ -1020,7 +1055,7 @@ defineExpose({
 }
 
 .sliderContainer[dir="ltr"] .imageWrapper::after {
-  background: linear-gradient(to right, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+  background: linear-gradient(90deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.6) 40%, rgba(0,0,0,0.2) 70%, transparent 100%);
 }
 
 @media (max-width: 768px) {

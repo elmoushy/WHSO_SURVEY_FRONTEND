@@ -15,6 +15,9 @@ export const useAppStore = defineStore('app', () => {
   // State - Release One: Default to Arabic RTL
   const currentLanguage = ref<Language>('ar') // Changed from 'en' to 'ar' for Release One
   const currentTheme = ref<Theme>('light')
+  
+  // Refresh triggers
+  const quickLinksRefreshTrigger = ref(0)
 
   // Initialize from localStorage
   const initializeFromLocalStorage = () => {
@@ -41,6 +44,10 @@ export const useAppStore = defineStore('app', () => {
   const isLightMode = computed(() => currentTheme.value === 'light')
 
   // Actions
+  const triggerQuickLinksRefresh = () => {
+    quickLinksRefreshTrigger.value++
+  }
+
   const t = (key: string): string => {
     const keys = key.split('.')
     let value: any = translations[currentLanguage.value]
@@ -114,6 +121,8 @@ export const useAppStore = defineStore('app', () => {
     toggleTheme,
     setTheme,
     updateDocumentAttributes,
-    initializeFromLocalStorage
+    initializeFromLocalStorage,
+    triggerQuickLinksRefresh,
+    quickLinksRefreshTrigger
   }
 })

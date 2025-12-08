@@ -90,6 +90,7 @@ const handleDelete = async (item: QuickLink) => {
       })
 
       await deleteQuickLink(item.id)
+      store.triggerQuickLinksRefresh()
 
       await Swal.fire({
         title: isRTL.value ? 'تم الحذف!' : 'Deleted!',
@@ -117,6 +118,7 @@ const handleToggleStatus = async (item: QuickLink) => {
   try {
     await toggleQuickLinkStatus(item.id, !item.is_active)
     loadQuickLinks()
+    store.triggerQuickLinksRefresh()
   } catch (error: any) {
     console.error('Failed to toggle status:', error)
     await Swal.fire({
@@ -163,6 +165,7 @@ const handleDrop = async (targetIndex: number) => {
 
   try {
     await updateQuickLinkPositions({ positions })
+    store.triggerQuickLinksRefresh()
   } catch (error) {
     console.error('Failed to update positions:', error)
     loadQuickLinks() // Reload on error
@@ -181,12 +184,14 @@ const handleDragEnd = () => {
 const handleCreateSuccess = () => {
   showCreateModal.value = false
   loadQuickLinks()
+  store.triggerQuickLinksRefresh()
 }
 
 const handleEditSuccess = () => {
   showEditModal.value = false
   editingItem.value = null
   loadQuickLinks()
+  store.triggerQuickLinksRefresh()
 }
 
 // Load on mount
@@ -328,6 +333,7 @@ watch(refreshKey, () => {
                 :src="link.icon_url" 
                 :alt="link.name"
                 :class="$style.linkIcon"
+                :version="link.updated_at"
               />
               <span v-if="!link.icon_url" :class="$style.iconFallback">
                 {{ link.name.charAt(0).toUpperCase() }}

@@ -49,8 +49,9 @@ const navGroups = computed<NavGroup[]>(() => {
   const primary: NavItem[] = [
     { name: 'surveys-overview',path:"/surveys", icon: 'fas fa-list-check', label: 'الاستطلاعات' },
     { name: 'news', path: '/news', icon: 'fas fa-newspaper', label: 'الأخبار' },
-    { name: 'organization-chart', path: '/organization-chart', icon: 'fas fa-sitemap', label: 'هيكل الشركة' },
-    { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
+    // DISABLED FOR NOW - Will enable in future release
+    // { name: 'organization-chart', path: '/organization-chart', icon: 'fas fa-sitemap', label: 'هيكل الشركة' },
+    // { name: 'chat', path: '/chat', icon: 'fas fa-comments', label: 'المحادثات', getBadge: () => totalUnreadCount.value || undefined },
     { name: 'manage-surveys', path: '/control/surveys', icon: 'fas fa-table-cells-large', label: 'إدارة الاستطلاعات' },
     { name: 'manage-news', path: '/control/news', icon: 'fas fa-newspaper', label: 'إدارة الأخبار', requiresRole: 'admin' },
     { name: 'manage-quicklinks', path: '/control/quicklinks', icon: 'fas fa-link', label: 'إدارة الروابط السريعة', requiresRole: 'admin' },
@@ -124,7 +125,6 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
       <div :class="$style.emblemWrap">
         <img :src="logoSrc" :class="$style.emblem" alt="شعار المجلس الأعلى للأمن الوطني" />
       </div>
-    
     </div>
 
     <nav :class="$style.navArea">
@@ -345,9 +345,11 @@ const logoSrc = computed(() => isCollapsed.value ? '/logomobile.png' : '/Logo.pn
 }
 
 .emblem{
-    padding:0 5px;
-  object-fit:contain;
-  transition: transform .25s ease, inline-size .25s ease, block-size .25s ease;
+  padding:0 5px !important;
+  object-fit:contain !important;
+  max-width: 100% !important;
+  height: auto !important;
+  transition: transform .25s ease, inline-size .25s ease, block-size .25s ease !important;
 }
 .headerText{
   display:flex;

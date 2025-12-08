@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 import { useAuthenticatedImage } from '../../composables/useAuthenticatedImage'
 
 interface Props {
   src: string | null | undefined
   alt?: string
   class?: string
+  /** Version string for cache invalidation (e.g., updated_at timestamp) */
+  version?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   alt: '',
-  class: ''
+  class: '',
+  version: undefined
 })
 
 const emit = defineEmits<{
@@ -18,7 +21,15 @@ const emit = defineEmits<{
   (e: 'error'): void
 }>()
 
-const { blobUrl, error } = useAuthenticatedImage(props.src)
+// Compute options for cache
+const imageOptions = computed(() => ({
+  version: props.version
+}))
+
+const { blobUrl, error, isFromCache } = useAuthenticatedImage(
+  computed(() => props.src),
+  imageOptions
+)
 
 // Watch for load completion
 watch([blobUrl, error], ([newBlobUrl, newError]) => {
@@ -36,6 +47,7 @@ watch([blobUrl, error], ([newBlobUrl, newError]) => {
     :src="blobUrl" 
     :alt="alt" 
     :class="props.class"
+    :data-cached="isFromCache ? 'true' : 'false'"
   />
 </template>
 

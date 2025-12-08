@@ -169,6 +169,7 @@ onMounted(() => {
             :src="newsItem.main_image.download_url"
             :alt="newsItem.title"
             :class="$style.mainImage"
+            :version="newsItem.updated_at"
           />
           <!-- Badge -->
           <div :class="$style.badge">
@@ -235,6 +236,7 @@ onMounted(() => {
                 :src="image.download_url"
                 :alt="`Image ${index + 1}`"
                 :class="$style.galleryImage"
+                :version="image.uploaded_at"
               />
               <div :class="$style.galleryOverlay">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -273,6 +275,7 @@ onMounted(() => {
             :src="currentLightboxImage.download_url"
             :alt="`Image ${selectedImageIndex + 1}`"
             :class="$style.lightboxImage"
+            :version="currentLightboxImage.uploaded_at"
           />
 
           <button v-if="allImages.length > 1" :class="[$style.lightboxNav, $style.lightboxNext]" @click="nextImage">

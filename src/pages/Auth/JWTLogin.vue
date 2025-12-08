@@ -213,7 +213,7 @@ const fieldErrors = ref<{ email?: string; password?: string }>({})
 // Watch for authentication state changes
 watch(isAuthenticated, (newValue) => {
   if (newValue) {
-    const redirectTo = (route.query.redirect as string) || '/surveys'
+    const redirectTo = (route.query.redirect as string) || '/news'
     router.replace(redirectTo)
   }
 }, { immediate: false })
@@ -288,7 +288,7 @@ onMounted(async () => {
     await checkAuth()
     
     if (isAuthenticated.value) {
-      const redirectTo = (route.query.redirect as string) || '/surveys'
+      const redirectTo = (route.query.redirect as string) || '/news'
       router.replace(redirectTo)
     }
   } catch (error) {

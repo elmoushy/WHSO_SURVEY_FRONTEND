@@ -204,6 +204,12 @@ const truncateHtml = (html: string | undefined, maxLength: number = 120): string
   const temp = document.createElement('div')
   temp.innerHTML = html
   
+  // Remove all images to prevent 401 errors
+  const images = temp.getElementsByTagName('img')
+  while(images.length > 0){
+    images[0].parentNode?.removeChild(images[0])
+  }
+  
   // Get plain text to check length
   const plainText = temp.textContent || temp.innerText || ''
   if (plainText.length <= maxLength) return html
@@ -331,6 +337,7 @@ onMounted(() => {
               :src="news.main_image.download_url"
               :alt="news.title"
               :class="$style.image"
+              :version="news.updated_at"
             />
             <img 
               v-else 

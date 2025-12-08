@@ -130,3 +130,73 @@ export const toggleQuickLinkStatus = async (id: number, isActive: boolean): Prom
   })
   return response.data
 }
+
+// ==================== USER PREFERENCES ====================
+
+/**
+ * Toggle pin status for a quick link
+ * @param id - Quick link ID
+ * @returns Pin toggle response with new status
+ */
+export const toggleQuickLinkPin = async (id: number): Promise<{
+  status: string
+  message: string
+  data: {
+    quicklink_id: number
+    is_pinned: boolean
+    pin_order: number | null
+  }
+}> => {
+  const response = await apiClient.post(`/quicklinks/${id}/pin/`)
+  return response.data
+}
+
+/**
+ * Record a click/access for a quick link
+ * Used for "recent" ordering
+ * @param id - Quick link ID
+ */
+export const recordQuickLinkClick = async (id: number): Promise<{
+  status: string
+  message: string
+  data: {
+    quicklink_id: number
+    click_count: number
+    last_accessed_at: string
+  }
+}> => {
+  const response = await apiClient.post(`/quicklinks/${id}/click/`)
+  return response.data
+}
+
+/**
+ * Get current user's quick link preferences
+ * @returns User preferences for pinned and recent links
+ */
+export const getMyQuickLinkPreferences = async (): Promise<{
+  status: string
+  message: string
+  data: {
+    pinned_count: number
+    recent_count: number
+    pinned: Array<{
+      quicklink_id: number
+      name: string
+      is_pinned: boolean
+      pin_order: number
+      last_accessed_at: string | null
+      click_count: number
+    }>
+    recent: Array<{
+      quicklink_id: number
+      name: string
+      is_pinned: boolean
+      pin_order: number
+      last_accessed_at: string | null
+      click_count: number
+    }>
+  }
+}> => {
+  const response = await apiClient.get('/quicklinks/my-preferences/')
+  return response.data
+}

@@ -37,11 +37,11 @@ const originalPositions = ref<Map<number, number>>(new Map())
 const modalTitle = computed(() => {
   switch (props.newsType) {
     case 'SLIDER':
-      return '🎬 Manage Slider Positions'
+      return '🎬 إدارة ترتيب الأخبار المصورة'
     case 'ACHIEVEMENT':
-      return '🏆 Manage Achievement Positions'
+      return '🏆 إدارة ترتيب الإنجازات'
     default:
-      return '📰 Manage News Positions'
+      return '📰 إدارة ترتيب الأخبار'
   }
 })
 
@@ -85,7 +85,7 @@ const loadPositions = async () => {
     hasChanges.value = false
   } catch (err: any) {
     console.error('Failed to load positions:', err)
-    error.value = 'Failed to load positions. Please try again.'
+    error.value = 'فشل في تحميل الترتيب. يرجى المحاولة مرة أخرى.'
   } finally {
     isLoading.value = false
   }
@@ -204,10 +204,11 @@ const saveChanges = async () => {
     
     if (updates.length === 0) {
       await Swal.fire({
-        title: 'No Changes',
-        text: 'No position changes to save.',
+        title: 'لا توجد تغييرات',
+        text: 'لا توجد تغييرات في الترتيب للحفظ.',
         icon: 'info',
-        confirmButtonColor: typeColor.value
+        confirmButtonColor: typeColor.value,
+        confirmButtonText: 'حسناً'
       })
       return
     }
@@ -217,8 +218,8 @@ const saveChanges = async () => {
     
     // Show success message
     await Swal.fire({
-      title: 'Success!',
-      text: `${updates.length} position(s) updated successfully.`,
+      title: 'تم بنجاح!',
+      text: `تم تحديث ترتيب ${updates.length} عنصر بنجاح.`,
       icon: 'success',
       timer: 2000,
       showConfirmButton: false
@@ -228,13 +229,14 @@ const saveChanges = async () => {
     emit('success')
   } catch (err: any) {
     console.error('Failed to save positions:', err)
-    error.value = err.response?.data?.detail || 'Failed to save positions. Please try again.'
+    error.value = err.response?.data?.detail || 'فشل في حفظ الترتيب. يرجى المحاولة مرة أخرى.'
     
     await Swal.fire({
-      title: 'Error',
-      text: error.value || 'Failed to save positions. Please try again.',
+      title: 'خطأ',
+      text: error.value || 'فشل في حفظ الترتيب. يرجى المحاولة مرة أخرى.',
       icon: 'error',
-      confirmButtonColor: '#dc2626'
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'حسناً'
     })
   } finally {
     isSaving.value = false
@@ -246,14 +248,14 @@ const resetChanges = async () => {
   if (!hasChanges.value) return
   
   const result = await Swal.fire({
-    title: 'Reset Changes?',
-    text: 'All unsaved position changes will be lost.',
+    title: 'إلغاء التغييرات؟',
+    text: 'سيتم فقد جميع التغييرات غير المحفوظة.',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#dc2626',
     cancelButtonColor: '#6b7280',
-    confirmButtonText: 'Yes, reset',
-    cancelButtonText: 'Cancel'
+    confirmButtonText: 'نعم، إلغاء التغييرات',
+    cancelButtonText: 'تراجع'
   })
   
   if (result.isConfirmed) {
@@ -265,17 +267,17 @@ const resetChanges = async () => {
 const handleClose = async () => {
   if (hasChanges.value) {
     const result = await Swal.fire({
-      title: 'Unsaved Changes',
-      text: 'You have unsaved position changes. Do you want to save before closing?',
+      title: 'تغييرات غير محفوظة',
+      text: 'لديك تغييرات غير محفوظة. هل تريد الحفظ قبل الإغلاق؟',
       icon: 'warning',
       showDenyButton: true,
       showCancelButton: true,
       confirmButtonColor: typeColor.value,
       denyButtonColor: '#dc2626',
       cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Save & Close',
-      denyButtonText: 'Discard',
-      cancelButtonText: 'Cancel'
+      confirmButtonText: 'حفظ وإغلاق',
+      denyButtonText: 'تجاهل',
+      cancelButtonText: 'إلغاء'
     })
     
     if (result.isConfirmed) {
@@ -314,7 +316,7 @@ onMounted(() => {
             <h2 :class="$style.title">{{ modalTitle }}</h2>
             <div :class="$style.headerActions">
               <span v-if="hasChanges" :class="$style.changesBadge">
-                {{ items.length }} items • Unsaved changes
+                {{ items.length }} عنصر • تغييرات غير محفوظة
               </span>
               <button 
                 :class="$style.closeButton" 
@@ -331,14 +333,14 @@ onMounted(() => {
             <!-- Loading State -->
             <div v-if="isLoading" :class="$style.loading">
               <div :class="$style.spinner"></div>
-              <p>Loading positions...</p>
+              <p>جاري تحميل الترتيب...</p>
             </div>
 
             <!-- Error State -->
             <div v-else-if="error" :class="$style.error">
               <span>⚠️ {{ error }}</span>
               <button :class="$style.retryButton" @click="loadPositions">
-                Retry
+                إعادة المحاولة
               </button>
             </div>
 
@@ -382,7 +384,7 @@ onMounted(() => {
                     :class="$style.actionButton"
                     @click="moveUp(index)"
                     :disabled="index === 0 || isSaving"
-                    title="Move up"
+                    title="تحريك للأعلى"
                   >
                     ↑
                   </button>
@@ -390,7 +392,7 @@ onMounted(() => {
                     :class="$style.actionButton"
                     @click="moveDown(index)"
                     :disabled="index === items.length - 1 || isSaving"
-                    title="Move down"
+                    title="تحريك للأسفل"
                   >
                     ↓
                   </button>
@@ -400,7 +402,7 @@ onMounted(() => {
 
             <!-- Empty State -->
             <div v-else :class="$style.empty">
-              <span>📦 No items to manage</span>
+              <span>📦 لا توجد عناصر للإدارة</span>
             </div>
           </div>
 
@@ -411,7 +413,7 @@ onMounted(() => {
               @click="resetChanges"
               :disabled="!hasChanges || isSaving"
             >
-              🔄 Reset
+              🔄 إعادة تعيين
             </button>
             <div :class="$style.footerActions">
               <button
@@ -419,7 +421,7 @@ onMounted(() => {
                 @click="handleClose"
                 :disabled="isSaving"
               >
-                Cancel
+                إلغاء
               </button>
               <button
                 :class="$style.saveButton"
@@ -427,8 +429,8 @@ onMounted(() => {
                 :disabled="!hasChanges || isSaving"
                 :style="{ background: hasChanges ? typeColor : '#e5e7eb' }"
               >
-                <span v-if="!isSaving">💾 Save Changes</span>
-                <span v-else>Saving...</span>
+                <span v-if="!isSaving">💾 حفظ التغييرات</span>
+                <span v-else>جاري الحفظ...</span>
               </button>
             </div>
           </div>

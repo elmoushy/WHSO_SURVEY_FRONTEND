@@ -6,15 +6,19 @@ interface Props {
   src: string | null | undefined
   alt?: string
   class?: string
+  /** Version string for cache invalidation (e.g., updated_at timestamp) */
+  version?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   alt: '',
-  class: ''
+  class: '',
+  version: undefined
 })
 
 const imageUrl = computed(() => props.src)
-const { blobUrl, isLoading } = useAuthenticatedImage(imageUrl)
+const imageOptions = computed(() => ({ version: props.version }))
+const { blobUrl, isLoading, isFromCache } = useAuthenticatedImage(imageUrl, imageOptions)
 </script>
 
 <template>
@@ -24,6 +28,7 @@ const { blobUrl, isLoading } = useAuthenticatedImage(imageUrl)
     :src="blobUrl"
     :alt="alt"
     :class="props.class"
+    :data-cached="isFromCache ? 'true' : 'false'"
   />
 </template>
 

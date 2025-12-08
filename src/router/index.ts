@@ -51,12 +51,12 @@ const SurveyEditorPage = () => import("../pages/Control/SurveyEditorPage.vue");
 const Notifications = () => import("../pages/Notifications");
 
 // Chat
-const InternalChat = () => import("../pages/Chat/InternalChat.vue");
+// const InternalChat = () => import("../pages/Chat/InternalChat.vue");
 
 // News
 const News = () => import("../pages/News/News.vue");
-const OrganizationChart = () => import("../pages/OrganizationChart/OrganizationChart.vue");
-const OrganizationDetails = () => import("../pages/OrganizationChart/OrganizationDetails.vue");
+// const OrganizationChart = () => import("../pages/OrganizationChart/OrganizationChart.vue");
+// const OrganizationDetails = () => import("../pages/OrganizationChart/OrganizationDetails.vue");
 
 /* =========================
    Routes
@@ -124,13 +124,13 @@ const routes: RouteRecordRaw[] = [
     meta: { title: "Notifications - WPC | WeaponpowerCloud App", requiresAuth: true },
   },
 
-  // Internal Chat
-  {
-    path: "/chat",
-    name: "Chat",
-    component: InternalChat,
-    meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
-  },
+  // Internal Chat - DISABLED FOR NOW - Will enable in future release
+  // {
+  //   path: "/chat",
+  //   name: "Chat",
+  //   component: InternalChat,
+  //   meta: { title: "Chat - WPC | WeaponpowerCloud App", requiresAuth: true },
+  // },
 
   // News (All authenticated users)
   {
@@ -146,21 +146,21 @@ const routes: RouteRecordRaw[] = [
     meta: { title: "News Details - WPC | WeaponpowerCloud App", requiresAuth: true },
   },
 
-  // Organization Chart (All authenticated users)
-  {
-    path: "/organization-chart",
-    name: "OrganizationChart",
-    component: OrganizationChart,
-    meta: { title: "Organization Chart - WPC | WeaponpowerCloud App", requiresAuth: true },
-  },
+  // Organization Chart - DISABLED FOR NOW - Will enable in future release
+  // {
+  //   path: "/organization-chart",
+  //   name: "OrganizationChart",
+  //   component: OrganizationChart,
+  //   meta: { title: "Organization Chart - WPC | WeaponpowerCloud App", requiresAuth: true },
+  // },
 
-  // Organization Details (All authenticated users)
-  {
-    path: "/organizationDetails/:id",
-    name: "OrganizationDetails",
-    component: OrganizationDetails,
-    meta: { title: "Employee Details - WPC | WeaponpowerCloud App", requiresAuth: true },
-  },
+  // Organization Details - DISABLED FOR NOW - Will enable in future release
+  // {
+  //   path: "/organizationDetails/:id",
+  //   name: "OrganizationDetails",
+  //   component: OrganizationDetails,
+  //   meta: { title: "Employee Details - WPC | WeaponpowerCloud App", requiresAuth: true },
+  // },
 
   // WebSocket Test (Development only)
   {
@@ -310,9 +310,9 @@ router.beforeEach(async (to, _from, next) => {
 
   let authenticated = isAuthenticated.value;
 
-  // ✅ If authenticated user tries to access UnauthorizedAccess page, redirect to /surveys
+  // ✅ If authenticated user tries to access UnauthorizedAccess page, redirect to /news
   if (to.path === "/" && authenticated) {
-    return next("/surveys");
+    return next("/news");
   }
 
   // ✅ Prevent infinite redirect loops on root path
@@ -335,7 +335,7 @@ router.beforeEach(async (to, _from, next) => {
 
   // ✅ Redirect authenticated users away from guest-only pages (login, register)
   if (requiresGuest && authenticated) {
-    const redirectTo = (to.query.redirect as string) || "/surveys";
+    const redirectTo = (to.query.redirect as string) || "/news";
     return next(redirectTo);
   }
 
@@ -358,9 +358,9 @@ router.beforeEach(async (to, _from, next) => {
     const currentUser = user.value;
     const ADMIN_ROLES = new Set(["admin", "super_admin"]);
     
-    // If user is authenticated but not an admin, redirect to surveys
+    // If user is authenticated but not an admin, redirect to news
     if (!currentUser || !ADMIN_ROLES.has(currentUser.role)) {
-      return next("/surveys");
+      return next("/news");
     }
   }
 

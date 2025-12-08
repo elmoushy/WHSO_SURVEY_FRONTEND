@@ -7,6 +7,8 @@ export interface QuickLink {
   redirect_url: string
   position: number
   is_active: boolean
+  is_pinned: boolean
+  last_accessed_at: string | null
   created_at: string
   updated_at: string
 }
